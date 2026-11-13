@@ -7,10 +7,20 @@
 <meta name="theme-color" content="#171B22" media="(prefers-color-scheme: dark)">
 <meta name="color-scheme" content="light dark">
 <meta name="robots" content="noindex,nofollow">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="차차차">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://accounts.google.com">
+<link rel="preconnect" href="https://www.googleapis.com">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <title>차차차</title>
 <style>
-@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
 /* 신한FC m과 같은 디자인 기준(tokens.css·design.css)을 이 파일 안에 옮겨 둔 것. 신한FC 파일은 링크하지 않음 */
 :root{
   --bg:#F4F5F7;--surface:#FFFFFF;--raised:#F0F2F5;--line:rgba(20,30,50,.10);
@@ -45,9 +55,9 @@ header{position:sticky;top:0;z-index:5;background:var(--surface);color:var(--t1)
 .card{background:var(--surface);border:1px solid var(--line);box-shadow:none;border-radius:var(--r-card);padding:16px;margin-bottom:8px}
 .card h3{margin:0 0 8px;font-size:13px;font-weight:500;color:var(--t3)}
 .hero{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);overflow:hidden;margin:0 0 8px}
-.hero .ph{background:var(--raised);height:136px;display:flex;align-items:center;justify-content:center}
-.hero .ph img{width:100%;height:100%;object-fit:cover}
-.hero .ph svg{width:64%}
+.hero .ph{background:var(--raised);aspect-ratio:5/2;display:flex;align-items:center;justify-content:center}
+.hero .ph img{width:100%;height:100%;object-fit:cover;object-position:50% 58%}
+.hero .ph svg{width:64%;max-width:260px}
 .hero .in{padding:14px 16px}
 .hero h2{margin:0;font-size:19px;font-weight:600}
 .sub{color:var(--t2);font-size:13px;line-height:1.45}
@@ -116,6 +126,9 @@ nav .navai.on::before{display:none}
 .chips button{min-height:0;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 10px;font-size:12.5px;color:var(--t2)}
 .msg{margin:0;padding:10px 12px;border-radius:var(--r-card);background:var(--accent-weak);color:var(--t1);font-size:13.5px;text-align:left;white-space:pre-line}
 .pend{border:1px solid var(--line);border-radius:var(--r-card);padding:12px;text-align:left}
+.crop canvas{display:block}
+.crop input[type=range]{width:100%;height:auto;padding:0;border:0;margin-top:4px;accent-color:var(--accent)}
+.sec{font-size:13px;font-weight:600;color:var(--t2);margin:16px 2px 8px}
 .evb+.evb{border-top:1px solid var(--line);margin-top:12px;padding-top:12px}
 .tw{overflow-x:auto}
 .tbl{width:100%;border-collapse:collapse;font-size:13px}
@@ -183,9 +196,9 @@ const fuelDef=()=>({comp:COMPS[0][0],kmL:11.0,price:1840,kmkWh:5.0,kwh:319});
 
 function norm(d){ // 옛 파일·새 파일 모두 같은 모양으로 맞춤
   d.events??=[];
-  d.cars.forEach(c=>{c.photo??="";c.startKm??=0;c.plate??="";c.notes??="";c.fuel??=fuelDef();
+  d.cars.forEach(c=>{c.photo??="";c.photoCredit??="";c.startKm??=0;c.plate??="";c.notes??="";c.fuel??=fuelDef();
     ["odo","maint","tires","mounts","ins","plans"].forEach(k=>{c[k]??=[]});
-    c.tires.forEach(t=>{t.baseKm??=0;t.lifeKm??=0;t.price??="";t.note??="";t.size??="";t.bought??=""})});
+    c.tires.forEach(t=>{t.newDepth??=0;t.treads??=[];t.baseKm??=0;t.lifeKm??=0;t.price??="";t.note??="";t.size??="";t.bought??=""})});
   d.sel??=d.cars[0]&&d.cars[0].id;return d;
 }
 function seed(){ // 처음 쓰는 계정의 빈 시작 상태 (개인 정보 없음)
@@ -225,7 +238,7 @@ async function gfetch(url,opt,asText){
 
 /* ---------- 내 Google Drive 저장 (Claude/app/차차차/설정/차차차_기록.json) ---------- */
 const DAPI="https://www.googleapis.com/drive/v3",DUP="https://www.googleapis.com/upload/drive/v3";
-let fileId=null,lastMod=null,saving=false,again=false,retryT=null,saveT=null;
+let fileId=null,folderId=null,lastMod=null,saving=false,again=false,retryT=null,saveT=null;
 const qv=x=>String(x).replace(/\\/g,"\\\\").replace(/'/g,"\\'");
 async function dFind(parent,name,folder){
   const q="'"+qv(parent)+"' in parents and name='"+qv(name)+"' and trashed=false"+(folder?" and mimeType='application/vnd.google-apps.folder'":"");
@@ -233,20 +246,32 @@ async function dFind(parent,name,folder){
   return(d.files||[])[0]||null;
 }
 async function dFolder(create){
+  if(folderId)return folderId;
   let id="root";
   for(const n of DRIVE_PATH){
     let f=await dFind(id,n,true);
     if(!f){if(!create)return null;f=await gfetch(DAPI+"/files?fields=id",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:n,mimeType:"application/vnd.google-apps.folder",parents:[id]})})}
     id=f.id;
   }
-  return id;
+  return folderId=id;
 }
+// 파일·폴더 번호는 이 기기에 기억해 두고 다음부터는 찾지 않고 바로 읽음 (번호는 비밀 정보가 아님, 틀리면 자동으로 다시 찾음)
+const FID_KEY="chacha.fid";
+const cachedFid=()=>{try{return JSON.parse(localStorage.getItem(FID_KEY)||"null")}catch(e){return null}};
+const cacheFid=()=>{try{localStorage.setItem(FID_KEY,JSON.stringify({file:fileId,folder:folderId}))}catch(e){}};
+const parseDoc=t=>JSON.parse(t.replace(/^\uFEFF/,""));
 async function loadDrive(){ // 드라이브의 기록 파일 → 객체 (없으면 null)
+  const c=cachedFid();
+  if(c&&c.file){
+    try{ // 빠른 길: 수정시각과 내용을 동시에 받음
+      const [meta,txt]=await Promise.all([gfetch(DAPI+"/files/"+c.file+"?fields=modifiedTime,trashed"),gfetch(DAPI+"/files/"+c.file+"?alt=media",null,true)]);
+      if(!meta.trashed){fileId=c.file;folderId=c.folder||null;lastMod=meta.modifiedTime;return parseDoc(txt)}
+    }catch(e){if(e.message==="GOOGLE_AUTH")throw e}
+  }
   const fo=await dFolder(false);if(!fo)return null;
   const f=await dFind(fo,DRIVE_FILE,false);if(!f)return null;
-  fileId=f.id;lastMod=f.modifiedTime;
-  const txt=await gfetch(DAPI+"/files/"+f.id+"?alt=media",null,true);
-  return JSON.parse(txt.replace(/^\uFEFF/,""));
+  fileId=f.id;lastMod=f.modifiedTime;cacheFid();
+  return parseDoc(await gfetch(DAPI+"/files/"+f.id+"?alt=media",null,true));
 }
 function setSync(st){
   const el=$("#sync");if(!el)return;
@@ -262,8 +287,7 @@ async function driveSave(force){
   if(saving){again=true;return}
   saving=true;clearTimeout(retryT);
   try{
-    const fo=await dFolder(true);
-    if(!fileId){const f=await dFind(fo,DRIVE_FILE,false);if(f){fileId=f.id;lastMod=f.modifiedTime}}
+    if(!fileId){const fo0=await dFolder(true),f=await dFind(fo0,DRIVE_FILE,false);if(f){fileId=f.id;lastMod=f.modifiedTime;cacheFid()}}
     const body=JSON.stringify(db);let meta;
     if(fileId){
       if(!force){
@@ -274,10 +298,10 @@ async function driveSave(force){
       }
       meta=await gfetch(DUP+"/files/"+fileId+"?uploadType=media&fields=id,modifiedTime",{method:"PATCH",headers:{"Content-Type":"application/json"},body});
     }else{
-      const bd="cha"+uid();
+      const fo=await dFolder(true),bd="cha"+uid();
       const mp="--"+bd+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+JSON.stringify({name:DRIVE_FILE,parents:[fo],mimeType:"application/json"})+"\r\n--"+bd+"\r\nContent-Type: application/json\r\n\r\n"+body+"\r\n--"+bd+"--";
       meta=await gfetch(DUP+"/files?uploadType=multipart&fields=id,modifiedTime",{method:"POST",headers:{"Content-Type":"multipart/related; boundary="+bd},body:mp});
-      fileId=meta.id;
+      fileId=meta.id;cacheFid();
     }
     lastMod=meta.modifiedTime;dirty=false;setSync("ok");
   }catch(e){
@@ -300,27 +324,33 @@ function showLogin(msg,isErr){ // 로그인 전·만료 때: 화면에서 기록
 }
 async function denyAccount(em){
   try{const t=storedTok()||gTok;if(t&&window.google&&google.accounts.oauth2.revoke)google.accounts.oauth2.revoke(t,()=>{})}catch(e){}
-  clearTok();try{localStorage.removeItem(GAC)}catch(e){}
-  db=null;dirty=false;fileId=null;lastMod=null;
+  clearTok();try{localStorage.removeItem(GAC);localStorage.removeItem(FID_KEY)}catch(e){}
+  db=null;dirty=false;fileId=null;folderId=null;lastMod=null;
   showLogin("권한이 없습니다. 이 앱은 허용된 계정만 쓸 수 있어요. 허용된 계정으로 다시 로그인해 주세요.");
 }
-async function afterToken(){ // 토큰을 받은 뒤: 계정 확인 → 허용 목록 검사 → 시작
+async function checkAccount(){ // 구글 계정 이메일 확인 (허용 목록)
   const u=await gfetch("https://www.googleapis.com/oauth2/v3/userinfo");
   const em=String(u.email||"").toLowerCase();
   if(!em)throw new Error("구글 계정 이메일을 읽지 못했습니다.");
-  if(!ALLOWED.map(x=>x.toLowerCase()).includes(em)||u.email_verified===false){await denyAccount(em);return}
-  const changed=gAcct()&&gAcct()!==em;
-  try{localStorage.setItem(GAC,em)}catch(e){}
-  if(changed){db=null;dirty=false;fileId=null;lastMod=null} // 다른 계정이면 이전 계정의 기록은 버림
-  await startApp();
+  return{em,ok:ALLOWED.map(x=>x.toLowerCase()).includes(em)&&u.email_verified!==false};
 }
-async function startApp(){
+async function afterToken(){ // 토큰을 받은 뒤: 계정 확인과 기록 읽기를 동시에 시작 (시간 단축)
+  const pre=loadDrive().then(d=>({d}),e=>({e}));
+  const a=await checkAccount();
+  if(!a.ok){await denyAccount(a.em);return}
+  const changed=gAcct()&&gAcct()!==a.em;
+  try{localStorage.setItem(GAC,a.em)}catch(e){}
+  if(changed){db=null;dirty=false;fileId=null;folderId=null;lastMod=null}
+  await startApp(changed?null:await pre);
+}
+async function startApp(pre){
   $("#lmsg").className="lm";$("#lmsg").textContent="기록을 불러오는 중…";
   $("#loginBtn").hidden=true;$("#loginOtherBtn").hidden=true;
   if(db&&dirty){await driveSave(true)} // 만료 동안 저장 못 한 기록이 있으면 먼저 저장
   else{
-    const d=await loadDrive();
-    if(d)db=norm(d);
+    const r=pre||await loadDrive().then(d=>({d}),e=>({e}));
+    if(r.e)throw r.e;
+    if(r.d)db=norm(r.d);
     else{ // 드라이브에 아직 파일이 없음 → 이 기기의 옛 기록을 한 번 가져오고, 없으면 빈 시작
       let mig=null;const raw=legacyRaw();
       if(raw){try{mig=norm(JSON.parse(raw))}catch(e){}}
@@ -336,15 +366,20 @@ async function doLogin(other){
 }
 $("#loginBtn").addEventListener("click",()=>doLogin(false));
 $("#loginOtherBtn").addEventListener("click",()=>doLogin(true));
-async function boot(){ // 열자마자: 저장된 로그인이 아직 유효하면 바로 계정 확인, 아니면 로그인 화면
-  if(storedTok()&&gAcct()){try{await afterToken();return}catch(e){}}
+async function boot(){ // 열자마자: 이미 확인된 계정으로 로그인돼 있으면 바로 시작(계정 확인은 뒤에서), 아니면 로그인 화면
+  if(storedTok()&&gAcct()&&ALLOWED.map(x=>x.toLowerCase()).includes(gAcct())){
+    try{
+      checkAccount().then(a=>{if(!a.ok)denyAccount(a.em)},()=>{});
+      await startApp();return;
+    }catch(e){showLogin(e.message==="GOOGLE_AUTH"?"":"기록을 불러오지 못했어요. 인터넷을 확인하고 다시 시도해 주세요. ("+e.message.slice(0,60)+")");return}
+  }
   showLogin("");
 }
 async function logout(){
   await driveSave();
   if(dirty&&!confirm("저장되지 않은 기록이 있습니다. 그래도 로그아웃할까요?"))return;
   try{const t=storedTok()||gTok;if(t&&window.google&&google.accounts.oauth2.revoke)google.accounts.oauth2.revoke(t,()=>{})}catch(e){}
-  clearTok();db=null;dirty=false;fileId=null;lastMod=null;
+  clearTok();db=null;dirty=false;fileId=null;folderId=null;lastMod=null;
   showLogin("로그아웃했습니다.",false);
 }
 let view="home";
@@ -431,8 +466,22 @@ function render(){
   const c=car();
   $("#main").innerHTML=({home:vHome,trip:vTrip,maint:vMaint,tire:vTire,ins:vIns}[view])(c);
 }
+// 차 사진: 내가 올린 사진이 있으면 그것, 없으면 색에 맞는 기본 사진(앱과 같은 폴더의 파일), 그것도 없으면 그림
+const DEFAULT_PHOTOS=[
+  {re:/흰|화이트|white|펄/i,src:"car-white.jpg",credit:"Ethan Llamas, Wikimedia Commons, CC BY-SA 4.0 (크기 조정)"},
+  {re:/빨|레드|red/i,src:"car-red.jpg",credit:"Ethan Llamas, Wikimedia Commons, CC BY-SA 4.0 (크기 조정, 번호판 흐림)"}];
+function carPhoto(c){
+  if(c.photo)return{src:c.photo,credit:c.photoCredit||"",own:true};
+  const d=DEFAULT_PHOTOS.find(x=>x.re.test(c.color||""));
+  return d?{src:d.src,credit:d.credit}:null;
+}
+function carPhotoHtml(c){
+  const p=carPhoto(c),svg=carSvg(c.colorHex);
+  if(!p)return svg;
+  return`<img src="${esc(p.src)}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div style="display:none;width:100%;text-align:center">${svg}</div>`;
+}
 function hero(c,withInfo){
-  return`<div class="hero"><div class="ph">${c.photo?`<img src="${c.photo}" alt="">`:carSvg(c.colorHex)}</div><div class="in"><h2>${esc(c.nick)}</h2><div class="sub">${c.year}년식 ${esc(c.model)} ${esc(c.trim)} · ${esc(c.color)} · ${esc(c.wheel)}</div><div class="sub">인도 ${esc(c.delivered)} · ${ageText(c.delivered)} · 타이어 ${esc(c.tireSpec)}${c.tireAlt?" (호환 "+esc(c.tireAlt)+")":""}</div></div></div>`;
+  return`<div class="hero"><div class="ph">${carPhotoHtml(c)}</div><div class="in"><h2>${esc(c.nick)}</h2><div class="sub">${c.year}년식 ${esc(c.model)} ${esc(c.trim)} · ${esc(c.color)} · ${esc(c.wheel)}</div><div class="sub">인도 ${esc(c.delivered)} · ${ageText(c.delivered)} · 타이어 ${esc(c.tireSpec)}${c.tireAlt?" (호환 "+esc(c.tireAlt)+")":""}</div>${(()=>{const p=carPhoto(c);return p&&p.credit?`<div class="k" style="margin-top:6px">사진: ${esc(p.credit)}</div>`:""})()}</div></div>`;
 }
 function events(c){
   const ev=[];
@@ -453,7 +502,7 @@ function vHome(c){
   ev.forEach(e=>{h+=`<div class="row"><div class="l"><span class="ic">${e.ic}</span><div><div class="t">${esc(e.t)}</div><div class="sub">${esc(e.d)}</div></div></div>${e.r?`<div class="r">${e.r}</div>`:""}</div>`});
   h+=`</div>`+insCard();
   h+=fc?`<div class="card"><h3>지금까지 아낀 연료비 (${esc(c.fuel.comp)} 대비)</h3><div class="big save">${won(fc.save)}</div></div>`:`<div class="card"><h3>아낀 연료비</h3><div class="sub">주행거리를 입력하면 계산돼요</div></div>`;
-  h+=`<div class="card"><h3>차량 정보${c.plate?" · "+esc(c.plate):""}</h3>${c.notes?`<div class="sub">${esc(c.notes)}</div>`:""}<div class="acts" style="margin-top:8px"><button class="btn" data-act="editCar">정보 수정</button><button class="btn" data-act="photo">사진 변경</button></div><div class="acts"><button class="btn dng" data-act="delCar">이 차 삭제</button></div><input type="file" accept="image/*" id="photoIn" hidden></div>`;
+  h+=`<div class="card"><h3>차량 정보${c.plate?" · "+esc(c.plate):""}</h3>${c.notes?`<div class="sub">${esc(c.notes)}</div>`:""}<div class="acts" style="margin-top:8px"><button class="btn" data-act="editCar">정보 수정</button><button class="btn" data-act="photo">내 사진 올리기</button>${c.photo?`<button class="btn" data-act="photoReset">기본 사진으로</button>`:""}</div><div class="acts"><button class="btn dng" data-act="delCar">이 차 삭제</button></div><input type="file" accept="image/*" id="photoIn" hidden></div>`;
   h+=`<div class="card"><h3>기록 파일 (JSON)</h3><div class="sub">이 앱의 기록은 JSON 파일로 저장해 두었다가 언제든 다시 불러올 수 있어요. 두 대 이상 모든 차 기록이 한 파일에 들어갑니다.</div><div class="acts"><button class="btn pri" data-act="export">기록 저장</button><button class="btn" data-act="import">기록 불러오기</button></div><input type="file" accept="application/json" id="impIn" hidden><div class="note">기록은 내 Google Drive(Claude/app/차차차/설정)에 자동으로 저장돼요. 파일로 따로 보관하려면 기록 저장을 누르세요.</div><div class="acts"><button class="btn" data-act="logout">로그아웃</button>${legacyRaw()?`<button class="btn dng" data-act="clearLegacy">이 기기에 남은 옛 기록 지우기</button>`:""}</div></div>`;
   return h;
 }
@@ -482,15 +531,29 @@ function vMaint(c){
   list.forEach(m=>{h+=`<div class="row"><div><div class="t">${esc(m.item)}</div><div class="sub">${esc(m.date)}${m.shop?" · "+esc(m.shop):""}${m.km?" · "+num(m.km)+"km":""}</div>${m.memo?`<div class="sub">${esc(m.memo)}</div>`:""}</div><div class="r"><div class="v">${m.amount?won(m.amount):"–"}</div><button class="btn sm" data-act="editMaint" data-id="${m.id}">수정</button> <button class="btn sm dng" data-act="delMaint" data-id="${m.id}">삭제</button></div></div>`});
   return h+`</div>`;
 }
+const treadAvg=x=>x.avg??Math.round((x.front+x.rear)/2*100)/100;
+function treadHtml(t){ // 트레드 깊이 측정 기록(앞·뒤 평균) + 남은 거리 추정
+  const tr=[...(t.treads||[])].sort((a,b)=>b.date.localeCompare(a.date));
+  if(!tr.length)return"";
+  const l=tr[0],avg=treadAvg(l),assumed=!+t.newDepth,nd=+t.newDepth||(t.type==="윈터"?8.5:8.0),wear=nd-avg,lim=t.type==="윈터"?4:3;
+  let h=`<div class="note" style="margin-top:8px">트레드 깊이 (앞·뒤 평균)</div>`;
+  tr.slice(0,4).forEach(x=>{h+=`<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:3px 0"><span>${esc(x.date)} · ${num(x.km)}km · <b>평균 ${treadAvg(x)} mm</b> <span class="k">(앞 ${x.front} / 뒤 ${x.rear})</span></span><button class="btn sm dng" data-act="delTread" data-id="${x.id}" data-tire="${t.id}">삭제</button></div>`});
+  if(wear>0.3&&l.dist>0){const per=l.dist/wear;h+=`<div class="k" style="margin-top:4px">지금 속도로 닳는다면 교체 권장(${lim}mm)까지 약 ${num(Math.max(avg-lim,0)*per)} km, 법적 한계(1.6mm)까지 약 ${num(Math.max(avg-1.6,0)*per)} km 더 탈 수 있어요. (평균 ${avg}mm, 신품 ${nd}mm${assumed?" 가정":""} 기준의 대략적인 추정)</div>`}
+  if(Math.abs(l.front-l.rear)>=1)h+=`<div class="k" style="color:var(--warn)">앞뒤 깊이 차이가 1mm 이상이에요. 위치 교환을 권해요.</div>`;
+  return h;
+}
 function vTire(c){
   let h=hero(c)+`<div class="card"><div class="acts" style="margin:0"><button class="btn pri" data-act="addTire">＋ 타이어 세트 추가</button></div><div class="note">타이어를 갈아 끼울 때 "장착"을 누르고 날짜와 그때 누적 km를 넣으면, 세트별 누적 주행거리가 자동 계산됩니다.</div></div>`;
-  if(!c.tires.length)h+=`<div class="empty">타이어 세트가 없습니다</div>`;
-  c.tires.forEach(t=>{const s=tireStats(c,t.id);
-    h+=`<div class="card"><div style="display:flex;justify-content:space-between;gap:8px"><div><div class="t" style="font-weight:600">${esc(t.brand)}</div><div class="sub">${esc(t.type)}${t.size?" · "+esc(t.size):" · 규격 확인 필요"}</div></div><span class="badge ${s.mounted?"on":""}">${s.mounted?"장착 중":"보관"}</span></div>
+  const tireCard=t=>{const s=tireStats(c,t.id);
+    return`<div class="card"><div style="display:flex;justify-content:space-between;gap:8px"><div><div class="t" style="font-weight:600">${esc(t.brand)}</div><div class="sub">${esc(t.type)}${t.size?" · "+esc(t.size):" · 규격 확인 필요"}</div></div><span class="badge ${s.mounted?"on":""}">${s.mounted?"장착 중":"보관"}</span></div>
     <div class="grid2" style="margin-top:10px"><div><div class="k">구입 후</div><div class="v">${ageText(t.bought)}</div><div class="k">${esc(t.bought||"구입일 미입력")}</div></div><div><div class="k">누적 주행</div><div class="v">${!s.count&&!(+t.baseKm)?"장착 이력 없음":s.unknown?"주행거리 입력 필요":num(s.dist)+" km"}</div>${+t.baseKm?`<div class="k">이전 ${num(t.baseKm)}km 포함</div>`:""}${s.unknown&&s.count?'<div class="k" style="color:var(--warn)">장착 시 km 또는 현재 km 필요</div>':""}</div></div>
     ${+t.lifeKm&&!s.unknown?`<div class="bar"><i style="width:${Math.min(100,s.dist/t.lifeKm*100)}%"></i></div><div class="k">예상 수명 ${num(t.lifeKm)}km 중 ${Math.round(s.dist/t.lifeKm*100)}% · 남은 약 ${num(Math.max(t.lifeKm-s.dist,0))}km</div>`:""}
+    ${treadHtml(t)}
     ${t.price?`<div class="sub" style="margin-top:6px">구입가 ${esc(t.price)}</div>`:""}${t.note?`<div class="sub">${esc(t.note)}</div>`:""}
-    <div class="acts"><button class="btn sm" data-act="mount" data-id="${t.id}">장착</button><button class="btn sm" data-act="editTire" data-id="${t.id}">수정</button><button class="btn sm dng" data-act="delTire" data-id="${t.id}">삭제</button></div></div>`});
+    <div class="acts">${s.mounted?"":`<button class="btn sm" data-act="mount" data-id="${t.id}">장착</button>`}<button class="btn sm" data-act="addTread" data-id="${t.id}">트레드 측정</button><button class="btn sm" data-act="editTire" data-id="${t.id}">수정</button><button class="btn sm dng" data-act="delTire" data-id="${t.id}">삭제</button></div></div>`};
+  const cur=mountedTire(c),rest=c.tires.filter(t=>!cur||t.id!==cur.id);
+  h+=`<div class="sec">장착 중</div>`+(cur?tireCard(cur):`<div class="card"><div class="empty">장착된 타이어가 없습니다. 아래 보관 중 타이어에서 [장착]을 눌러 주세요.</div></div>`);
+  h+=`<div class="sec">보관 중 (${rest.length})</div>`+(rest.length?rest.map(tireCard).join(""):`<div class="card"><div class="empty">보관 중인 타이어가 없습니다</div></div>`);
   const ms=c.mounts.map((m,i)=>({...m,i})).sort((a,b)=>b.date.localeCompare(a.date)||b.i-a.i);
   h+=`<div class="card"><h3>장착 이력</h3>`;
   if(!ms.length)h+=`<div class="empty">이력이 없습니다</div>`;
@@ -655,6 +718,42 @@ function aiSave(){
 
 /* ---------- 동작 ---------- */
 function resizeImg(file,cb){const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,900/im.width),cv=document.createElement("canvas");cv.width=im.width*s;cv.height=im.height*s;cv.getContext("2d").drawImage(im,0,0,cv.width,cv.height);cb(cv.toDataURL("image/jpeg",.8))};im.src=r.result};r.readAsDataURL(file)}
+/* ---------- 사진 자르기: 끌어서 위치, 막대·두 손가락으로 크기 ---------- */
+function openCrop(file,c){
+  const url=URL.createObjectURL(file),im=new Image();
+  im.onload=()=>{URL.revokeObjectURL(url);showCrop(im,c)};
+  im.onerror=()=>{URL.revokeObjectURL(url);alert("사진을 열 수 없어요. 다른 사진을 골라 주세요.")};
+  im.src=url;
+}
+function showCrop(im,c){
+  const W=Math.min(360,innerWidth-64),H=Math.round(W*2/5),iw=im.naturalWidth,ih=im.naturalHeight,base=Math.max(W/iw,H/ih);
+  let z=1,ox=0,oy=0;
+  $("#modal").innerHTML=`<div class="modal" data-act="mclose"><div class="sheet crop"><h3>사진 자르기</h3><div class="sub">손가락으로 끌어 위치를 맞추고, 아래 막대(또는 두 손가락)로 크기를 조절하세요. 보이는 그대로 앱에 나와요.</div><div style="display:flex;justify-content:center;margin:12px 0 4px"><canvas id="cv" width="${W*2}" height="${H*2}" style="width:${W}px;height:${H}px;border-radius:10px;background:#000;touch-action:none;cursor:grab"></canvas></div><input type="range" id="zm" min="100" max="400" value="100" aria-label="크기"><div class="acts"><button class="btn" data-act="mclose">취소</button><button class="btn pri" id="cropOk">이 사진으로 저장</button></div></div></div>`;
+  const cv=$("#cv"),ctx=cv.getContext("2d"),zm=$("#zm");
+  const clamp=()=>{const dw=iw*base*z,dh=ih*base*z,mx=Math.max((dw-W)/2,0),my=Math.max((dh-H)/2,0);ox=Math.min(Math.max(ox,-mx),mx);oy=Math.min(Math.max(oy,-my),my)};
+  const draw=()=>{clamp();ctx.setTransform(2,0,0,2,0,0);ctx.clearRect(0,0,W,H);const dw=iw*base*z,dh=ih*base*z;ctx.drawImage(im,W/2+ox-dw/2,H/2+oy-dh/2,dw,dh)};
+  const pts=new Map();let last=0;
+  const dist=()=>{const a=[...pts.values()];return Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)};
+  cv.addEventListener("pointerdown",e=>{cv.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pts.size===2)last=dist();cv.style.cursor="grabbing"});
+  cv.addEventListener("pointermove",e=>{
+    const p=pts.get(e.pointerId);if(!p)return;
+    if(pts.size===1){ox+=e.clientX-p.x;oy+=e.clientY-p.y}
+    p.x=e.clientX;p.y=e.clientY;
+    if(pts.size===2){const d=dist();if(last>0){z=Math.min(4,Math.max(1,z*d/last));zm.value=Math.round(z*100)}last=d}
+    draw();
+  });
+  const up=e=>{pts.delete(e.pointerId);last=pts.size===2?dist():0;cv.style.cursor="grab"};
+  cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",up);
+  cv.addEventListener("wheel",e=>{e.preventDefault();z=Math.min(4,Math.max(1,z*(e.deltaY<0?1.08:1/1.08)));zm.value=Math.round(z*100);draw()},{passive:false});
+  zm.addEventListener("input",()=>{z=zm.value/100;draw()});
+  $("#cropOk").onclick=()=>{
+    const OW=1000,OH=400,k=OW/W,o=document.createElement("canvas");o.width=OW;o.height=OH;
+    const x=o.getContext("2d"),dw=iw*base*z*k,dh=ih*base*z*k;
+    x.fillStyle="#000";x.fillRect(0,0,OW,OH);x.drawImage(im,OW/2+ox*k-dw/2,OH/2+oy*k-dh/2,dw,dh);
+    c.photo=o.toDataURL("image/jpeg",.85);c.photoCredit="";save();$("#modal").innerHTML="";render();
+  };
+  draw();
+}
 const carFields=c=>[{k:"nick",l:"애칭(이름)",v:c.nick},{k:"model",l:"차종",v:c.model},{k:"trim",l:"트림",v:c.trim},{k:"year",l:"연식",t:"number",v:c.year},{k:"color",l:"색상 이름",v:c.color},{k:"colorHex",l:"색상 코드(그림용)",t:"color",v:c.colorHex},{k:"wheel",l:"휠",v:c.wheel},{k:"delivered",l:"인도일",t:"date",v:c.delivered},{k:"tireSpec",l:"정품 타이어 규격",v:c.tireSpec},{k:"tireAlt",l:"호환 타이어 규격",v:c.tireAlt},{k:"plate",l:"차번호",v:c.plate},{k:"notes",l:"메모",t:"area",v:c.notes},{k:"startKm",l:"계산 시작 km (인도 시 주행거리)",t:"number",v:c.startKm}];
 const applyCar=(c,o)=>Object.assign(c,o,{year:+o.year||c.year,startKm:+o.startKm||0,nick:o.nick||c.nick});
 
@@ -694,16 +793,18 @@ document.addEventListener("click",e=>{
       if(!o.item||!o.date){alert("날짜와 정비 내용을 입력해 주세요.");return false}
       if(a==="addMaint")c.maint.push({id:uid(),...o,amount:+o.amount||0});else Object.assign(m,o,{amount:+o.amount||0});save()})}
   else if(a==="delMaint"){if(confirm("이 정비 기록을 삭제할까요?")){c.maint=c.maint.filter(x=>x.id!==id);save();render()}}
-  else if(a==="addTire"||a==="editTire"){const t=a==="editTire"?c.tires.find(x=>x.id===id):{brand:"",type:"올시즌",size:c.tireSpec,bought:"",price:"",note:"",baseKm:0,lifeKm:0};
-    form(a==="addTire"?"타이어 세트 추가":"타이어 세트 수정",[{k:"brand",l:"타이어 (브랜드·모델)",v:t.brand},{k:"type",l:"종류",t:"select",o:["올시즌","사계절","썸머","윈터","기본"],v:t.type},{k:"size",l:"규격",v:t.size},{k:"bought",l:"구입일",t:"date",v:t.bought},{k:"price",l:"구입가 (예: 90달러, 6,760원)",v:t.price},{k:"baseKm",l:"이전 누적 km (이 앱에 기록하기 전에 탄 거리)",t:"number",v:t.baseKm},{k:"lifeKm",l:"예상 수명 km (선택)",t:"number",v:t.lifeKm},{k:"note",l:"메모",t:"area",v:t.note}],o=>{
+  else if(a==="addTire"||a==="editTire"){const t=a==="editTire"?c.tires.find(x=>x.id===id):{brand:"",type:"올시즌",size:c.tireSpec,bought:"",price:"",note:"",baseKm:0,lifeKm:0,newDepth:0};
+    form(a==="addTire"?"타이어 세트 추가":"타이어 세트 수정",[{k:"brand",l:"타이어 (브랜드·모델)",v:t.brand},{k:"type",l:"종류",t:"select",o:["올시즌","사계절","썸머","윈터","기본"],v:t.type},{k:"size",l:"규격",v:t.size},{k:"bought",l:"구입일",t:"date",v:t.bought},{k:"price",l:"구입가 (예: 90달러, 6,760원)",v:t.price},{k:"baseKm",l:"이전 누적 km (이 앱에 기록하기 전에 탄 거리)",t:"number",v:t.baseKm},{k:"lifeKm",l:"예상 수명 km (선택)",t:"number",v:t.lifeKm},{k:"newDepth",l:"신품 트레드 깊이 mm (선택, 모르면 비워 두세요)",t:"number",v:t.newDepth},{k:"note",l:"메모",t:"area",v:t.note}],o=>{
       if(!o.brand){alert("타이어 이름을 입력해 주세요.");return false}
-      const nb={baseKm:+o.baseKm||0,lifeKm:+o.lifeKm||0};if(a==="addTire")c.tires.push({id:uid(),...o,...nb});else Object.assign(t,o,nb);save()})}
+      const nb={baseKm:+o.baseKm||0,lifeKm:+o.lifeKm||0,newDepth:+o.newDepth||0};if(a==="addTire")c.tires.push({id:uid(),...o,...nb});else Object.assign(t,o,nb);save()})}
   else if(a==="delTire"){if(confirm("이 타이어 세트와 장착 이력을 삭제할까요?")){c.tires=c.tires.filter(x=>x.id!==id);c.mounts=c.mounts.filter(m=>m.tireId!==id);save();render()}}
-  else if(a==="mount"){const k=lastKm(c);
-    form("타이어 장착",[{k:"date",l:"장착 날짜",t:"date",v:today()},{k:"km",l:"장착 시 누적 km",t:"number",v:k??"",p:"그때 계기판 km"}],o=>{
+  else if(a==="mount"){const k=lastKm(c),tt=c.tires.find(x=>x.id===id),st=tireStats(c,id),cu=mountedTire(c),cs=cu&&cu.id!==id?tireStats(c,cu.id):null;
+    if(cu&&cu.id===id)return alert("이미 끼워져 있는 타이어입니다.");
+    const info=`<div class="sub"><b>${esc(tt.brand)}</b>는 지금까지 ${st.unknown?"(일부 구간 km 입력 필요)":num(st.dist)+" km"} 탔어요. 장착하면 거기서부터 이어서 쌓여요.${cs?`<br>지금 끼워진 <b>${esc(cu.brand)}</b>는 보관으로 바뀌고, 지금까지 ${cs.unknown?"(일부 구간 km 입력 필요)":num(cs.dist)+" km"} 탄 것으로 기록돼요.`:""}</div>`;
+    form("타이어 장착",[{k:"date",l:"장착 날짜",t:"date",v:today()},{k:"km",l:"장착 시 누적 km (계기판)",t:"number",v:k??"",p:"그때 계기판 km"}],o=>{
       if(o.km===""&&!confirm("km를 비워두면 누적 주행거리를 계산할 수 없습니다. 그래도 저장할까요?"))return false;
       c.mounts.push({id:uid(),tireId:id,date:o.date,km:o.km===""?null:+o.km});save()},
-      `<div class="sub">${esc(c.tires.find(x=>x.id===id).brand)} 를 끼웠다고 기록합니다. 지금까지 달려 있던 타이어의 주행은 여기서 끝납니다.</div>`)}
+      info)}
   else if(a==="editMount"){const m=c.mounts.find(x=>x.id===id);form("장착 이력 수정",[{k:"date",l:"장착 날짜",t:"date",v:m.date},{k:"km",l:"장착 시 누적 km",t:"number",v:m.km??""}],o=>{m.date=o.date;m.km=o.km===""?null:+o.km;save()})}
   else if(a==="delMount"){if(confirm("이 장착 이력을 삭제할까요?")){c.mounts=c.mounts.filter(x=>x.id!==id);save();render()}}
   else if(a==="addEvent"||a==="editEvent"){const ev=a==="editEvent"?db.events.find(x=>x.id===id):{name:"",date:today(),memo:""};
@@ -712,6 +813,17 @@ document.addEventListener("click",e=>{
       if(a==="addEvent")db.events.push({id:uid(),...o});else Object.assign(ev,o);save()},
       `<div class="sub">그날부터 모든 차가 얼마나 탔는지 계산해요. 그날 기록이 없으면 앞뒤 기록으로 나눠 추정해요.</div>`)}
   else if(a==="delEvent"){if(confirm("이 이벤트를 삭제할까요? (주행 기록은 그대로 남아요)")){db.events=db.events.filter(x=>x.id!==id);save();render()}}
+  else if(a==="addTread"){const tt=c.tires.find(x=>x.id===id);
+    form("트레드 깊이 측정",[{k:"date",l:"측정 날짜",t:"date",v:today()},{k:"km",l:"그때 계기판 km",t:"number",v:lastKm(c)??""},{k:"front",l:"앞 타이어 남은 깊이 (mm)",t:"number",p:"예: 6.85"},{k:"rear",l:"뒤 타이어 남은 깊이 (mm)",t:"number",p:"예: 6.75"}],o=>{
+      const f=+o.front,r=+o.rear,k=+o.km;
+      if(!o.date||!(f>0&&f<15)||!(r>0&&r<15)){alert("날짜와 앞·뒤 깊이(mm)를 입력해 주세요.");return false}
+      const st=tireStats(c,id),top=lastKm(c);
+      const dist=Math.max(Math.round(st.dist-(st.mounted&&top!=null&&k&&k<top?top-k:0)),0);
+      (tt.treads=tt.treads||[]).push({id:uid(),date:o.date,km:k||top||0,front:f,rear:r,avg:Math.round((f+r)/2*100)/100,dist});save()},
+      `<div class="sub">${esc(tt.brand)} · 지금까지 ${num(tireStats(c,id).dist)} km 탔어요. 앞·뒤 깊이를 적으면 <b>평균</b>으로 기록하고 남은 거리를 추정해요.</div><div class="sub" id="avgv" style="margin-top:6px;font-weight:600">평균: –</div>`);
+    const upd=()=>{const f=+document.querySelector('#modal [data-k="front"]').value,r=+document.querySelector('#modal [data-k="rear"]').value;$("#avgv").textContent=f>0&&r>0?"평균: "+(Math.round((f+r)/2*100)/100)+" mm":"평균: –"};
+    document.querySelectorAll('#modal [data-k="front"],#modal [data-k="rear"]').forEach(e=>e.addEventListener("input",upd))}
+  else if(a==="delTread"){if(confirm("이 측정 기록을 삭제할까요?")){const tt=c.tires.find(x=>x.id===b.dataset.tire);if(tt){tt.treads=tt.treads.filter(x=>x.id!==id);save();render()}}}
   else if(a==="addIns"||a==="editIns"){const i=a==="editIns"?c.ins.find(x=>x.id===id):{date:today(),insurer:"",premium:"",memo:""};
     form(a==="addIns"?"보험 기록 추가":"보험 기록 수정",[{k:"date",l:"가입·갱신일",t:"date",v:i.date},{k:"insurer",l:"보험사",v:i.insurer,p:"예: 삼성화재"},{k:"premium",l:"보험료(원)",t:"number",v:i.premium},{k:"memo",l:"메모",t:"area",v:i.memo}],o=>{
       if(!o.date||!o.insurer){alert("날짜와 보험사를 입력해 주세요.");return false}
@@ -722,10 +834,12 @@ document.addEventListener("click",e=>{
   else if(a==="editCar")form("차량 정보 수정",carFields(c),o=>{applyCar(c,o);save()});
   else if(a==="addCar"){const n={id:uid(),nick:"새 차",model:"Tesla Model 3",trim:"",year:new Date().getFullYear(),color:"흰색",colorHex:"#f1f1f1",wheel:"",delivered:"",tireSpec:"",tireAlt:"",photo:"",startKm:0,fuel:fuelDef(),odo:[],maint:[],tires:[],mounts:[],ins:[],plans:[],plate:"",notes:""};form("차량 추가",carFields(n),o=>{applyCar(n,o);db.cars.push(n);db.sel=n.id;view="home";save()})}
   else if(a==="delCar"){if(db.cars.length<2)return alert("마지막 차량은 삭제할 수 없습니다.");if(confirm("'"+c.nick+"' 의 모든 기록을 삭제할까요? 되돌릴 수 없습니다.")){db.cars=db.cars.filter(x=>x.id!==c.id);db.sel=db.cars[0].id;save();render()}}
-  else if(a==="photo"){const f=$("#photoIn");f.onchange=()=>{if(f.files[0])resizeImg(f.files[0],d=>{c.photo=d;save();render()})};f.click()}
+  else if(a==="photo"){const f=$("#photoIn");f.onchange=()=>{if(f.files[0])openCrop(f.files[0],c);f.value=""};f.click()}
+  else if(a==="photoReset"){if(confirm("올린 사진을 지우고 기본 사진으로 돌아갈까요?")){c.photo="";c.photoCredit="";save();render()}}
   else if(a==="export"){const u=URL.createObjectURL(new Blob([JSON.stringify(db)],{type:"application/json"})),l=document.createElement("a");l.href=u;l.download=today().replace(/-/g,"")+"_차차차_백업.json";l.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
   else if(a==="import"){const f=$("#impIn");f.onchange=()=>{const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.cars||!d.cars.length)throw 0;if(confirm("현재 기록을 이 파일의 기록으로 바꿉니다. 계속할까요?")){db=norm(d);save();render()}}catch(x){alert("올바른 기록 파일(JSON)이 아닙니다.")}};r.readAsText(f.files[0])};f.click()}
 });
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{}); // 홈 화면 앱 설치용(없어도 앱은 동작)
 boot();
 </script>
 </body>
