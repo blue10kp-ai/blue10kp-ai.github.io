@@ -307,6 +307,7 @@ const APPDIR={shinhanfc:"/shlife/m/",goodday:"/goodday/",chachacha:"/cars/"};
 function goUrl(n){const p=new URLSearchParams({go:n.go});if(n.q)p.set("q",n.q);if(n.kind)p.set("kind",n.kind);return APPDIR[n.app]+"?"+p.toString()}
 const NAV_KIND=[["맛집",/맛집|식당|카페/],["영상",/영화|드라마|영상|음악|노래|예능/],["여행",/여행|숙소/],["일상",/일상|일기/]];
 const NAV_STOP=/^(고객님?|님|검색(해줘|해|해주세요|해봐|해봐줘)?|찾아(줘|줄래|봐|주세요|봐줘)?|찾기|보여(줘|주세요)?|조회(해줘)?|알려(줘|주세요)?|열어(줘)?|정보(좀|를|도)?|보기|해줘|좀|줘|본|간|먹은|갔던|기록|내역|목록|리스트|전체|은|는|정보는|정보은|누구|어때|뭐야|뭐지|얼마야|확인|확인해줘|좀|번호)$/;
+const SENS_VAL=/주민\s?(등록)?\s?번호|계좌|카드\s?번호|연락처|전화번호|전화|휴대폰|핸드폰|이메일|주소|생년월일|비밀번호/; // 값을 불러 달라고 하면 거절하는 낱말 (묻는 말 자체는 막지 않음)
 const SENS=/주민\s?(등록)?\s?번호|계좌|연락처|전화번호|전화|휴대폰|핸드폰|이메일|주소|생년월일|증권|계약\s?(내용|정보|현황)?/; // 고객 민감정보 낱말: 보여 줄지는 신한FC가 권한(canSens)으로 정함
 function carsIntent(t){ // 차차차 모듈: 읽는 말만(기록·남겨·적어 같은 쓰기 말이 있으면 편지로 보냄)
   if(/기록해|남겨|적어|저장|입력/.test(t))return null;
@@ -324,6 +325,13 @@ function carsIntent(t){ // 차차차 모듈: 읽는 말만(기록·남겨·적�
   if(/정비|수리|엔진오일|비용|충전비|주유비/.test(t))return mk("maint","차차차 정비·비용");
   if(/주행|충전|주유/.test(t))return mk("records","차차차 기록");
   return mk("home","차차차");
+}
+function analysisIntent(t){ // "김현성 고객 보장은?", "OO 보장분석", "OO 보험 뭐 있어" → 신한FC 고객 정보의 분석 탭 (tab=analysis). 이름은 규칙으로만 뽑고 AI로 보내지 않음
+  if(/기록해|남겨|적어|저장|입력|추가|일정|약속|예약/.test(t))return null;
+  if(!/보장|보험\s?뭐|보험\s?있/.test(t))return null;
+  if(/자동차|차\s?보험/.test(t))return null; // 차차차 쪽 말
+  const q=t.replace(/[?？]/g," ").replace(/보장\s?분석|보장|보험\s?뭐\s?있(어|나|는지)?|보험|고객님?|분석|뭐|있어|있나|어때|알려|보여|줘|좀|리스트/g," ").split(/\s+/).filter(x=>x&&x.length>1&&!NAV_STOP.test(x)).join(" ").slice(0,30);
+  return{app:"shinhanfc",go:"customers",q,kind:"",tab:"analysis",label:"보장 분석"};
 }
 function scopeIntent(t){ // "이관 보여줘", "가망 고객 보여줘", "DB 보여줘" → 신한FC 고객 검색에서 그 분류만 (kind=transfer|plan|db). 이름이 같이 있으면 q로
   if(/기록해|남겨|적어|저장|입력|추가|일정|약속|상담기록|메모/.test(t))return null;
@@ -349,14 +357,18 @@ function salesIntent(t){ // 신한FC 영업 화면: "이달이관 보여줘", "�
   return{app:"shinhanfc",go:"sales",q:dda?"dda":"transfer",kind:"",id:ym,label:dda?"따행":"이달이관"};
 }
 function navIntent(t){
+  {const s=analysisIntent(t);if(s)return s}
   {const s=salesIntent(t);if(s)return s}
   {const s=scopeIntent(t);if(s)return s}
   if(/일정|약속|미팅|예약|따행|이관|상담기록|엑셀|보장분석/.test(t))return null;
   const toks=s=>s.replace(/[?？]/g," ").replace(/고객님?/g," ").split(/\s+/).filter(x=>x&&x.length>1&&!NAV_STOP.test(x));
   if(!/고객/.test(t)){const c=carsIntent(t);if(c)return c}
-  if(!/고객/.test(t)&&SENS.test(t)&&/알려|보여|조회|검색|찾|정보|확인|뭐|얼마|[?？]|어때/.test(t)){ // "김OO 주민번호/연락처 알려줘" → 막지 않고 신한FC 고객 모듈로
-    const q=toks(t.replace(new RegExp(SENS.source,"g")," ")).join(" ").slice(0,30);
-    if(q)return{app:"shinhanfc",go:"customers",q,kind:"",label:"고객 검색"};
+  { // 민감 값(주민번호·계좌·연락처·주소 등)을 불러 달라는 말: 말만해요가 알려 주지 않음 → 거절 카드 (열리는 고객 화면은 신한FC 권한대로)
+    const tw=t.replace(/계약\s?(내용|정보|현황)?|증권/g," ");
+    if(SENS_VAL.test(tw)&&/알려|불러|보여|뭐|몇|얼마|번호|[?？]|어때|확인|조회/.test(tw)&&!/기록해|남겨|적어|저장|입력|추가|수정|변경|바꿔/.test(tw)){
+      const q=toks(tw.replace(new RegExp(SENS_VAL.source,"g")," ")).join(" ").slice(0,30);
+      return{app:"shinhanfc",go:"customers",q,kind:"",refuse:true,label:"고객 정보"};
+    }
   }
   if(!/검색|찾아|찾기|찾고|보여|조회|알려|열어|정보|보기|[은는]\s?\?|어때|누구/.test(t))return null;
   if(/고객/.test(t))return{app:"shinhanfc",go:"customers",q:toks(t.replace(new RegExp(SENS.source,"g")," ")).join(" ").slice(0,30),kind:"",memo:SENS.test(t)?"":"1",label:"고객 검색"}; // 이름 검색은 신한FC 전체검색(이름·연락처·주소·메모·상담기록·일정)으로
@@ -378,7 +390,7 @@ function navIntent(t){
    한 번 띄운 iframe은 숨겨 두고 다시 씀. 새 요청은 postMessage. 검색어·고객 키는 # 뒤에 둠(서버로 안 나감). */
 const MODS={}; // 앱 번호 → {frame, ready, where}
 let suppressOpen=false,modApp=null,sheetOpen=false,modPushed=false,sheetPushed=false,ignorePop=false;
-const modHash=o=>{const p=new URLSearchParams();["go","q","kind","id","month","car","memo"].forEach(k=>{if(o[k])p.set(k,o[k])});return p.toString()};
+const modHash=o=>{const p=new URLSearchParams();["go","q","kind","id","month","car","memo","tab"].forEach(k=>{if(o[k])p.set(k,o[k])});return p.toString()};
 function updateFab(){
   const m=modApp&&MODS[modApp],r=document.documentElement.style;
   $("#fab").hidden=!(db&&$("#login").hidden)||(!sheetOpen&&!!(m&&m.fabHide));
@@ -403,7 +415,7 @@ function showMod(app){
 }
 function openModule(n){
   const dir=APPDIR[n.app];if(!dir)return false;
-  const req={go:n.go,q:n.q||"",kind:n.kind||"",id:n.id||"",month:n.month||"",car:n.car||"",memo:n.memo||""};
+  const req={go:n.go,q:n.q||"",kind:n.kind||"",id:n.id||"",month:n.month||"",car:n.car||"",memo:n.memo||"",tab:n.tab||""};
   if(sheetOpen){closeSheet(false,()=>deliverModule(n,dir,req));return true} // 묻는 창이 쌓은 history 칸을 먼저 걷은 뒤에 앱에 전달
   deliverModule(n,dir,req);return true;
 }
@@ -461,7 +473,7 @@ function resetMods(){ // 로그아웃·계정 거부·로그인 화면: 띄워 �
 function openSheet(keep){
   if(sheetOpen||!db)return;
   sheetOpen=true; // 뒤 화면은 지우지 않음(지우면 페이지가 짧아져 스크롤바가 사라지고 마이크 버튼이 밀림)
-  if(keep!==true&&pending&&["done","answer","name"].includes(pending.stage))pending=null;
+  if(keep!==true&&pending&&["done","answer","name","refuse"].includes(pending.stage))pending=null;
   $("#sheet").classList.add("open");$("#scrim").classList.add("open");document.documentElement.classList.add("sheetopen");
   sheetPushed=pushLayer();updateFab();render();
   setTimeout(()=>{const t=$("#txt");if(t&&!t.disabled&&!matchMedia("(pointer:coarse)").matches)t.focus()},260); // 폰은 키보드를 자동으로 띄우지 않음
@@ -470,7 +482,7 @@ function closeSheet(skipHist,cb){
   if(!sheetOpen)return;
   sheetOpen=false;$("#sheet").classList.remove("open");$("#scrim").classList.remove("open");document.documentElement.classList.remove("sheetopen");$("#sheetBody").innerHTML="";
   const p=sheetPushed;sheetPushed=false;
-  if(pending&&["done","answer","name"].includes(pending.stage))pending=null; // 끝난 카드는 닫으면 치움
+  if(pending&&["done","answer","name","refuse"].includes(pending.stage))pending=null; // 끝난 카드는 닫으면 치움
   updateFab();suppressOpen=true;render();suppressOpen=false;
   if(p&&!skipHist)popLayer(cb);else if(cb)cb();
 }
@@ -518,6 +530,11 @@ function finishNav(nv,rec){
 }
 async function navFlow(nv,rec){
   const a=adapter(nv.app);
+  if(rec.text==='(해석 중)')rec.text=(nv.app==='shinhanfc'&&nv.go==='customers'?'고객 검색':nv.label||'화면 열기')+' (검색어는 기록 안 함)';
+  if(nv.refuse){ // 값은 말하지 않음. 고객 정보 화면 열기 버튼만(권한은 신한FC가 정함)
+    rec.status="kept";rec.text="민감정보 요청 (내용은 기록 안 함)";save();
+    pending={rec,stage:"refuse",nav:{...nv,refuse:false,memo:""},canOpen:activeApps().some(x=>x.id===nv.app)&&!!nv.q};render();return;
+  }
   if(!activeApps().some(x=>x.id===nv.app)){
     rec.status="kept";save();
     pending={rec,stage:"done",canUndo:false,note:"‘"+a.name+"’은(는) 내가 쓸 수 있는 앱이 아니에요. 설정에서 꺼져 있는지 확인하거나 관리자에게 열어 달라고 하세요."};
@@ -525,6 +542,35 @@ async function navFlow(nv,rec){
   }
   if(nv.app==="shinhanfc"&&nv.go==="customers"&&!nv.q&&!nv.kind){pending={rec,stage:"name",nav:nv};render();return}
   finishNav(nv,rec);
+}
+
+/* ===== 해석용 색인 (규칙: app\_공통\말만해요_플로팅.md '민감정보' 1번) =====
+   각 하위 앱이 만든 Claude/app/<앱>/설정/말만해요_색인.json(이름·분류·제목 등, 민감 항목 없음)을 쓸 수 있는 앱 것만 읽어 메모리에서만 해석에 씀.
+   기기·기록 파일에 복사하지 않고 Gemini로 보내지 않음. 파일이 없거나 못 읽으면 조용히 건너뜀. */
+const IDX_FOLDER={shinhanfc:"신한FC",goodday:"goodday",chachacha:"차차차"};
+let IDX={}; // 앱 번호 → {names:[...]} (메모리에만)
+function idxNames(j){
+  const out=new Set(),put=v=>{const s=typeof v==="string"?v:v&&(v.name||v["이름"]||v["고객명"]);if(s&&String(s).trim().length>=2)out.add(String(s).trim())};
+  const walk=(o,k)=>{if(Array.isArray(o)){if(/names|customers|고객|이름|people/i.test(k||""))o.forEach(put);else if(!k)o.forEach(put)}else if(o&&typeof o==="object")for(const x in o)walk(o[x],x)};
+  walk(j);return[...out];
+}
+async function loadIndexes(){
+  if(DEMO)return;
+  for(const a of activeApps()){
+    const f=IDX_FOLDER[a.id];if(!f)continue;
+    try{const j=await Drive.read(["Claude","app",f,"설정"],"말만해요_색인.json");if(j)IDX[a.id]={names:idxNames(j)}}catch(e){}
+  }
+}
+const knownNames=text=>{const r=[];for(const k in IDX)for(const n of IDX[k].names)if(n&&text.includes(n))r.push({app:k,name:n});return r};
+// 색인에 없을 때 짐작용: 성씨+이름 꼴로 시작하고 만남·상담 같은 말이 따라오면 사람 이름으로 봄(일정 확인 카드로 한 번 더 물음)
+const SURNAME="김이박최정강조윤장임한오서신권황안송류전홍고문양손배백허유남심노하곽성차주우구나민진지엄채원천방공현함변염여추도소석선설마길연위표명기반왕금옥육인맹제모탁국어은편용예경봉사부가복태목";
+const NOT_NAME=/^(이번|오늘|내일|어제|모레|주말|다음|지난|정기|보험|고객|차량|하루|우리|아침|오전|오후|저녁|점심|전화|연락|상담|미팅|방문|면담|만남)/;
+const MEET=/만남|상담|미팅|방문|면담|통화|연락|전화|약속/;
+function nameMeet(text){
+  if(!MEET.test(text))return false;
+  if(knownNames(text).some(x=>x.app==="shinhanfc"))return true;
+  const m=text.trim().match(/^([가-힣]{3,4})\s?(님)?\s?(만남|상담|미팅|방문|면담|통화|연락|약속)/);
+  return !!m&&SURNAME.includes(m[1][0])&&!NOT_NAME.test(m[1]);
 }
 
 /* ================= 4. 저장소 (구글 드라이브 / 시험용 메모리) ================= */
@@ -710,6 +756,7 @@ async function startApp(pre){
     if(!r.d){dirty=true;await driveSave()}
   }
   await loadCfg();
+  loadIndexes(); // 해석용 색인(있으면) 메모리에만 읽어 둠
   setShell(true);setSync("ok");go("log");openSheet();scrollTo(0,0);
 }
 async function doLogin(other){
@@ -817,8 +864,12 @@ function pendingHtml(){
       <div class="choice">${opts.map((o,i)=>`<button class="btn" data-find="${o[0]}"><b>${i+1}</b>${esc(o[1])}</button>`).join("")}
         <button class="btn" data-find="cancel"><b>${opts.length+1}</b>취소</button></div></div>`;
   }
+  if(p.stage==="refuse"){
+    return `<div class="card"><h3>알려 드릴 수 없어요</h3><div class="msg">주민번호·계좌 같은 민감정보는 말만해요에서 불러 드릴 수 없어요.</div>
+      <div class="acts">${p.canOpen?`<button class="btn pri" id="refopen">고객 정보 열기</button>`:""}<button class="btn" id="next">닫기</button></div></div>`;
+  }
   if(p.stage==="name"){
-    return `<div class="card"><h3>어느 고객을 찾을까요?</h3><input id="navq" type="text" placeholder="고객 이름" autocomplete="off">
+    return `<div class="card"><h3>${p.nav&&p.nav.tab==="analysis"?"어느 고객의 보장을 볼까요?":"어느 고객을 찾을까요?"}</h3><input id="navq" type="text" placeholder="고객 이름" autocomplete="off">
       <div class="acts"><button class="btn" id="next">그만</button><button class="btn pri" id="navgo">찾기</button></div></div>`;
   }
   if(p.stage==="confirm"){
@@ -867,6 +918,9 @@ function setHtml(){
     <b>일정 질문</b>: “오늘 일정은?”, “내일 약속 있어?”, “이번 주 일정 알려줘”, “다음 일정은 언제야?” — 답이 바로 카드로 나오고, 카드에서 [수정]·[삭제]를 누를 수 있어요. 일정 내용은 AI로 보내지 않고 앱 안에서만 정리해요.<br>
     수정·삭제·등록은 항상 확인 카드를 보여 주고, 끝난 뒤 되돌릴 수 있어요. 맛집·여행·차계부처럼 앱 안의 기록은 받은편지함에 담아 그 앱을 열 때 반영돼요.<br>
     <b>이름·낱말만 말하면 검색</b>: “김현성”처럼 이름이나 낱말만 말하면 ‘1 구글 일정 / 2 일상 / 3 신한FC(고객·메모·상담기록) / 4 취소’ 중 어디서 찾을지 물어요. “기록”, “추가”, “등록”, “남겨” 같은 말이 들어 있으면 검색이 아니라 앱에 기록해요.<br>
+    <b>AI(Gemini)</b>: 설정에 키를 넣으면 말을 먼저 Gemini가 해석해요(이름·민감 값은 가려서 보내요). 키가 없거나 안 될 때는 규칙으로 대신해요. 결과는 지금처럼 확인 카드 뒤에 실행돼요.<br>
+    <b>민감정보</b>: 주민번호·계좌·연락처·주소 같은 값을 불러 달라고 하면 말만해요는 알려 드리지 않고 ‘고객 정보 열기’ 버튼만 보여 줘요(열리는 화면에서 보이는 정도는 신한FC 권한대로). 그 밖의 묻는 말은 어떤 단어든 받아요.<br>
+    <b>고객 보장</b>: “김OO 고객 보장은?”, “김OO 보장분석”, “김OO 보험 뭐 있어”는 신한FC 고객 정보의 분석 탭으로 열려요(여러 명이면 목록에서 고른 뒤).<br>
     <b>찾기·보기는 바로</b> (신한FC 이름 검색은 신한FC의 ‘전체검색’으로 열려 이름·연락처·주소·메모·상담기록·일정에서 찾아요): “김OO 고객 검색해줘”라고 하면 말만해요 안에 신한FC m의 고객 목록이 열리고, “맛집 검색해줘”, “강남 맛집 찾아줘”, “본 영화 찾아줘”, “여행 기록 보여줘”라고 하면 항상일상 찾기 결과가 열려요. “김OO 주민번호·연락처·계좌 알려줘”처럼 민감정보를 묻는 말도 막지 않고 신한FC 고객 화면으로 열어 줘요. 보여 줄지는 신한FC가 내 권한으로 정하고, 말만해요는 고객 데이터를 읽지 않아요. 고객 이름은 말만해요 기록에 남기지 않고 AI로도 보내지 않아요. 열린 화면에는 그 페이지만 보이고, 왼쪽 위 뒤로 버튼은 앱 안에서 한 단계 뒤로 가다가 더 갈 곳이 없으면 닫고 말만해요로 돌아와요(폰 뒤로 동작도 같아요). 오른쪽 위 [앱으로 열기]를 누르면 지금 보던 화면 그대로 그 앱이 열려요. 화면이 열려 있는 동안 오른쪽 아래 말만해요 버튼을 누르면 아래에서 묻는 창이 떠올라요. 내게 열리지 않은 앱은 열 수 없다고 알려 줘요.<br>
     <b>이관·가망·DB</b>: “이관 보여줘”, “가망 고객 보여줘”, “DB 보여줘”는 신한FC 고객 검색에서 그 분류만 보여 줘요(“김OO 이관 보여줘”처럼 이름을 붙이면 그 이름만). <b>이달이관·따행</b>: “이달이관 보여줘”, “지난달 이관 보여줘”, “따행 보여줘”는 신한FC 영업 화면의 해당 탭이 열려요.<br>
     <b>차차차</b>: “이번 달 주행 얼마야”, “차 요약 보여줘”, “지난달 충전비 알려줘”는 요약, “주행 기록 보여줘”는 기록, “정비 기록 보여줘”·“충전 비용 알려줘”는 정비·비용 화면이 열려요. “빨강이 …”처럼 차 이름을 말하면 그 차로 열려요.<br>
@@ -876,13 +930,13 @@ function setHtml(){
   ${isStandalone()?"":`<div class="card" id="installcard"><h3>앱 설치</h3><div class="t">홈 화면에 추가해서 앱처럼 쓰세요</div>
     <p class="k" style="margin:6px 0 0">안드로이드 크롬: 브라우저 메뉴 → ‘앱 설치’ 또는 ‘홈 화면에 추가’. 아이폰 사파리: 공유 → ‘홈 화면에 추가’.</p>
     <div class="acts"><button class="btn pri" id="installbtn" ${installEv?"":"hidden"}>앱 설치</button></div></div>`}
-  <div class="card"><h3>AI 해석 (Gemini)</h3><div class="t">${cfg.geminiKey?"Gemini 연결됨 (애매한 말만 물어봐요)":"규칙 기반만 사용 중 (키 없음)"}</div>
+  <div class="card"><h3>AI 해석 (Gemini)</h3><div class="t">${cfg.geminiKey?"Gemini 연결됨 (말을 먼저 Gemini가 해석해요)":"규칙 기반만 사용 중 (키 없음)"}</div>
     <label for="gkey">Gemini API 키 (Google AI Studio에서 직접 발급)</label>
     <input id="gkey" type="password" autocomplete="off" placeholder="${cfg.geminiKey?"저장된 키가 있어요 (바꾸려면 새로 붙여넣기)":"키를 붙여넣기"}">
     <label for="gmodel">모델 이름</label><input id="gmodel" value="${esc(cfg.model||GEMINI_MODEL_DEFAULT)}">
     <div class="acts"><button class="btn pri" id="gsave">저장</button>${cfg.geminiKey?`<button class="btn dng" id="gdel">키 지우기</button>`:""}</div>
     <p class="k">키는 내 Google Drive의 설정 파일에만 저장되고, 앱 코드나 공개 저장소에는 없어요. 이 키는 신한FC·차차차 AI 도우미도 함께 써요. 모델 이름과 무료 한도는 바뀔 수 있으니 AI Studio에서 확인하세요.</p>
-    <div class="warn">무료 사용분은 구글이 서비스 개선에 쓸 수 있어요. 그래서 주민번호·카드·계좌번호·비밀번호·인증번호·API 키는 보내기 전에 앱에서 먼저 가려요. 그 밖의 말은 가리지 않고 보내요.</div></div>`;
+    <div class="warn">무료 사용분은 구글이 서비스 개선에 쓸 수 있어요. 그래서 보내기 전에 앱에서 먼저 가려요: 주민번호·카드·계좌·비밀번호·인증번호·API 키·전화·이메일·주소는 지우고, 고객 이름은 [고객1] 같은 자리표시자로 바꿔 보낸 뒤 받은 답에서 되돌려요. 일정·고객 내용과 해석용 색인은 보내지 않아요. 키가 없거나 실패·한도 초과·12초 넘으면 규칙 해석으로 대신해요.</div></div>`;
 }
 function bind(){
   if(view==="set"&&!sheetOpen)fillCalSettings();
@@ -895,6 +949,7 @@ function bind(){
   const cg=$("#calgo");if(cg)cg.onclick=calRun;
   const ib=$("#installbtn");if(ib)ib.onclick=async()=>{if(!installEv)return;installEv.prompt();try{await installEv.userChoice}catch(e){}installEv=null;ib.hidden=true};
   document.querySelectorAll("[data-find]").forEach(b=>b.onclick=()=>doFind(b.dataset.find));
+  const ro=$("#refopen");if(ro)ro.onclick=()=>{if(pending&&pending.nav)finishNav({...pending.nav,label:"고객 검색"},pending.rec)};
   const oa=$("#openapp");if(oa)oa.onclick=()=>{location.href=oa.dataset.dir}; // 편지를 남긴 앱을 같은 창에서 열기
   const tx0=$("#txt");if(tx0&&pending&&["ask","pick","confirm"].includes(pending.stage)&&!matchMedia("(pointer:coarse)").matches)tx0.focus(); // 고르는 중에도 바로 새로 쓸 수 있게 커서
   const ng=$("#navgo"),nq=$("#navq");
@@ -927,6 +982,7 @@ function toggleMic(){
 
 /* 이름·낱말만 있는 말 = 기본은 '검색': 구글 일정 / 일상 / 신한FC(고객·메모·상담기록) 중 어디서 찾을지 묻는다.
    "기록·추가·등록·남겨…" 같은 쓰는 말이 있으면 검색이 아니라 기존대로 앱에 기록한다. */
+const WRITE_WORDS_NOCAL=/삭제|수정|변경|바꿔|옮겨|검색|찾아|보여|알려|[?？]/;
 const WRITE_WORDS=/기록|추가|등록|남겨|적어|저장|입력|메모|예약|잡아|넣어|수정|삭제|변경|바꿔|옮겨|취소해/;
 function findLike(res,text,apps){
   if(WRITE_WORDS.test(text)||text.length>40)return false;
@@ -954,6 +1010,74 @@ async function doFind(which){
   }
 }
 
+/* ===== Gemini 먼저 (키가 있을 때) =====
+   말을 받으면 바로 Gemini에게 '어디로 보낼지(JSON)'만 묻는다. 보내기 전에 앱에서 먼저 가림:
+   민감 숫자·이메일·전화·주소 + 고객 이름(색인에 있으면 [고객1], 이름 모양이면 [사람1])을 자리표시자로 바꾸고, 받은 뒤 되돌림.
+   색인 자료 자체와 일정·고객 내용은 보내지 않음. 키 없음·실패·한도 초과·12초 넘김이면 규칙 해석으로 자동 대신. */
+let aiOffUntil=0;const AI_LOG=[]; // AI_LOG: 이번 접속에서 Gemini로 보낸 글(메모리에만, 확인용)
+const AI_MAIL=/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
+const AI_PHONE=/(?<!\d)0\d{1,2}[-\s]?\d{3,4}[-\s]?\d{4}(?!\d)/g;
+const AI_ADDR=/[가-힣0-9]+(?:특별시|광역시|특별자치시|특별자치도|도|시)\s?[가-힣0-9]+(?:구|군|시)\s?[가-힣0-9]+(?:동|읍|면|로|길)(?:\s?\d+(?:-\d+)?(?:번길)?)?(?:\s?\d+동)?(?:\s?\d+호)?/g;
+function anonymize(masked){
+  let t=masked.replace(AI_MAIL,"[이메일 가림]").replace(AI_PHONE,"[전화 가림]").replace(AI_ADDR,"[주소 가림]").replace(/\d{7,}/g,"[숫자 가림]");
+  const map={};let c=0,p=0;
+  const names=[...new Set(Object.values(IDX).flatMap(x=>x.names))].sort((a,b)=>b.length-a.length);
+  for(const nm of names)if(t.includes(nm)){const ph="[고객"+(++c)+"]";map[ph]=nm;t=t.split(nm).join(ph)}
+  const guess=w=>SURNAME.includes(w[0])&&!NOT_NAME.test(w);
+  const ph2=w=>{for(const k in map)if(map[k]===w)return k;const ph="[사람"+(++p)+"]";map[ph]=w;return ph};
+  t=t.replace(/^(\s*)([가-힣]{3,4})/,(all,sp,w)=>guess(w)?sp+ph2(w):all); // 맨 앞 이름 꼴
+  t=t.replace(/([가-힣]{3,4})(?=\s?(?:님|씨|고객|만남|상담|미팅|면담|방문|통화|연락|약속))/g,(all,w)=>guess(w)?ph2(w):all);
+  return{text:t,map};
+}
+const unmap=(s,map)=>{s=String(s==null?"":s);for(const k in map)s=s.split(k).join(map[k]);return s};
+const GO_OK={shinhanfc:["customers","schedule","sales"],goodday:["search"],chachacha:["records","maint","summary","tire","ins","home"]};
+const KIND_OK={customers:["","transfer","plan","db","contract","ddahaeng"],search:["","영상","맛집","여행","일상"]};
+async function geminiFirst(maskedText,apps,fetcher){
+  const an=anonymize(maskedText);
+  for(const nm of Object.values(IDX).flatMap(x=>x.names))if(an.text.includes(nm))return null; // 이름이 남아 있으면 보내지 않음(규칙으로)
+  const ids=apps.map(a=>a.id);
+  const catalog=apps.map(a=>({app:a.id,name:a.name,kinds:a.kinds.map(k=>k.id+":"+k.label)}));
+  const prompt="너는 한국어 비서 앱 '말만해요'의 분류기다. 사용자가 말한 한 문장(이름·민감 값은 [고객1] [사람1] [전화 가림] 같은 자리표시자로 가려져 있으니 그대로 둬라)을 분류해 JSON으로만 답해라.\n앱 목록: "+JSON.stringify(catalog)+
+   "\n1) action=\"navigate\" (앱 화면을 열어 찾아 보는 말): "+
+   (ids.includes("shinhanfc")?"app=shinhanfc, go=customers(고객 검색: q=이름이나 낱말, memo=\"1\"이면 이름·메모·상담기록·일정 전체검색, kind=transfer|plan|db|contract 분류만 볼 때, tab=\"analysis\"면 보장분석) / go=schedule(q=YYYY-MM-DD 하루 일정) / go=sales(q=transfer 이달이관|dda 따행, id=YYYY-MM). ":"")+
+   (ids.includes("goodday")?"app=goodday, go=search(q 검색어, kind=영상|맛집|여행|일상). ":"")+
+   (ids.includes("chachacha")?"app=chachacha, go=records|maint|summary|tire|ins|home(month=YYYY-MM, car=차 별명). ":"")+
+   "\n2) action=\"record\" (새로 기록·등록·수정·삭제하거나 구글 일정을 묻는 말): app과 kind를 앱 목록에서 골라라(gcal은 add|edit|delete|list).\n3) action=\"find\" (이름·낱말만 있어 어디서 찾을지 모를 때): q.\n확신이 없으면 confidence는 low로 하고 alt에 후보 {app,kind}를 넣어라. 주민번호·계좌 등 민감 값을 알려 달라는 말도 분류만 해라(답은 하지 마라).\n오늘 날짜: "+todayStr()+
+   "\n사용자 말: \""+an.text.replace(/"/g,"'")+"\"\nJSON 형식: {\"action\":\"navigate|record|find\",\"app\":\"\",\"go\":\"\",\"q\":\"\",\"kind\":\"\",\"tab\":\"\",\"id\":\"\",\"month\":\"\",\"car\":\"\",\"memo\":\"\",\"confidence\":\"high|low\",\"alt\":[{\"app\":\"\",\"kind\":\"\"}]}";
+  AI_LOG.push(prompt);if(AI_LOG.length>30)AI_LOG.shift();
+  const ctl=typeof AbortController!=="undefined"?new AbortController():null,timer=setTimeout(()=>{try{ctl&&ctl.abort()}catch(e){}},12000);
+  let r;
+  try{
+    r=await (fetcher||fetch)("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(cfg.model||GEMINI_MODEL_DEFAULT)+":generateContent",
+      {method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":cfg.geminiKey},signal:ctl?ctl.signal:undefined,
+       body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:"application/json",temperature:0}})});
+  }finally{clearTimeout(timer)}
+  if(!r.ok)throw new Error("Gemini "+r.status);
+  const j=await r.json();
+  const raw=j.candidates&&j.candidates[0]&&j.candidates[0].content.parts.map(x=>x.text||"").join("");
+  const o=JSON.parse(String(raw||"").replace(/^```json|```$/g,"").trim());
+  const S=(v,n)=>unmap(v,an.map).replace(/\[(?:고객|사람)\d+\]/g,"").trim().slice(0,n||30); // 못 되돌린 자리표시자는 버림
+  const high=o.confidence==="high";
+  if(o.action==="navigate"&&ids.includes(o.app)&&(GO_OK[o.app]||[]).includes(o.go)){
+    const kind=String(o.kind||"");if(KIND_OK[o.go]&&!KIND_OK[o.go].includes(kind))return null;
+    const nv={app:o.app,go:o.go,q:S(o.q),kind,label:"AI가 연 화면"};
+    if(o.tab==="analysis"&&o.go==="customers")nv.tab="analysis";
+    if(o.memo==="1"&&o.go==="customers")nv.memo="1";
+    if(/^\d{4}-\d{2}$/.test(o.id||""))nv.id=o.id;
+    if(/^\d{4}-\d{2}$/.test(o.month||""))nv.month=o.month;
+    if(o.car&&/^[가-힣A-Za-z0-9]{1,8}$/.test(o.car))nv.car=o.car;
+    if(o.go==="schedule"&&!/^\d{4}-\d{2}-\d{2}$/.test(nv.q))nv.q=todayStr();
+    if(o.go==="sales"&&nv.q!=="dda")nv.q="transfer";
+    return high?{type:"nav",nv}:null; // 확신이 낮으면 규칙 해석으로
+  }
+  if(o.action==="record"&&ids.includes(o.app)&&kindOf(o.app,o.kind)){
+    const alt=(o.alt||[]).filter(x=>x&&ids.includes(x.app)&&kindOf(x.app,x.kind)).map(x=>({app:x.app,kind:x.kind,score:0,why:["AI"]}));
+    return{type:"route",pick:{app:o.app,kind:o.kind,score:0,why:["AI"]},high,alt};
+  }
+  if(o.action==="find")return{type:"find",q:S(o.q,60)};
+  return null;
+}
+
 /* 보내기 → 걸러내기 → 원문 기록 → 해석 → (확실하면) 반영 / (애매하면) 되묻기 */
 async function submit(raw){
   raw=String(raw||"").trim();if(!raw)return;
@@ -965,26 +1089,41 @@ async function submit(raw){
   const apps=activeApps();if(!apps.length)return;
   const s=Sens.mask(raw);
   const nv=navIntent(s.text);
-  const rec={id:uid(),at:new Date().toISOString(),text:nv&&nv.app==="shinhanfc"&&nv.go==="customers"?"고객 검색 (이름은 기록 안 함)":s.text,masked:s.hit,status:"new",target:null,fields:{}};
+  const refuse=!!(nv&&nv.refuse);
+  const useAI=!!cfg.geminiKey&&!refuse&&Date.now()>aiOffUntil; // 키가 있으면 Gemini 먼저(민감 값을 불러 달라는 말은 앱이 먼저 판단해 거절)
+  const gen=nv&&nv.app==="shinhanfc"&&nv.go==="customers";
+  const rec={id:uid(),at:new Date().toISOString(),text:useAI?"(해석 중)":gen?"고객 검색 (이름은 기록 안 함)":s.text,masked:s.hit,status:"new",target:null,fields:{}};
   db.records.push(rec);save();
-  if(nv){await navFlow(nv,rec);return}
+  if(refuse){await navFlow(nv,rec);return}
+  let g=null;
+  if(useAI){
+    try{g=await geminiFirst(s.text,apps,window.__geminiFetch)}
+    catch(e){rec.aiError=String(e&&e.message||e).slice(0,40);if(/429|RESOURCE|quota/i.test(rec.aiError))aiOffUntil=Date.now()+120000} // 한도 초과면 잠시 규칙으로만
+    if(!g)rec.text=gen?"고객 검색 (이름은 기록 안 함)":s.text; // 실패·확신 낮음 → 규칙 해석으로 대신
+  }
+  if(g&&g.type==="nav"){await navFlow(g.nv,rec);return}
+  if(g&&g.type==="find"){
+    rec.text="검색 (검색어는 기록 안 함)";rec.status="find";rec.fields={};save();
+    pending={rec,stage:"find",q:g.q||s.text.slice(0,60)};render();return;
+  }
+  if(!g&&nv){await navFlow(nv,rec);return}
   const res=await Providers[providerId].classify(s.text,apps);
   rec.fields={title:s.text.length>60?s.text.slice(0,60)+"…":s.text,...res.fields}; // 받는 앱이 필수로 쓰는 제목 칸(항상일상 등)
-  const d=decide(res,apps);
-  if(d.mode==="ask"&&findLike(res,s.text,apps)){ // 기록하는 말이 아니라 이름·낱말만 있으면: 어디서 찾을지 묻기 (고객 이름이 든 글은 기록·AI로 보내지 않음)
-    rec.text="검색 (검색어는 기록 안 함)";rec.status="find";rec.fields={};save();
-    pending={rec,stage:"find",q:s.text.slice(0,60)};render();return;
+  if(apps.some(a=>a.id==="gcal")&&!WRITE_WORDS_NOCAL.test(s.text)&&nameMeet(s.text)){ // "최민수 만남" → 고객 일정으로(확인 카드)
+    const c=res.candidates.find(x=>x.app==="gcal"&&x.kind==="add");
+    if(c)c.score=Math.max(c.score,3);else res.candidates.unshift({app:"gcal",kind:"add",score:3,why:["이름+만남"]});
+    res.candidates.sort((x,y)=>y.score-x.score);
   }
-  if(d.mode==="ask"&&cfg.geminiKey&&!/고객/.test(s.text)&&!SENS.test(s.text)){ // 애매한 것만 Gemini에게 (가린 글만 보냄). 고객 이야기가 든 말은 AI로 보내지 않음
-    try{
-      const g=await geminiClassify(s.text,apps,cfg);
-      if(g){
-        const seen=new Set([g.pick.app+"/"+g.pick.kind]),more=[];
-        for(const o of [...g.alt,...d.options]){const k=o.app+"/"+o.kind;if(!seen.has(k)){seen.add(k);more.push(o)}}
-        d.options=[g.pick,...more].slice(0,3);
-        if(g.high){d.mode="auto";d.pick=g.pick}
-      }
-    }catch(e){rec.aiError=String(e.message).slice(0,40)} // 실패하면 규칙 결과로 되묻기
+  let d;
+  if(g&&g.type==="route"){ // Gemini가 고른 곳: 확신하면 바로(확인 카드는 일정 쪽이 따로), 아니면 후보 3개로 되묻기
+    rec.text=s.text;
+    d=g.high?{mode:"auto",pick:g.pick,options:[g.pick]}:{mode:"ask",options:[g.pick,...g.alt].slice(0,3)};
+  }else{
+    d=decide(res,apps);
+    if(d.mode==="ask"&&findLike(res,s.text,apps)){ // 기록하는 말이 아니라 이름·낱말만 있으면: 어디서 찾을지 묻기
+      rec.text="검색 (검색어는 기록 안 함)";rec.status="find";rec.fields={};save();
+      pending={rec,stage:"find",q:s.text.slice(0,60)};render();return;
+    }
   }
   pending={rec,options:d.options,stage:"ask"};
   if(d.mode==="auto"){await apply(d.pick,d.pick.why.includes("AI")?"AI":"자동")}
