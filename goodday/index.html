@@ -139,6 +139,10 @@ nav .plus span.l{margin-top:-2px}
 .back{border:0;background:none;color:var(--accent);font-size:14px;font-weight:600;padding:4px 0;margin-bottom:8px}
 .demo{font-size:11px;color:var(--warn);margin-left:8px;font-weight:500}
 [hidden]{display:none!important}
+/* 말만해요 안(embed): 위·아래 메뉴 없이 그 페이지만, 위쪽은 말만해요 플로팅 버튼 자리 56px */
+html.embed header,html.embed nav{display:none!important}
+html.embed body{padding-top:56px;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+html.embed .toast{bottom:calc(16px + env(safe-area-inset-bottom))}
 /* 로그인 화면: 차차차와 같은 모양 */
 .login{max-width:360px;margin:16vh auto 0;padding:0 24px;text-align:center}
 .login h1{font-size:28px;font-weight:700;margin:0 0 4px;letter-spacing:-.5px}
@@ -156,7 +160,6 @@ nav .plus span.l{margin-top:-2px}
   <div class="lm" id="lmsg">확인 중…</div>
   <button class="btn pri" id="loginBtn" hidden>Google 계정으로 로그인</button>
   <button class="btn" id="loginOtherBtn" hidden>다른 계정으로 로그인</button>
-  <div class="hint">로그인한 뒤에만 기록이 보입니다. 기록은 내 Google Drive에 저장됩니다.</div>
 </section>
 <header id="title" hidden><span>항상일상</span><span class="demo" id="demoTag" hidden>체험 모드</span><small id="sync"></small></header>
 <div class="wrap" id="main" hidden></div>
@@ -182,6 +185,7 @@ const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+Stri
 const today=()=>iso(new Date());
 const WD="일월화수목금토";
 const EMBED=/[?&]embed=1(&|$)/.test(location.search); // 말만해요 안에 끼워 보일 때(로그아웃 숨김, 로그인 화면 대신 안내)
+if(EMBED)document.documentElement.classList.add("embed");
 const DEMO=/^(localhost|127\.0\.0\.1)$/.test(location.hostname)&&/[?&]demo=1/.test(location.search); // 내 컴퓨터에서 화면 확인용(구글 로그인·Drive 저장 없음)
 /* localStorage는 막힐 수 있어 항상 감쌈 (화면 모드·파일 번호 같은 기기 편의 값만 둠. 기록은 두지 않음) */
 const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
@@ -244,7 +248,7 @@ function seedDemo(){
 }
 
 /* ---------- 말만해요와 연결 (주소 # 뒤: #go=search&q=&kind= / #go=record&id= , embed 모드, 위치 알리기) ---------- */
-let pendingGo=null,curRec=null;
+let pendingGo=null,curRec=null,rootRec=null; // rootRec = 말만해요가 열어 준 기록(그 화면이 맨 처음이라 앱 안 뒤로가기 없음)
 function hashGo(){ // 주소 # 뒤 값은 서버로 나가지 않음. 읽은 뒤 지움
   try{const u=new URLSearchParams(location.hash.replace(/^#/,""));return u.get("go")?{go:u.get("go"),q:u.get("q")||"",kind:u.get("kind")||"",id:u.get("id")||""}:null}catch(e){return null}
 }
@@ -259,6 +263,7 @@ const kindShort=id=>{const k=allKinds().find(x=>x.id===id);return k?(k.custom?k.
 window.blue10kpGo=function(o){
   o=o||{};
   if(!db){pendingGo={go:o.go,q:o.q||"",kind:o.kind||"",id:o.id||""};return} // 로그인 전이면 로그인 뒤에 이어서
+  rootRec=o.go==="record"?String(o.id||""):null;
   if(o.go==="search"){
     S.q=String(o.q||"");S.kind=kindIdFrom(o.kind);S.min=0;S.from="";S.to="";S.tag="";
     closeSheet();view="find";tripOpen=null;render();scrollTo(0,0);
@@ -273,6 +278,16 @@ window.blue10kpGo=function(o){
   cleanHash();
 };
 function runPendingGo(){if(pendingGo&&db){const o=pendingGo;pendingGo=null;window.blue10kpGo(o)}}
+function canBack(){ // 앱 안에서 한 단계 뒤로 갈 곳이 있는가
+  if(!db)return false;
+  if($("#modal").firstChild)return !(curRec&&curRec===rootRec&&!tripOpen);
+  return !!(tripOpen&&tripOpen!==rootRec);
+}
+function goBack(){
+  if(!db||!canBack())return;
+  if($("#modal").firstChild){closeSheet();return}
+  tripOpen=null;render();
+}
 function reportWhere(){ // embed일 때 지금 위치를 부모(말만해요)에게 알림 → [앱으로 열기]가 그 화면으로 열림
   if(!EMBED||window.parent===window||!db)return;
   let w={go:"home"};
@@ -280,11 +295,13 @@ function reportWhere(){ // embed일 때 지금 위치를 부모(말만해요)에
   else if(view==="find")w={go:"search",q:S.q,kind:kindShort(S.kind)};
   else if(view==="trip")w=tripOpen?{go:"record",id:tripOpen}:{go:"trips"};
   else if(view==="set")w={go:"settings"};
-  try{window.parent.postMessage({type:"blue10kp-where",app:"goodday",go:w.go,q:w.q||"",kind:w.kind||"",id:w.id||""},location.origin)}catch(e){}
+  try{window.parent.postMessage({type:"blue10kp-where",app:"goodday",go:w.go,q:w.q||"",kind:w.kind||"",id:w.id||"",canBack:canBack()},location.origin)}catch(e){}
 }
 window.addEventListener("message",e=>{ // 말만해요가 보낸 요청만 받음(같은 출처, 부모 창)
   if(e.origin!==location.origin||e.source!==window.parent)return;
-  const d=e.data;if(!d||d.type!=="blue10kp-go")return;
+  const d=e.data;if(!d)return;
+  if(d.type==="blue10kp-back"){goBack();return}
+  if(d.type!=="blue10kp-go")return;
   window.blue10kpGo({go:String(d.go||""),q:String(d.q||""),kind:String(d.kind||""),id:String(d.id||"")});
   if(!db)boot(); // 로그인이 아직이면 다시 확인
 });
@@ -708,7 +725,7 @@ function viewTrips(){
 function viewTripDetail(){
   const t=db.records.find(r=>r.id===tripOpen&&!r.del);if(!t){tripOpen=null;return viewTrips()}
   const[s,e]=tripRange(t),recs=tripRecs(t);
-  return`<button class="back" data-act="tripBack">‹ 여행 목록</button><div class="card"><h3>${esc(t.x.region||"여행")} · ${esc(s?s+(e!==s?" ~ "+e:""):"기간 없음")}</h3><div style="font-size:18px;font-weight:600">${esc(t.title)}</div>${t.note?`<div class="sub" style="margin-top:4px">${esc(t.note)}</div>`:""}<div class="acts"><button class="btn" data-act="open" data-id="${t.id}">여행 정보 보기·수정</button></div></div>`+
+  return`${EMBED&&tripOpen===rootRec?"":`<button class="back" data-act="tripBack">‹ 여행 목록</button>`}<div class="card"><h3>${esc(t.x.region||"여행")} · ${esc(s?s+(e!==s?" ~ "+e:""):"기간 없음")}</h3><div style="font-size:18px;font-weight:600">${esc(t.title)}</div>${t.note?`<div class="sub" style="margin-top:4px">${esc(t.note)}</div>`:""}<div class="acts"><button class="btn" data-act="open" data-id="${t.id}">여행 정보 보기·수정</button></div></div>`+
    (recs.length?groupList(recs):`<div class="empty">이 기간에 쓴 다른 기록이 없어요.</div>`);
 }
 function viewSet(){
@@ -732,8 +749,8 @@ function viewSet(){
 }
 
 /* ---------- 시트(아래에서 올라오는 창) ---------- */
-function openSheet(html){$("#modal").innerHTML=`<div class="modal" data-act="bg"><div class="sheet">${html}</div></div>`;document.documentElement.classList.add("lock")}
-function closeSheet(){const had=curRec;$("#modal").innerHTML="";document.documentElement.classList.remove("lock");F=null;curRec=null;if(had)reportWhere()}
+function openSheet(html){$("#modal").innerHTML=`<div class="modal" data-act="bg"><div class="sheet">${html}</div></div>`;document.documentElement.classList.add("lock");reportWhere()}
+function closeSheet(){$("#modal").innerHTML="";document.documentElement.classList.remove("lock");F=null;curRec=null;reportWhere()}
 let toastT=null,toastUndo=null;
 function toast(msg,undo){
   const el=$("#toast");toastUndo=undo||null;
@@ -830,7 +847,7 @@ function openHelp(){
    <b>여행</b><br>‘여행’ 종류로 이름과 시작일·끝난 날을 적어 두면, 그 기간에 쓴 기록이 날짜별로 모여 보여요.<br><br>
    <b>지우기</b><br>지운 기록은 설정의 휴지통에서 30일 동안 되살릴 수 있어요.<br><br>
    <b>내 기록은 어디에?</b><br>내 Google Drive의 goodday 폴더에 저장되며, 다른 사람은 볼 수 없어요. 이 앱은 앱이 만든 파일만 열 수 있는 권한만 씁니다.<br><br>
-   <b>말만해요에서 바로 찾기</b><br>말만해요에서 "맛집 검색해줘"처럼 말하면 말만해요 화면 안에 항상일상의 찾기 결과가 끼워져 나와요. 말만해요의 [앱으로 열기]를 누르면 보던 화면 그대로 항상일상이 열립니다.<br><br>
+   <b>말만해요에서 바로 찾기</b><br>말만해요에서 "맛집 검색해줘"처럼 말하면 말만해요 화면 안에 항상일상의 찾기 결과가 끼워져 나와요. 말만해요 안에서는 그 화면만 보이고, 뒤로가기는 왼쪽 위 버튼으로 해요. 말만해요의 [앱으로 열기]를 누르면 보던 화면 그대로 항상일상이 열립니다.<br><br>
    <b>한 번 로그인하면 다른 앱도 함께</b><br>같은 브라우저에서 내 다른 앱(신한FC, 차차차 등)에 로그인했다면 항상일상도 로그인 화면 없이 바로 열려요. 로그아웃하면 모든 앱에서 함께 로그아웃됩니다. 로그인은 한 시간마다 다시 필요할 수 있어요. 아이폰 홈 화면 앱은 앱마다 따로라 서로 나눠 쓰지 못해요.<br><br>
    <b>함께 쓰려면</b><br>허용된 계정만 로그인할 수 있어요. 쓸 사람을 추가하려면 앱을 관리하는 사람에게 구글 계정(이메일)을 알려 주세요.<br><br>
    <b>말만해요 받은편지함</b><br>설정에서 받은편지함 파일을 한 번 고르면, 말만해요가 보낸 쪽지가 앱을 열 때 카드로 나타나요. 기록에 넣기를 누르면 기록이 되고 쪽지는 처리 완료로 표시됩니다.<br><br>
