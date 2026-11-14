@@ -833,7 +833,7 @@ function bind(){
   if(view==="set"&&!sheetOpen)fillCalSettings();
   const mic=$("#mic");if(mic)mic.onclick=toggleMic;
   const send=$("#send");if(send)send.onclick=()=>submit($("#txt").value);
-  const tx=$("#txt");if(tx)tx.addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.ctrlKey||e.metaKey)){e.preventDefault();submit(tx.value)}});
+  const tx=$("#txt");if(tx)tx.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey&&!e.isComposing&&e.keyCode!==229){e.preventDefault();submit(tx.value)}}); // 엔터로 바로 보내기(Shift+엔터는 줄바꿈, 한글 조합 중 엔터는 제외)
   document.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>choose(b.dataset.pick));
   const nx=$("#next");if(nx)nx.onclick=()=>{pending=null;render()};
   const un=$("#undo");if(un)un.onclick=undo;
