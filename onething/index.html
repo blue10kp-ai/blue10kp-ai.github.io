@@ -97,12 +97,12 @@ nav button.on::before{content:"";position:absolute;top:-1px;left:28%;right:28%;h
 .xbtn:active{background:var(--raised)}
 .xbtn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round}
 #modbody{flex:1;min-height:0;position:relative}
-.mfl{position:absolute;z-index:2;top:calc(8px + env(safe-area-inset-top));left:12px;width:40px;height:40px;padding:0;border:1px solid var(--line);border-radius:50%;background:var(--surface);color:var(--t1);display:flex;align-items:center;justify-content:center;box-shadow:0 1px 6px rgba(0,0,0,.15)}
+.mfl{position:absolute;z-index:2;top:calc(12px + env(safe-area-inset-top));left:max(20px,env(safe-area-inset-left));width:40px;height:40px;padding:0;border:1px solid var(--line);border-radius:50%;background:var(--surface);color:var(--t1);display:flex;align-items:center;justify-content:center;box-shadow:0 1px 6px rgba(0,0,0,.15)}
 .mfl:active{background:var(--raised)}
 .mfl svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
-.mfl.pill{left:auto;right:12px;width:auto;height:32px;padding:0 12px;border-radius:16px;font-size:12px;font-weight:600;color:var(--t2)}
+.mfl.pill{left:auto;right:max(20px,env(safe-area-inset-right));width:auto;height:32px;padding:0 12px;border-radius:16px;font-size:12px;font-weight:600;color:var(--t2)}
 #modbody iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:var(--surface)}
-#fab{position:fixed;right:16px;bottom:var(--fabl,calc(var(--fabb,72px) + env(safe-area-inset-bottom)));z-index:30;width:56px;height:56px;border-radius:50%;border:0;padding:0;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.2);transition:transform var(--t-fast) var(--ease),bottom 200ms var(--ease)}
+#fab{position:fixed;right:max(24px,env(safe-area-inset-right));bottom:var(--fabl,calc(var(--fabb,72px) + env(safe-area-inset-bottom)));z-index:30;width:56px;height:56px;border-radius:50%;border:0;padding:0;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.2);transition:transform var(--t-fast) var(--ease),bottom 200ms var(--ease)}
 #fab:active{transform:scale(.96)}
 #fab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 #scrim{position:fixed;inset:0;z-index:40;background:rgba(10,14,20,.4);opacity:0;visibility:hidden;transition:opacity 200ms,visibility 0s linear 200ms}
@@ -110,11 +110,6 @@ nav button.on::before{content:"";position:absolute;top:-1px;left:28%;right:28%;h
 #sheet{position:fixed;left:0;right:0;bottom:0;margin:0 auto;max-width:640px;height:70vh;height:70dvh;z-index:41;background:var(--surface);border:1px solid var(--line);border-bottom:0;border-radius:16px 16px 0 0;display:flex;flex-direction:column;transform:translateY(100%);visibility:hidden;transition:transform 240ms var(--ease),visibility 0s linear 240ms}
 #sheet.open{transform:none;visibility:visible;transition-delay:0s}
 #sheet .modbar{border-radius:16px 16px 0 0;padding-top:4px}
-@media (min-width:700px){ /* 넓은 화면: 아래에서 올라오는 시트 대신 가운데 창 */
-  #sheet{bottom:auto;top:50%;left:50%;right:auto;margin:0;width:480px;max-width:calc(100vw - 32px);height:560px;max-height:80vh;border-bottom:1px solid var(--line);border-radius:16px;transform:translate(-50%,-46%);opacity:0;transition:transform 240ms var(--ease),opacity 200ms,visibility 0s linear 240ms}
-  #sheet.open{transform:translate(-50%,-50%);opacity:1}
-  #sheet .modbar{border-radius:16px 16px 0 0}
-}
 #sheetBody{flex:1;min-height:0;overflow:auto;padding:8px 16px 16px}
 #sheetBody .card{background:transparent;border:0;padding:8px 0;margin-bottom:0}
 #sheetBody textarea{min-height:64px}
@@ -791,7 +786,7 @@ function setHtml(){
     수정·삭제·등록은 항상 확인 카드를 보여 주고, 끝난 뒤 되돌릴 수 있어요. 맛집·여행·차계부처럼 앱 안의 기록은 받은편지함에 담아 그 앱을 열 때 반영돼요.<br>
     <b>찾기·보기는 바로</b>: “김OO 고객 검색해줘”라고 하면 말만해요 안에 신한FC m의 고객 목록이 열리고, “맛집 검색해줘”, “강남 맛집 찾아줘”, “본 영화 찾아줘”, “여행 기록 보여줘”라고 하면 항상일상 찾기 결과가 열려요. “김OO 주민번호·연락처·계좌 알려줘”처럼 민감정보를 묻는 말도 막지 않고 신한FC 고객 화면으로 열어 줘요. 보여 줄지는 신한FC가 내 권한으로 정하고, 말만해요는 고객 데이터를 읽지 않아요. 고객 이름은 말만해요 기록에 남기지 않고 AI로도 보내지 않아요. 열린 화면에는 그 페이지만 보이고, 왼쪽 위 뒤로 버튼은 앱 안에서 한 단계 뒤로 가다가 더 갈 곳이 없으면 닫고 말만해요로 돌아와요(폰 뒤로 동작도 같아요). 오른쪽 위 [앱으로 열기]를 누르면 지금 보던 화면 그대로 그 앱이 열려요. 화면이 열려 있는 동안 오른쪽 아래 말만해요 버튼을 누르면 아래에서 묻는 창이 떠올라요. 내게 열리지 않은 앱은 열 수 없다고 알려 줘요.<br>
     <b>차차차</b>: “이번 달 주행 얼마야”, “차 요약 보여줘”, “지난달 충전비 알려줘”는 요약, “주행 기록 보여줘”는 기록, “정비 기록 보여줘”·“충전 비용 알려줘”는 정비·비용 화면이 열려요. “빨강이 …”처럼 차 이름을 말하면 그 차로 열려요.<br>
-    <b>묻는 창과 말만해요 버튼</b>: 앱을 열면 묻는 창이 열린 채로 시작해요(넓은 화면에서는 가운데 창). 답 카드도 이 창 안에 나와요. X로 닫으면 뒤의 최근 기록이 보이고, 오른쪽 아래 말만해요 버튼은 어느 화면에서나 떠 있어서 누르면 창이 다시 열려요.<br>
+    <b>묻는 창과 말만해요 버튼</b>: 앱을 열면 묻는 창이 열린 채로 시작해요. 답 카드도 이 창 안에 나와요. X로 닫으면 뒤의 최근 기록이 보이고, 오른쪽 아래 말만해요 버튼은 어느 화면에서나 떠 있어서 누르면 창이 다시 열려요.<br>
     <b>새로 적는 것은 편지로</b>: “오늘 본 영화 기록해줘”, “충전 40kWh 기록해줘”처럼 다른 앱에 기록을 새로 남기는 말은 그 앱의 받은편지함에 남기고, 카드의 [앱으로 열기]로 그 앱을 열 수 있어요(앱을 열면 반영돼요). 신한FC 상담 메모는 신한FC 고객 화면을 열어 직접 적어요. 읽기인지 쓰기인지 애매하면 어디로 보낼지 물어봐요.<br>
     <b>로그인</b>: 한 번 로그인하면 같은 브라우저에서 다른 앱(신한FC·차차차·항상일상 등)도 로그인 없이 열려요. 로그아웃하면 <b>모든 앱에서 로그아웃</b>돼요. 로그인은 1시간 정도 유지되고, 끝나면 아무 앱에서나 다시 연결하면 돼요. (아이폰은 홈 화면에 추가한 앱끼리는 나눠 쓰지 못해요.)</p></details></div>
   <div class="card"><h3>AI 해석 (Gemini)</h3><div class="t">${cfg.geminiKey?"Gemini 연결됨 (애매한 말만 물어봐요)":"규칙 기반만 사용 중 (키 없음)"}</div>
