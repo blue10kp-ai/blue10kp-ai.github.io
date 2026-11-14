@@ -313,7 +313,19 @@ function carsIntent(t){ // 차차차 모듈: 읽는 말만(기록·남겨·적�
   if(/주행|충전|주유/.test(t))return mk("records","차차차 기록");
   return mk("home","차차차");
 }
+function salesIntent(t){ // 신한FC 영업 화면: "이달이관 보여줘", "따행 보여줘", "지난달 이관 고객" (q=이관|따행 탭, id=YYYY-MM 달)
+  if(/기록해|남겨|적어|저장|입력|추가|일정|약속/.test(t))return null;
+  if(!/이달\s?이관|이번\s?달\s?이관|지난\s?달\s?이관|이관\s?(고객|리스트|목록|현황|보여|확인|알려)|따행/.test(t))return null;
+  if(!/보여|알려|열어|조회|확인|보기|목록|리스트|현황|[?？]|어때|있어/.test(t)&&!/^\s*(이달\s?이관|따행)\s*$/.test(t))return null;
+  const now=new Date();let ym="";
+  if(/지난\s?달|저번\s?달/.test(t)){const d=new Date(now.getFullYear(),now.getMonth()-1,1);ym=iso(d).slice(0,7)}
+  else if(/이번\s?달|이달/.test(t))ym=iso(now).slice(0,7);
+  else{const m=t.match(/(\d{1,2})\s?월/);if(m)ym=now.getFullYear()+"-"+String(+m[1]).padStart(2,"0")}
+  const dda=/따행/.test(t);
+  return{app:"shinhanfc",go:"sales",q:dda?"dda":"transfer",kind:"",id:ym,label:dda?"따행":"이달이관"};
+}
 function navIntent(t){
+  {const s=salesIntent(t);if(s)return s}
   if(/일정|약속|미팅|예약|따행|이관|상담기록|엑셀|보장분석/.test(t))return null;
   const toks=s=>s.replace(/[?？]/g," ").replace(/고객님?/g," ").split(/\s+/).filter(x=>x&&x.length>1&&!NAV_STOP.test(x));
   if(!/고객/.test(t)){const c=carsIntent(t);if(c)return c}
@@ -364,13 +376,13 @@ function showMod(app){
 }
 function openModule(n){
   const dir=APPDIR[n.app];if(!dir)return false;
-  const req={go:n.go,q:n.q||"",kind:n.kind||"",month:n.month||"",car:n.car||""};
+  const req={go:n.go,q:n.q||"",kind:n.kind||"",id:n.id||"",month:n.month||"",car:n.car||""};
   if(sheetOpen){closeSheet(false,()=>deliverModule(n,dir,req));return true} // 묻는 창이 쌓은 history 칸을 먼저 걷은 뒤에 앱에 전달
   deliverModule(n,dir,req);return true;
 }
 function deliverModule(n,dir,req){
   let m=MODS[n.app];
-  const expKey=whereKey({go:req.go,q:req.q,kind:req.kind,id:"",month:req.month,car:req.car});
+  const expKey=whereKey({go:req.go,q:req.q,kind:req.kind,id:req.id,month:req.month,car:req.car});
   if(!m){
     const f=document.createElement("iframe");f.title=adapter(n.app).name;f.setAttribute("allow","microphone");
     m=MODS[n.app]={frame:f,ready:false,where:{app:n.app,...req},stack:[],restoring:null};
@@ -759,8 +771,8 @@ function talkHtml(){
   return `<div class="card">
     <button class="mic${listening?" rec":""}" id="mic" aria-label="말로 입력"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
     <p class="ast" id="ast">${listening?"듣고 있어요… 다시 누르면 멈춰요":""}</p>
-    <textarea id="txt" placeholder="예) 김OO 고객 검색 / 내일 3시 김OO AP / 하양이 누적 235000" ${pending?"disabled":""}></textarea>
-    <div class="acts"><button class="btn pri" id="send" ${pending||!apps.length?"disabled":""}>보내기</button></div>
+    <textarea id="txt" placeholder="예) 김OO 고객 검색 / 내일 3시 김OO AP / 하양이 누적 235000" ${pending&&pending.stage==="work"?"disabled":""}></textarea>
+    <div class="acts"><button class="btn pri" id="send" ${(pending&&pending.stage==="work")||!apps.length?"disabled":""}>보내기</button></div>
     ${apps.length?"":`<div class="warn">열린 앱이 없어요. 설정에서 앱을 켜거나 관리자에게 열어 달라고 하세요.</div>`}
   </div>${pending?pendingHtml():""}`;
 }
@@ -822,6 +834,7 @@ function setHtml(){
     <b>일정 질문</b>: “오늘 일정은?”, “내일 약속 있어?”, “이번 주 일정 알려줘”, “다음 일정은 언제야?” — 답이 바로 카드로 나오고, 카드에서 [수정]·[삭제]를 누를 수 있어요. 일정 내용은 AI로 보내지 않고 앱 안에서만 정리해요.<br>
     수정·삭제·등록은 항상 확인 카드를 보여 주고, 끝난 뒤 되돌릴 수 있어요. 맛집·여행·차계부처럼 앱 안의 기록은 받은편지함에 담아 그 앱을 열 때 반영돼요.<br>
     <b>찾기·보기는 바로</b>: “김OO 고객 검색해줘”라고 하면 말만해요 안에 신한FC m의 고객 목록이 열리고, “맛집 검색해줘”, “강남 맛집 찾아줘”, “본 영화 찾아줘”, “여행 기록 보여줘”라고 하면 항상일상 찾기 결과가 열려요. “김OO 주민번호·연락처·계좌 알려줘”처럼 민감정보를 묻는 말도 막지 않고 신한FC 고객 화면으로 열어 줘요. 보여 줄지는 신한FC가 내 권한으로 정하고, 말만해요는 고객 데이터를 읽지 않아요. 고객 이름은 말만해요 기록에 남기지 않고 AI로도 보내지 않아요. 열린 화면에는 그 페이지만 보이고, 왼쪽 위 뒤로 버튼은 앱 안에서 한 단계 뒤로 가다가 더 갈 곳이 없으면 닫고 말만해요로 돌아와요(폰 뒤로 동작도 같아요). 오른쪽 위 [앱으로 열기]를 누르면 지금 보던 화면 그대로 그 앱이 열려요. 화면이 열려 있는 동안 오른쪽 아래 말만해요 버튼을 누르면 아래에서 묻는 창이 떠올라요. 내게 열리지 않은 앱은 열 수 없다고 알려 줘요.<br>
+    <b>이달이관·따행</b>: “이달이관 보여줘”, “지난달 이관 고객 보여줘”, “따행 보여줘”라고 하면 신한FC 영업 화면의 해당 탭이 열려요.<br>
     <b>차차차</b>: “이번 달 주행 얼마야”, “차 요약 보여줘”, “지난달 충전비 알려줘”는 요약, “주행 기록 보여줘”는 기록, “정비 기록 보여줘”·“충전 비용 알려줘”는 정비·비용 화면이 열려요. “빨강이 …”처럼 차 이름을 말하면 그 차로 열려요.<br>
     <b>묻는 창과 말만해요 버튼</b>: 앱을 열면 묻는 창이 열린 채로 시작해요. 답 카드도 이 창 안에 나와요. X로 닫으면 뒤의 최근 기록이 보이고, 오른쪽 아래 말만해요 버튼은 어느 화면에서나 떠 있어서 누르면 창이 다시 열려요.<br>
     <b>새로 적는 것은 편지로</b>: “오늘 본 영화 기록해줘”, “충전 40kWh 기록해줘”처럼 다른 앱에 기록을 새로 남기는 말은 그 앱의 받은편지함에 남기고, 카드의 [앱으로 열기]로 그 앱을 열 수 있어요(앱을 열면 반영돼요). 신한FC 상담 메모는 신한FC 고객 화면을 열어 직접 적어요. 읽기인지 쓰기인지 애매하면 어디로 보낼지 물어봐요.<br>
@@ -831,7 +844,7 @@ function setHtml(){
     <input id="gkey" type="password" autocomplete="off" placeholder="${cfg.geminiKey?"저장된 키가 있어요 (바꾸려면 새로 붙여넣기)":"키를 붙여넣기"}">
     <label for="gmodel">모델 이름</label><input id="gmodel" value="${esc(cfg.model||GEMINI_MODEL_DEFAULT)}">
     <div class="acts"><button class="btn pri" id="gsave">저장</button>${cfg.geminiKey?`<button class="btn dng" id="gdel">키 지우기</button>`:""}</div>
-    <p class="k">키는 내 Google Drive의 설정 파일에만 저장되고, 앱 코드나 공개 저장소에는 없어요. 모델 이름과 무료 한도는 바뀔 수 있으니 AI Studio에서 확인하세요.</p>
+    <p class="k">키는 내 Google Drive의 설정 파일에만 저장되고, 앱 코드나 공개 저장소에는 없어요. 이 키는 신한FC·차차차 AI 도우미도 함께 써요. 모델 이름과 무료 한도는 바뀔 수 있으니 AI Studio에서 확인하세요.</p>
     <div class="warn">무료 사용분은 구글이 서비스 개선에 쓸 수 있어요. 그래서 주민번호·카드·계좌번호·비밀번호·인증번호·API 키는 보내기 전에 앱에서 먼저 가려요. 그 밖의 말은 가리지 않고 보내요.</div></div>`;
 }
 function bind(){
@@ -844,6 +857,7 @@ function bind(){
   const un=$("#undo");if(un)un.onclick=undo;
   const cg=$("#calgo");if(cg)cg.onclick=calRun;
   const oa=$("#openapp");if(oa)oa.onclick=()=>{location.href=oa.dataset.dir}; // 편지를 남긴 앱을 같은 창에서 열기
+  const tx0=$("#txt");if(tx0&&pending&&["ask","pick","confirm"].includes(pending.stage)&&!matchMedia("(pointer:coarse)").matches)tx0.focus(); // 고르는 중에도 바로 새로 쓸 수 있게 커서
   const ng=$("#navgo"),nq=$("#navq");
   if(ng&&nq){const run=()=>{const q=nq.value.trim().slice(0,30);if(q&&pending&&pending.nav)finishNav({...pending.nav,q},pending.rec)};ng.onclick=run;nq.addEventListener("keydown",e=>{if(e.key==="Enter")run()});setTimeout(()=>nq.focus(),50)}
   const cn=$("#calno");if(cn)cn.onclick=()=>{if(pending){pending.rec.status="cancelled";save()}pending=null;render()};
@@ -874,11 +888,16 @@ function toggleMic(){
 
 /* 보내기 → 걸러내기 → 원문 기록 → 해석 → (확실하면) 반영 / (애매하면) 되묻기 */
 async function submit(raw){
-  raw=String(raw||"").trim();if(!raw||pending)return;
+  raw=String(raw||"").trim();if(!raw)return;
+  if(pending){ // 고르는 중에 새로 쓰면 그 말로 다시 시작: 하던 되묻기·확인은 접음
+    if(pending.stage==="work")return;
+    const o=pending.rec;if(o&&(o.status==="ask"||o.status==="new")){o.status="cancelled";save()}
+    pending=null;
+  }
   const apps=activeApps();if(!apps.length)return;
   const s=Sens.mask(raw);
   const nv=navIntent(s.text);
-  const rec={id:uid(),at:new Date().toISOString(),text:nv&&nv.app==="shinhanfc"?"고객 검색 (이름은 기록 안 함)":s.text,masked:s.hit,status:"new",target:null,fields:{}};
+  const rec={id:uid(),at:new Date().toISOString(),text:nv&&nv.app==="shinhanfc"&&nv.go==="customers"?"고객 검색 (이름은 기록 안 함)":s.text,masked:s.hit,status:"new",target:null,fields:{}};
   db.records.push(rec);save();
   if(nv){await navFlow(nv,rec);return}
   const res=await Providers[providerId].classify(s.text,apps);
