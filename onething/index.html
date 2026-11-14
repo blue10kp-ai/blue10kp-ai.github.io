@@ -257,30 +257,56 @@ const labelOf=(app,kind)=>{const a=adapter(app),k=kindOf(app,kind);return a?a.na
 
 /* ================= 4. 저장소 (구글 드라이브 / 시험용 메모리) ================= */
 const DAPI="https://www.googleapis.com/drive/v3",DUP="https://www.googleapis.com/upload/drive/v3";
-const GTK="onething.gtoken",GAC="onething.gaccount";
-let gTok=null,DEMO=false;
-function storedTok(){try{const t=JSON.parse(localStorage.getItem(GTK)||"null");return t&&t.exp>Date.now()+60000?t.token:null}catch(e){return null}}
-function clearTok(){try{localStorage.removeItem(GTK)}catch(e){}gTok=null}
+/* 공통 로그인: 모든 앱이 localStorage "blue10kp.gauth" {v,token,exp,scopes,email} 를 같이 씀 (app\_공통\공통로그인.md)
+   이 토큰은 구글 API 호출에만 씀. Drive·서버로 보내거나 파일에 저장하지 않음. Gemini 키는 여기 넣지 않음 */
+const GK="blue10kp.gauth",GAC="onething.gaccount",OLDTK="onething.gtoken";
+const GA="https://www.googleapis.com/auth/";
+const SUP={ // 필요한 권한 → 그것을 포함하는 더 넓은 권한
+  [GA+"drive"]:[GA+"drive"],
+  [GA+"calendar.events"]:[GA+"calendar.events",GA+"calendar"],
+  [GA+"calendar.calendarlist.readonly"]:[GA+"calendar.calendarlist.readonly",GA+"calendar.calendarlist",GA+"calendar.readonly",GA+"calendar"]};
+const hasScopes=have=>Object.keys(SUP).every(n=>SUP[n].some(s=>(have||[]).includes(s)));
+let gTok=null,DEMO=false,gAuthMem=null,authSeen=false;
+function readAuth(){
+  try{const a=JSON.parse(localStorage.getItem(GK)||"null");if(a&&a.v===1&&a.token&&a.exp&&Array.isArray(a.scopes))return a}catch(e){}
+  return null;
+}
+function writeAuth(a){gAuthMem=a;try{localStorage.setItem(GK,JSON.stringify(a))}catch(e){}}
+function curAuth(){return readAuth()||gAuthMem}
+function storedTok(){const a=curAuth();return a&&a.exp>Date.now()+60000?a.token:null}
+function clearTok(){try{localStorage.removeItem(GK)}catch(e){}gAuthMem=null;gTok=null}
+function migrateOld(){ // 예전 전용 토큰을 한 번만 공통 키로 옮김
+  try{
+    const o=JSON.parse(localStorage.getItem(OLDTK)||"null");
+    if(o&&o.token&&o.exp>Date.now()+120000&&!readAuth())writeAuth({v:1,token:o.token,exp:o.exp,scopes:[GA+"drive"],email:gAcct()});
+    localStorage.removeItem(OLDTK);
+  }catch(e){}
+}
 const gAcct=()=>{try{return localStorage.getItem(GAC)||""}catch(e){return""}};
 function requestTok(prompt,noHint){
   return new Promise((res,rej)=>{
     const g=window.google&&google.accounts&&google.accounts.oauth2;
     if(!g)return rej(new Error("구글 로그인 모듈을 불러오지 못했습니다. 잠시 후 다시 시도하세요."));
-    const c=g.initTokenClient({client_id:GCLIENT,scope:GSCOPE,hint:noHint?undefined:(gAcct()||undefined),
+    const c=g.initTokenClient({client_id:GCLIENT,scope:GSCOPE,include_granted_scopes:true,hint:noHint?undefined:((curAuth()||{}).email||gAcct()||undefined),
       callback:r=>{
         if(r.error)return rej(new Error("구글 연결 실패: "+r.error));
         if(!g.hasGrantedAllScopes(r,"https://www.googleapis.com/auth/drive"))return rej(new Error("Google Drive 권한을 허용해야 합니다. 다시 로그인하면서 모든 항목에 체크해 주세요."));
-        try{localStorage.setItem(GTK,JSON.stringify({token:r.access_token,exp:Date.now()+(r.expires_in||3600)*1000}))}catch(e){}
-        gTok=r.access_token;res(r.access_token);
+        writeAuth({v:1,token:r.access_token,exp:Date.now()+(r.expires_in||3600)*1000,scopes:String(r.scope||"").split(/\s+/).filter(Boolean),email:noHint?"":gAcct()});
+        authSeen=true;gTok=r.access_token;res(r.access_token);
       },
       error_callback:e=>rej(new Error(e&&e.type==="popup_closed"?"구글 로그인 창이 닫혔습니다.":"구글 로그인 창을 열 수 없습니다. 팝업 차단을 확인하세요."))});
     c.requestAccessToken({prompt:prompt==null?"":prompt});
   });
 }
 async function gfetch(url,opt,asText){
-  const t=storedTok()||gTok;if(!t)throw new Error("GOOGLE_AUTH");
-  const o=opt||{},r=await fetch(url,{...o,headers:{Authorization:"Bearer "+t,...(o.headers||{})},cache:"no-store"});
-  if(r.status===401){clearTok();throw new Error("GOOGLE_AUTH")}
+  let t=storedTok();if(!t)throw new Error("GOOGLE_AUTH");
+  const o=opt||{},go1=tk=>fetch(url,{...o,headers:{Authorization:"Bearer "+tk,...(o.headers||{})},cache:"no-store"});
+  let r=await go1(t);
+  if(r.status===401){
+    const n=storedTok(); // 다른 앱이 새로 로그인했으면 그 토큰으로 이어서
+    if(n&&n!==t)r=await go1(n);
+    if(r.status===401){if(!n||n===t)clearTok();throw new Error("GOOGLE_AUTH")}
+  }
   if(!r.ok)throw new Error("Google "+r.status+": "+(await r.text()).slice(0,160));
   return asText?r.text():r.json();
 }
@@ -378,12 +404,11 @@ function showLogin(msg,isErr){
   $("#main").innerHTML="";$("#nav").innerHTML="";
   setShell(false);
   const m=$("#lmsg");m.textContent=msg||"";m.className="lm"+(msg&&isErr!==false&&/권한|실패|만료|못|않|닫혔|허용/.test(msg)?" err":"");
-  $("#loginBtn").hidden=false;$("#loginOtherBtn").hidden=false;
+  $("#loginBtn").hidden=false;$("#loginOtherBtn").hidden=false;$("#loginBtn").textContent="Google 계정으로 로그인";
 }
 const isAllowed=em=>Object.keys(USERS).map(x=>x.toLowerCase()).includes(String(em).toLowerCase());
 async function denyAccount(){
-  try{const t=storedTok()||gTok;if(t&&window.google&&google.accounts.oauth2.revoke)google.accounts.oauth2.revoke(t,()=>{})}catch(e){}
-  clearTok();try{localStorage.removeItem(GAC)}catch(e){}
+  clearTok();try{localStorage.removeItem(GAC)}catch(e){} // revoke는 부르지 않음(다른 앱 동의 유지)
   db=null;dirty=false;me="";
   showLogin("권한이 없습니다. 이 앱은 허용된 계정만 쓸 수 있어요. 허용된 계정으로 다시 로그인해 주세요.");
 }
@@ -398,6 +423,7 @@ async function afterToken(){
   const a=await checkAccount();
   if(!a.ok){await denyAccount();return}
   try{localStorage.setItem(GAC,a.em)}catch(e){}
+  const au=curAuth();if(au&&au.email!==a.em)writeAuth({...au,email:a.em});
   me=a.em;await startApp(await pre);
 }
 async function startApp(pre){
@@ -423,10 +449,10 @@ $("#loginBtn").addEventListener("click",()=>doLogin(false));
 $("#loginOtherBtn").addEventListener("click",()=>doLogin(true));
 async function logout(){
   if(DEMO){location.href=location.pathname;return}
+  if(!confirm("모든 앱에서 로그아웃됩니다. 계속할까요?"))return;
   await driveSave();
   if(dirty&&!confirm("저장되지 않은 기록이 있습니다. 그래도 로그아웃할까요?"))return;
-  try{const t=storedTok()||gTok;if(t&&window.google&&google.accounts.oauth2.revoke)google.accounts.oauth2.revoke(t,()=>{})}catch(e){}
-  clearTok();db=null;dirty=false;me="";
+  clearTok();db=null;dirty=false;me="";authSeen=false;
   showLogin("로그아웃했습니다.",false);
 }
 async function boot(){
@@ -436,14 +462,35 @@ async function boot(){
     DEMO=true;me="demo@test";USERS[me]=(new URLSearchParams(location.search).get("apps")||"goodday,shinhanfc,chachacha").split(",");
     db=normDb(null);setShell(true);setSync("ok");go("talk");return;
   }
-  if(storedTok()&&gAcct()&&isAllowed(gAcct())){
-    try{
-      checkAccount().then(a=>{if(!a.ok)denyAccount()},()=>{});
-      me=gAcct();await startApp();return;
-    }catch(e){showLogin(e.message==="GOOGLE_AUTH"?"":"기록을 불러오지 못했어요. 인터넷을 확인하고 다시 시도해 주세요. ("+e.message.slice(0,60)+")");return}
+  migrateOld();
+  const au=readAuth();
+  if(au&&au.exp>Date.now()+120000&&au.email&&isAllowed(au.email)){
+    if(hasScopes(au.scopes)){
+      try{
+        authSeen=true;
+        checkAccount().then(a=>{if(!a.ok)denyAccount()},()=>{});
+        me=au.email.toLowerCase();try{localStorage.setItem(GAC,me)}catch(e){}
+        await startApp();return;
+      }catch(e){showLogin(e.message==="GOOGLE_AUTH"?"":"기록을 불러오지 못했어요. 인터넷을 확인하고 다시 시도해 주세요. ("+e.message.slice(0,60)+")");return}
+    }
+    showLogin("이 앱에 필요한 권한(드라이브·캘린더)이 더 필요해요. 아래 버튼을 눌러 허용해 주세요.",false);
+    $("#loginBtn").textContent="구글 연결 (권한 추가)";return;
   }
   showLogin("");
 }
+// 화면이 다시 보일 때 공통 출입증 다시 확인: 다른 앱에서 로그아웃/새 로그인했으면 따라감
+function syncAuth(){
+  if(DEMO||!me||document.visibilityState==="hidden")return;
+  let ls=true;try{localStorage.getItem(GK)}catch(e){ls=false}
+  if(!ls)return;
+  const au=readAuth();
+  if(!au&&authSeen){ // 다른 앱에서 로그아웃함
+    (async()=>{try{await driveSave()}catch(e){}authSeen=false;gAuthMem=null;db=null;dirty=false;me="";showLogin("다른 앱에서 로그아웃했어요. 다시 로그인해 주세요.",false)})();
+  }else if(au&&au.email&&me&&au.email.toLowerCase()!==me){ // 다른 계정으로 바뀜
+    db=null;dirty=false;me="";gAuthMem=null;boot();
+  }
+}
+document.addEventListener("visibilitychange",syncAuth);window.addEventListener("focus",syncAuth);
 
 /* ================= 6. 화면 ================= */
 // 내게 열린 앱 = 관리자가 열어 준 것(USERS) 중 내가 끄지 않은 것
@@ -534,7 +581,8 @@ function setHtml(){
     <b>일정 수정</b>: “내일 3시 김OO 상담을 5시로 바꿔줘”, “금요일 회식을 다음주 월요일로 옮겨줘”<br>
     <b>일정 삭제</b>: “내일 김OO 상담 일정 삭제해줘” — 여러 개가 걸리면 고르게 해요.<br>
     <b>일정 질문</b>: “오늘 일정은?”, “내일 약속 있어?”, “이번 주 일정 알려줘”, “다음 일정은 언제야?” — 답이 바로 카드로 나오고, 카드에서 [수정]·[삭제]를 누를 수 있어요. 일정 내용은 AI로 보내지 않고 앱 안에서만 정리해요.<br>
-    수정·삭제·등록은 항상 확인 카드를 보여 주고, 끝난 뒤 되돌릴 수 있어요. 맛집·여행·차계부처럼 앱 안의 기록은 받은편지함에 담아 그 앱을 열 때 반영돼요.</p></details></div>
+    수정·삭제·등록은 항상 확인 카드를 보여 주고, 끝난 뒤 되돌릴 수 있어요. 맛집·여행·차계부처럼 앱 안의 기록은 받은편지함에 담아 그 앱을 열 때 반영돼요.<br>
+    <b>로그인</b>: 한 번 로그인하면 같은 브라우저에서 다른 앱(신한FC·차차차·항상일상 등)도 로그인 없이 열려요. 로그아웃하면 <b>모든 앱에서 로그아웃</b>돼요. 로그인은 1시간 정도 유지되고, 끝나면 아무 앱에서나 다시 연결하면 돼요. (아이폰은 홈 화면에 추가한 앱끼리는 나눠 쓰지 못해요.)</p></details></div>
   <div class="card"><h3>AI 해석 (Gemini)</h3><div class="t">${cfg.geminiKey?"Gemini 연결됨 (애매한 말만 물어봐요)":"규칙 기반만 사용 중 (키 없음)"}</div>
     <label for="gkey">Gemini API 키 (Google AI Studio에서 직접 발급)</label>
     <input id="gkey" type="password" autocomplete="off" placeholder="${cfg.geminiKey?"저장된 키가 있어요 (바꾸려면 새로 붙여넣기)":"키를 붙여넣기"}">
@@ -553,7 +601,7 @@ function bind(){
   const un=$("#undo");if(un)un.onclick=undo;
   const cg=$("#calgo");if(cg)cg.onclick=calRun;
   const cn=$("#calno");if(cn)cn.onclick=()=>{if(pending){pending.rec.status="cancelled";save()}pending=null;render()};
-  const ra=$("#reauth");if(ra)ra.onclick=()=>{clearTok();doLogin(false)};
+  const ra=$("#reauth");if(ra)ra.onclick=()=>doLogin(false);
   document.querySelectorAll("[data-evpick]").forEach(b=>b.onclick=()=>calPick(+b.dataset.evpick));
   document.querySelectorAll("[data-evdel]").forEach(b=>b.onclick=()=>{const e=pending.events[+b.dataset.evdel];pending={...pending,cal:{op:"delete",change:{}}};calConfirm(e)}); // 결과 카드 → 삭제 확인 카드
   document.querySelectorAll("[data-evedit]").forEach(b=>b.onclick=()=>{ // 결과 카드 → 수정할 말을 미리 적어 줌 (그 뒤는 확인 카드)
@@ -846,7 +894,7 @@ async function fillCalSettings(){
     $("#calsave").onclick=async()=>{cfg.calName=$("#calDef").value;cfg.viewNames=[...box.querySelectorAll("[data-vc]")].filter(x=>x.checked).map(x=>x.dataset.vc);cfg.calPrefix=$("#calPfx").value.trim();await saveCfg();$("#calsave").textContent="저장됨"};
   }catch(e){
     box.innerHTML=e.message==="CAL_SCOPE"||e.message==="GOOGLE_AUTH"?`<p class="k">구글 일정 권한이 아직 없어요.</p><div class="acts"><button class="btn pri" id="reauth2">일정 권한 연결(다시 로그인)</button></div>`:`<p class="k">캘린더 목록을 못 불러왔어요. (${esc(String(e.message).slice(0,60))})</p>`;
-    const r=$("#reauth2");if(r)r.onclick=()=>{clearTok();doLogin(false)};
+    const r=$("#reauth2");if(r)r.onclick=()=>doLogin(false);
   }
 }
 boot();
