@@ -53,7 +53,9 @@ header small.fail{color:var(--bad)}
 .btn.sm{height:26px;padding:0 10px;font-size:12px}
 label{display:block;font-size:13px;color:var(--t3);margin:12px 0 4px}
 textarea{width:100%;padding:10px 12px;font:inherit;font-size:16px;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--surface);color:var(--t1);line-height:1.45;resize:vertical;min-height:84px}
-textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
+textarea:focus,input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+input[type=password],input[type=text],input:not([type]),select{width:100%;height:34px;padding:0 10px;font:inherit;font-size:14px;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--surface);color:var(--t1)}
+.chk{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:14px;color:var(--t1)}.chk input{width:20px;height:20px;accent-color:var(--accent)}
 .mic{width:76px;height:76px;padding:0;border:0;border-radius:50%;margin:8px auto 4px;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 9px var(--accent-weak)}
 .mic.rec{background:var(--bad);color:#fff;box-shadow:0 0 0 9px rgba(192,57,43,.15)}
 .mic:disabled{opacity:.4}
@@ -104,9 +106,10 @@ nav button.on::before{content:"";position:absolute;top:-1px;left:28%;right:28%;h
 "use strict";
 /* ===== 설정 (여기만 고치면 됩니다) ===== */
 // 로그인을 허용할 구글 계정과, 그 사람에게 열어 준 앱 (소문자 이메일 → 앱 번호 목록). 여러 명이면 줄을 추가.
-const USERS={"blue10kp@gmail.com":["goodday","shinhanfc","chachacha"]};
+const USERS={"blue10kp@gmail.com":["gcal","goodday","shinhanfc","chachacha"]};
 const GCLIENT="482206908404-5sdbvetcrc8j7ctrhe6aa23ccmd3d05d.apps.googleusercontent.com"; // 차차차와 같은 구글 로그인 클라이언트 ID (공개되어도 되는 값)
-const GSCOPE="openid email https://www.googleapis.com/auth/drive"; // 차차차와 같은 권한. 캘린더 쓰기 권한은 '실시간 일정 등록'을 정할 때 추가
+// Drive(차차차와 같은 권한) + 캘린더 일정 읽기·쓰기 + 캘린더 목록 읽기(필요한 만큼만)
+const GSCOPE="openid email https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar.calendarlist.readonly";
 const BASE=["Claude","app","onething"]; // 내 드라이브 안 저장 위치
 /* ===== 끝 ===== */
 const $=s=>document.querySelector(s);
@@ -146,10 +149,18 @@ const ADAPTERS=[
    {id:"trip",label:"여행",fields:["title","date","note"],words:{여행:4,숙소:3,호텔:3,펜션:3,비행기:3,항공:2,캠핑:3,휴가:2,해외:2,제주:2,부산:1,강릉:1,일본:1,오사카:2,도쿄:2,다녀왔:2,관광:2}},
    {id:"daily",label:"일상",fields:["title","date","note"],words:{오늘:1,일기:3,기분:2,생각:1,느낌:1,하루:2,산책:2,운동:1,날씨:1,감사:2,행복:2,피곤:1,메모:1}}
   ]},
- {id:"shinhanfc",name:"신한FC m",desc:"보험설계사의 고객 상담·일정 관리 앱. 일정은 구글 캘린더에 등록",
-  folder:["Claude","app","신한FC"],how:{inbox:"받은편지함/shinhanfc.json",now:"calendar"},
+ {id:"gcal",name:"구글 일정",desc:"구글 캘린더에 일정을 만들고·고치고·지우고·보여 주는 기능. 앱을 거치지 않고 말만해요가 바로 처리(신한FC 1팀 캘린더 관례 포함)",
+  folder:null,direct:"calendar",how:{now:"calendar"},
   kinds:[
-   {id:"schedule",label:"일정 등록",fields:["title","date","time","customer","note"],words:{고객:3,상담:3,미팅:3,면담:3,계약:3,청약:3,증권:3,보험:2,설계:2,전달:1,방문:2,약속:2,통화:1,연락:1,보장분석:3,갱신:2,만기:2,해약:2,청구:2,일정:3,예약:1,회의:2,교육:2,"FC":1,팀장:1,지점:1}}
+   {id:"add",label:"일정 등록",fields:["title","date","time"],words:{일정:2,약속:2,미팅:3,면담:2,상담:2,예약:1,회의:2,등록:1,추가:1,잡아:3,넣어:1,방문:1,만나:1,교육:1}},
+   {id:"edit",label:"일정 수정",fields:["title","date","time"],words:{수정:4,변경:4,바꿔:4,옮겨:4,미뤄:4,당겨:4}},
+   {id:"delete",label:"일정 삭제",fields:["title","date"],words:{삭제:4,지워:4,없애:4,"일정 취소":4,"취소해":3}},
+   {id:"list",label:"일정 보기",fields:["date"],words:{보여:3,알려:3,"뭐 있":3,조회:3,"일정 있":2,"일정 확인":3,"일정은":3,"일정이":2,"다음 일정":4,"다음 약속":4,언제:3,"뭐야":2,"뭐 해":2,"있어?":3,"있나":2,스케줄:3}}
+  ]},
+ {id:"shinhanfc",name:"신한FC m",desc:"보험설계사의 고객 자료(고객 엑셀: 상담기록·따행·이관). 일정은 '구글 일정'이 바로 처리하므로 여기는 고객 자료만",
+  folder:["Claude","app","신한FC"],how:{inbox:"받은편지함/shinhanfc.json",now:null},
+  kinds:[
+   {id:"memo",label:"고객 메모(상담기록)",fields:["title","note"],words:{상담기록:4,고객정보:3,따행:4,이관:4,엑셀:3,계약내용:3,보장분석:3}}
   ]},
  {id:"chachacha",name:"차차차",desc:"내 차의 주행거리·주유/충전·정비·보험을 적는 차 기록장(차계부)",
   folder:["Claude","app","차차차"],how:{inbox:"받은편지함/chachacha.json",now:null},
@@ -198,8 +209,16 @@ const Providers={
         for(const w in k.words){if(low.includes(w.toLowerCase())){score+=k.words[w];why.push(w)}}
         if(score>0)cands.push({app:a.id,kind:k.id,score,why});
       }
+      const f=extractFields(text);
+      if(allowed.some(a=>a.id==="gcal")){
+        if(cands.some(c=>c.app==="gcal"&&c.kind!=="add"))cands.splice(0,cands.length,...cands.filter(c=>!(c.app==="gcal"&&c.kind==="add"))); // 고치기·지우기·보기 말이 있으면 '등록'은 뺌
+        else if(f.date||f.time){ // 날짜·시간이 말에 있으면 일정 등록 쪽에 가산점
+          const b=(f.time?2:0)+(f.date?1:0),c=cands.find(x=>x.app==="gcal"&&x.kind==="add");
+          if(c){c.score+=b;c.why.push("날짜·시간")}else cands.push({app:"gcal",kind:"add",score:b,why:["날짜·시간"]});
+        }
+      }
       cands.sort((x,y)=>y.score-x.score);
-      return{candidates:cands,fields:extractFields(text)};
+      return{candidates:cands,fields:f};
     }
   }
   // Claude 등 다른 AI로 바꾸려면 같은 모양(classify(text,allowed) → {candidates,fields})으로 여기에 추가
@@ -262,7 +281,7 @@ async function gfetch(url,opt,asText){
   const t=storedTok()||gTok;if(!t)throw new Error("GOOGLE_AUTH");
   const o=opt||{},r=await fetch(url,{...o,headers:{Authorization:"Bearer "+t,...(o.headers||{})},cache:"no-store"});
   if(r.status===401){clearTok();throw new Error("GOOGLE_AUTH")}
-  if(!r.ok)throw new Error("Drive "+r.status+": "+(await r.text()).slice(0,160));
+  if(!r.ok)throw new Error("Google "+r.status+": "+(await r.text()).slice(0,160));
   return asText?r.text():r.json();
 }
 const qv=x=>String(x).replace(/\\/g,"\\\\").replace(/'/g,"\\'");
@@ -471,14 +490,33 @@ function pendingHtml(){
       <div class="choice">${p.options.map((o,i)=>`<button class="btn" data-pick="${i}"><b>${i+1}</b>${esc(labelOf(o.app,o.kind))}${o.why.length?` <span class="k">(‘${esc(o.why.slice(0,2).join("’, ‘"))}’ 때문에)</span>`:""}</button>`).join("")}
         <button class="btn" data-pick="keep">기록만 해 두기 (어디에도 안 보냄)</button></div></div>`;
   }
+  if(p.stage==="confirm"){
+    const c=p.cal;
+    return `<div class="card"><h3>이렇게 처리할까요?</h3><div class="msg"><b>${esc(c.opLabel)}</b>\n${esc(p.lines.join("\n"))}</div>
+      ${c.op==="delete"?`<div class="warn">구글 캘린더에서 지웁니다. 끝난 뒤 ‘되돌리기’로 복원할 수 있어요.</div>`:""}
+      <div class="acts"><button class="btn" id="calno">아니요</button><button class="btn ${c.op==="delete"?"dng":"pri"}" id="calgo">실행</button></div></div>`;
+  }
+  if(p.stage==="answer"){
+    return `<div class="card"><h3>${esc(p.ansTitle)}</h3>
+      ${p.events.length?p.events.map((e,i)=>`<div class="row"><div style="min-width:0"><div class="t">${esc(e.title)}</div><div class="k">${esc(fmtEv(e))} · ${esc(e.calName)}</div></div>
+        ${e.writeOk===false?"":`<div style="display:flex;gap:6px"><button class="btn sm" data-evedit="${i}">수정</button><button class="btn sm dng" data-evdel="${i}">삭제</button></div>`}</div>`).join(""):`<div class="empty">일정이 없어요</div>`}
+      <p class="k">찾은 캘린더: ${esc(p.ansCals)} (설정에서 바꿀 수 있어요)</p>
+      <div class="acts"><button class="btn pri" id="next">다음 말하기</button></div></div>`;
+  }
+  if(p.stage==="pick"){
+    return `<div class="card"><h3>어느 일정인가요?</h3><div class="msg">${esc(p.rec.text)}</div>
+      <div class="choice">${p.events.map((e,i)=>`<button class="btn" data-evpick="${i}"><b>${i+1}</b>${esc(e.title)} <span class="k">${esc(fmtEv(e))} · ${esc(e.calName)}</span></button>`).join("")}
+      <button class="btn" id="calno">아니요, 그만</button></div></div>`;
+  }
   return `<div class="card"><h3>${p.stage==="done"?"처리했어요":"처리 중"}</h3><div class="msg">${esc(p.note||"")}</div>
-    <div class="acts">${p.canUndo?`<button class="btn dng" id="undo">취소</button>`:""}<button class="btn pri" id="next">다음 말하기</button></div></div>`;
+    <div class="acts">${p.reauth?`<button class="btn pri" id="reauth">일정 권한 연결(다시 로그인)</button>`:""}${p.canUndo?`<button class="btn dng" id="undo">${p.undoFn?"되돌리기":"취소"}</button>`:""}<button class="btn pri" id="next">다음 말하기</button></div></div>`;
 }
 function logHtml(){
   const rs=db.records.slice().reverse();
   if(!rs.length)return `<div class="card"><div class="empty">아직 기록이 없어요.<br>‘말하기’에서 말해 보세요.</div></div>`;
   return `<div class="card">`+rs.map(r=>{
-    const st=r.status==="done"?["ok","받은편지함에 담음"]:r.status==="ask"?["ask","되묻는 중"]:r.status==="cancelled"?["bad","취소함"]:r.status==="kept"?["","기록만 함"]:["bad","실패"];
+    const direct=r.target&&adapter(r.target.app)&&adapter(r.target.app).direct;
+    const st=r.status==="done"?["ok",direct?"바로 처리함":"받은편지함에 담음"]:r.status==="ask"?["ask","되묻는 중"]:r.status==="cancelled"?["bad","취소함"]:r.status==="kept"?["","기록만 함"]:["bad","실패"];
     return `<div class="row"><div style="min-width:0"><div class="t">${esc(r.text)}</div>
       <div class="k">${esc(new Date(r.at).toLocaleString("ko-KR",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"}))}${r.target?" · "+esc(labelOf(r.target.app,r.target.kind)):""}${r.masked.length?" · 가림: "+esc(r.masked.join(", ")):""}</div></div>
       <div style="text-align:right"><span class="badge ${st[0]}">${st[1]}</span>${r.status==="ask"?`<br><button class="btn sm" data-resume="${r.id}" style="margin-top:6px">고르기</button>`:""}</div></div>`}).join("")+`</div>`;
@@ -487,9 +525,16 @@ function setHtml(){
   const all=openApps();
   return `<div class="card"><h3>계정</h3><div class="t">${esc(DEMO?"시험 모드":me)}</div><div class="acts"><button class="btn" id="logout">로그아웃</button></div></div>
   <div class="card"><h3>내 연결 앱 (내게 열린 앱만 보여요)</h3>
-    ${all.length?all.map(a=>`<div class="row"><div style="min-width:0"><div class="t">${esc(a.name)}</div><div class="k">${esc(a.kinds.map(k=>k.label).join(" · "))}</div><div class="k">반영: 받은편지함 ${a.how.now?"(실시간은 준비 중)":""}</div></div>
+    ${all.length?all.map(a=>`<div class="row"><div style="min-width:0"><div class="t">${esc(a.name)}</div><div class="k">${esc(a.kinds.map(k=>k.label).join(" · "))}</div><div class="k">반영: ${a.direct?"바로 처리(앱을 거치지 않음)":"받은편지함 (앱을 열면 반영)"}</div></div>
       <label class="sw"><input type="checkbox" data-app="${a.id}" ${db.off.includes(a.id)?"":"checked"}>사용</label></div>`).join(""):`<div class="empty">열린 앱이 없어요</div>`}
     <p class="k">앱을 열고 닫는 건 관리자가 정해요. 여기서는 열린 앱 중에서 쓸 것만 고를 수 있어요.</p></div>
+  ${(USERS[me]||[]).includes("gcal")&&!db.off.includes("gcal")?`<div class="card"><h3>구글 일정 설정</h3><div id="calset"><p class="k">캘린더 목록을 불러오는 중…</p></div></div>`:""}
+  <div class="card"><h3>설명서</h3><details><summary class="t" style="cursor:pointer">이렇게 말해 보세요</summary>
+    <p class="k"><b>일정 등록</b>: “내일 오후 3시 김OO 고객 상담 일정 추가” — 기본은 1팀 캘린더, 제목 앞에 내 구분 글자가 붙어요. “내 일정에 …”라고 하면 내 캘린더에 글자 없이 등록해요.<br>
+    <b>일정 수정</b>: “내일 3시 김OO 상담을 5시로 바꿔줘”, “금요일 회식을 다음주 월요일로 옮겨줘”<br>
+    <b>일정 삭제</b>: “내일 김OO 상담 일정 삭제해줘” — 여러 개가 걸리면 고르게 해요.<br>
+    <b>일정 질문</b>: “오늘 일정은?”, “내일 약속 있어?”, “이번 주 일정 알려줘”, “다음 일정은 언제야?” — 답이 바로 카드로 나오고, 카드에서 [수정]·[삭제]를 누를 수 있어요. 일정 내용은 AI로 보내지 않고 앱 안에서만 정리해요.<br>
+    수정·삭제·등록은 항상 확인 카드를 보여 주고, 끝난 뒤 되돌릴 수 있어요. 맛집·여행·차계부처럼 앱 안의 기록은 받은편지함에 담아 그 앱을 열 때 반영돼요.</p></details></div>
   <div class="card"><h3>AI 해석 (Gemini)</h3><div class="t">${cfg.geminiKey?"Gemini 연결됨 (애매한 말만 물어봐요)":"규칙 기반만 사용 중 (키 없음)"}</div>
     <label for="gkey">Gemini API 키 (Google AI Studio에서 직접 발급)</label>
     <input id="gkey" type="password" autocomplete="off" placeholder="${cfg.geminiKey?"저장된 키가 있어요 (바꾸려면 새로 붙여넣기)":"키를 붙여넣기"}">
@@ -499,12 +544,21 @@ function setHtml(){
     <div class="warn">무료 사용분은 구글이 서비스 개선에 쓸 수 있어요. 그래서 주민번호·카드·계좌번호·비밀번호·인증번호·API 키는 보내기 전에 앱에서 먼저 가려요. 그 밖의 말은 가리지 않고 보내요.</div></div>`;
 }
 function bind(){
+  if(view==="set")fillCalSettings();
   const mic=$("#mic");if(mic)mic.onclick=toggleMic;
   const send=$("#send");if(send)send.onclick=()=>submit($("#txt").value);
   const tx=$("#txt");if(tx)tx.addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.ctrlKey||e.metaKey)){e.preventDefault();submit(tx.value)}});
   document.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>choose(b.dataset.pick));
   const nx=$("#next");if(nx)nx.onclick=()=>{pending=null;render()};
   const un=$("#undo");if(un)un.onclick=undo;
+  const cg=$("#calgo");if(cg)cg.onclick=calRun;
+  const cn=$("#calno");if(cn)cn.onclick=()=>{if(pending){pending.rec.status="cancelled";save()}pending=null;render()};
+  const ra=$("#reauth");if(ra)ra.onclick=()=>{clearTok();doLogin(false)};
+  document.querySelectorAll("[data-evpick]").forEach(b=>b.onclick=()=>calPick(+b.dataset.evpick));
+  document.querySelectorAll("[data-evdel]").forEach(b=>b.onclick=()=>{const e=pending.events[+b.dataset.evdel];pending={...pending,cal:{op:"delete",change:{}}};calConfirm(e)}); // 결과 카드 → 삭제 확인 카드
+  document.querySelectorAll("[data-evedit]").forEach(b=>b.onclick=()=>{ // 결과 카드 → 수정할 말을 미리 적어 줌 (그 뒤는 확인 카드)
+    const e=pending.events[+b.dataset.evedit],d=e.start,t=e.allDay?"":" "+d.getHours()+"시"+(d.getMinutes()?d.getMinutes()+"분":"");
+    pending=null;render();const tx=$("#txt");if(tx){tx.value=(d.getMonth()+1)+"월 "+d.getDate()+"일"+t+" "+e.title.replace(/^[^\s)]{1,10}\)\s*/,"")+"을 ";tx.focus()}});
   document.querySelectorAll("[data-resume]").forEach(b=>b.onclick=()=>resume(b.dataset.resume));
   document.querySelectorAll("[data-app]").forEach(c=>c.onchange=()=>{const id=c.dataset.app;db.off=db.off.filter(x=>x!==id);if(!c.checked)db.off.push(id);save();render()});
   const lo=$("#logout");if(lo)lo.onclick=logout;
@@ -556,6 +610,7 @@ async function choose(i){
 }
 async function apply(pick,how){
   const rec=pending.rec,a=adapter(pick.app),k=kindOf(pick.app,pick.kind);
+  if(a.direct==="calendar"){pending.stage="work";pending.note="확인하는 중…";render();await calFlow(pick.kind,rec);return} // 앱을 거치지 않고 바로 처리
   pending.stage="work";pending.note="보내는 중…";render();
   const item={id:rec.id,at:rec.at,from:"onething",kind:pick.kind,text:rec.text,fields:rec.fields,status:"new"};
   try{
@@ -572,6 +627,11 @@ async function apply(pick,how){
 }
 async function undo(){
   if(!pending)return;const rec=pending.rec;
+  if(pending.undoFn){
+    try{await pending.undoFn();rec.status="cancelled";save();pending={...pending,undoFn:null,canUndo:false,note:"되돌렸어요."}}
+    catch(e){pending.note="되돌리지 못했어요. "+String(e.message).slice(0,60)}
+    render();return;
+  }
   try{
     const ok=await inboxCancel(rec.target.app,rec.id);
     rec.status="cancelled";save();
@@ -582,6 +642,212 @@ async function undo(){
 function resume(id){
   const rec=db.records.find(r=>r.id===id);if(!rec)return;
   pending={rec,options:rec.options||[],stage:"ask"};go("talk");
+}
+/* ================= 7. 구글 캘린더 직접 처리 (신한FC 앱을 거치지 않음) =================
+   신한FC 관례: 기본 캘린더 '1팀', 1팀에 넣을 땐 제목 앞에 FC별 구분 글자(신한FC 권한 파일의 prefixes), '내 일정'은 글자 없이 본인 캘린더 */
+const GCAL="https://www.googleapis.com/calendar/v3",TEAM_CAL="1팀",DAYN="일월화수목금토";
+const pad=n=>String(n).padStart(2,"0");
+const enc=encodeURIComponent;
+const fmtEv=e=>{const d=e.start;return(d.getMonth()+1)+"/"+d.getDate()+"("+DAYN[d.getDay()]+") "+(e.allDay?"종일":pad(d.getHours())+":"+pad(d.getMinutes()))};
+const dayS=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate());
+const addD=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const ymdDate=s=>new Date(+s.slice(0,4),+s.slice(5,7)-1,+s.slice(8,10));
+const localDT=d=>iso(d)+"T"+pad(d.getHours())+":"+pad(d.getMinutes())+":00";
+const TZ=(Intl.DateTimeFormat().resolvedOptions()||{}).timeZone||"Asia/Seoul";
+function timesBody(s,e,allDay){ // 시작·끝 → 구글 일정 칸 (종일↔시간 전환 때 반대 칸은 비움)
+  return allDay?{start:{date:iso(s),dateTime:null},end:{date:iso(e),dateTime:null}}
+    :{start:{dateTime:localDT(s),timeZone:TZ,date:null},end:{dateTime:localDT(e),timeZone:TZ,date:null}};
+}
+async function calApi(path,opt,asText){
+  try{return await gfetch(GCAL+path,opt,asText)}
+  catch(e){if(/Google 40[13]/.test(e.message)&&/scope|insufficient|permission|forbidden/i.test(e.message))throw new Error("CAL_SCOPE");throw e}
+}
+const toEv=(c,x)=>{const allDay=!!x.start.date,p=s=>s.length<=10?ymdDate(s):new Date(s);
+  return{calId:c.id,calName:c.name,id:x.id,title:String(x.summary||"(제목 없음)"),allDay,start:p(x.start.date||x.start.dateTime),end:p(x.end.date||x.end.dateTime)}};
+const RealCal={
+  cache:null,
+  async calendars(){
+    if(this.cache)return this.cache;
+    const d=await calApi("/users/me/calendarList?minAccessRole=reader&maxResults=250");
+    return this.cache=(d.items||[]).map(c=>({id:c.id,name:String(c.summaryOverride||c.summary||"").trim(),primary:!!c.primary,write:/owner|writer/.test(c.accessRole)}));
+  },
+  async list(c,a,b){
+    const d=await calApi("/calendars/"+enc(c.id)+"/events?singleEvents=true&orderBy=startTime&maxResults=100&timeMin="+enc(a.toISOString())+"&timeMax="+enc(b.toISOString()));
+    return(d.items||[]).filter(x=>x.status!=="cancelled").map(x=>toEv(c,x));
+  },
+  async insert(c,body){return toEv(c,await calApi("/calendars/"+enc(c.id)+"/events",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}))},
+  async patch(e,body){return toEv({id:e.calId,name:e.calName},await calApi("/calendars/"+enc(e.calId)+"/events/"+enc(e.id),{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}))},
+  async remove(e){await calApi("/calendars/"+enc(e.calId)+"/events/"+enc(e.id),{method:"DELETE"},true)},
+  async restore(e){await this.patch(e,{status:"confirmed"})}
+};
+const DemoCal={ // 시험 모드: 메모리에만 있음 (구글 호출 없음)
+  ev:[],n:0,
+  async calendars(){return[{id:"c1",name:"1팀",primary:false,write:true},{id:"c2",name:"김현성",primary:true,write:true},{id:"c3",name:"가족",primary:false,write:false}]},
+  async list(c,a,b){return this.ev.filter(e=>e.calId===c.id&&!e.gone&&e.end>a&&e.start<b).sort((x,y)=>x.start-y.start)},
+  async insert(c,body){const bs=body.start.date?ymdDate(body.start.date):new Date(body.start.dateTime),be=body.end.date?ymdDate(body.end.date):new Date(body.end.dateTime);
+    const e={calId:c.id,calName:c.name,id:"d"+(++this.n),title:body.summary,allDay:!!body.start.date,start:bs,end:be};this.ev.push(e);return e},
+  async patch(e,body){const t=this.ev.find(x=>x.id===e.id);if(body.summary!=null)t.title=body.summary;if(body.status==="confirmed")t.gone=false;
+    if(body.start){t.allDay=!!body.start.date;t.start=body.start.date?ymdDate(body.start.date):new Date(body.start.dateTime);t.end=body.end.date?ymdDate(body.end.date):new Date(body.end.dateTime)}return t},
+  async remove(e){this.ev.find(x=>x.id===e.id).gone=true},
+  async restore(e){this.ev.find(x=>x.id===e.id).gone=false}
+};
+const CalApi=()=>DEMO?DemoCal:RealCal;
+
+/* 설정: 기본 캘린더(이름), 보여줄 캘린더(이름들), 제목 앞 글자 → 내 설정 파일(cfg)에 저장 */
+const fixPrefix=v=>{const t=String(v||"").trim().replace(/[)）\s]+$/,"");return t?t+")":""};
+async function perms(){try{return await store().read(["Claude","app","신한FC","설정"],"shlife-권한.json")}catch(e){return null}}
+async function myFc(){const p=await perms();return p&&p.names?p.names[me]||"":""}
+async function myPrefix(){
+  if(cfg.calPrefix)return fixPrefix(cfg.calPrefix);
+  const p=await perms();const nm=p&&p.names&&p.names[me];
+  return nm&&p.prefixes&&p.prefixes[nm]?fixPrefix(p.prefixes[nm]):"";
+}
+const writable=cals=>cals.filter(c=>c.write);
+function defaultCal(cals){const w=writable(cals);return w.find(c=>c.name===(cfg.calName||TEAM_CAL))||w.find(c=>c.name===TEAM_CAL)||w.find(c=>c.primary)||w[0]||null}
+async function myCal(cals){const w=writable(cals),nm=await myFc();return w.find(c=>nm&&c.name===nm)||w.find(c=>c.primary)||null}
+function viewCals(cals){const w=cals.filter(c=>(cfg.viewNames||[]).includes(c.name));if(w.length)return w;const d=defaultCal(cals);return d?[d]:[]}
+
+/* 말에서 제목 뽑기 (날짜·시간·동사·조사를 걷어냄) */
+function calTitle(t){
+  return String(t)
+   .replace(/그제|그저께|어제|오늘|내일|모레|글피/g," ")
+   .replace(/(다음\s?주|이번\s?주|돌아오는)?\s?[일월화수목금토]요일/g," ")
+   .replace(/\d{1,2}\s?월\s?\d{1,2}\s?일/g," ")
+   .replace(/(오전|오후|저녁|아침|점심|밤|새벽)?\s?\d{1,2}\s?시\s?(?:\d{1,2}\s?분|반)?/g," ")
+   .replace(/일정\s*(?:을|를|에)?/g," ")
+   .replace(/(등록|추가|잡아|넣어|만들어|삭제|지워|없애|취소|수정|변경|바꿔|옮겨|미뤄|당겨|보여|알려)\s*(?:해?\s*줘|주세요|해|줄래|줘)?/g," ")
+   .replace(/(?:^|\s)(?:에|에서|를|을|으로|로|은|는|이|가|도|좀)(?=\s|$)/g," ")
+   .replace(/\s+/g," ").trim();
+}
+// '내일 3시 상담을 5시로 바꿔줘' → 고칠 일정 설명 / 바뀔 값
+function parseEdit(t){
+  let m=t.match(/^(.*?)(?:을|를)\s+(.+?)\s*(?:으로|로)\s*(?:바꿔|변경|옮겨|미뤄|당겨|수정)/)||t.match(/^(.*?)\s+(\S+)\s*(?:으로|로)\s*(?:바꿔|변경|옮겨|미뤄|당겨|수정)/);
+  if(!m)return null;
+  const target=m[1].trim(),np=m[2].trim(),nf=extractFields(np);
+  const ch={};
+  if(nf.date)ch.date=nf.date;if(nf.time)ch.time=nf.time;
+  if(!nf.date&&!nf.time){const nt=calTitle(np);if(nt)ch.title=nt}
+  return{target,ch,tf:extractFields(target)};
+}
+async function findEvents(cals,desc,f){
+  const base=f.date?ymdDate(f.date):dayS(new Date());
+  const a=base,b=f.date?addD(base,1):addD(base,60);
+  const kws=calTitle(desc).split(" ").filter(w=>w.length>=2);
+  let out=[];
+  for(const c of viewCals(cals).filter(c=>c.write))out=out.concat(await CalApi().list(c,a,b));
+  const strip=s=>s.replace(/^[^\s)]{1,10}\)\s*/,"");
+  let hit=out.filter(e=>!kws.length||kws.some(k=>strip(e.title).includes(k)||e.title.includes(k)));
+  if(f.time){const h=hit.filter(e=>!e.allDay&&pad(e.start.getHours())+":"+pad(e.start.getMinutes())===f.time);if(h.length)hit=h}
+  return hit.sort((x,y)=>x.start-y.start).slice(0,6);
+}
+function calFail(e){
+  const scope=e.message==="CAL_SCOPE"||e.message==="GOOGLE_AUTH";
+  pending={...pending,stage:"done",canUndo:false,reauth:scope,
+    note:scope?"구글 일정 권한이 아직 없어요. 아래 버튼으로 다시 로그인하면서 ‘캘린더’ 항목을 허용해 주세요.":"일정을 처리하지 못했어요.\n"+String(e.message).slice(0,80)};
+  pending.rec.status="fail";save();render();
+}
+async function calFlow(kind,rec){
+  try{
+    const cals=await CalApi().calendars(),f=rec.fields;
+    let t=rec.text;
+    if(kind==="list"){ // 질문: 답을 앱 안에서 정리해 바로 보여 줌 (일정 내용은 AI로 보내지 않음)
+      const today=dayS(new Date());let a,b,label,next=false;
+      if(/다음\s?(일정|약속)|언제/.test(t)&&!f.date){next=true;a=new Date();b=addD(today,90);label="다음 일정"}
+      else if(/이번\s?주/.test(t)){a=today;b=addD(today,(7-today.getDay())%7+1);label="이번 주(오늘~일요일)"}
+      else if(/다음\s?주(?!\s?[일월화수목금토]요일)/.test(t)){const d=(8-today.getDay())%7||7;a=addD(today,d);b=addD(a,7);label="다음 주"}
+      else{const day=f.date?ymdDate(f.date):today;a=day;b=addD(day,1);label=(day.getMonth()+1)+"월 "+day.getDate()+"일("+DAYN[day.getDay()]+")"}
+      let evs=[];
+      for(const c of viewCals(cals))evs=evs.concat((await CalApi().list(c,a,b)).map(e=>({...e,writeOk:c.write})));
+      evs.sort((x,y)=>x.start-y.start);
+      if(next)evs=evs.filter(e=>e.end>new Date()).slice(0,3);
+      rec.status="done";rec.target={app:"gcal",kind};save();
+      pending={...pending,stage:"answer",canUndo:false,events:evs,ansTitle:label+" 일정 "+evs.length+"개",ansCals:viewCals(cals).map(c=>c.name).join(", ")};
+      render();return;
+    }
+    if(kind==="add"){
+      const mine=/(?:^|\s)내\s*(?:일정|캘린더)/.test(t);
+      t=t.replace(/(?:^|\s)내\s*(?:일정|캘린더)\s*(?:에다가|에다|에서|에)?/," ");
+      let cal=null;
+      for(const c of writable(cals)){const re=new RegExp(c.name.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"\\s*캘린더\\s*(?:에다가|에다|에서|에)?");if(re.test(t)){cal=c;t=t.replace(re," ");break}}
+      if(!cal)cal=mine?await myCal(cals):defaultCal(cals);
+      if(!cal){pending={...pending,stage:"done",note:"쓸 수 있는 캘린더를 찾지 못했어요. 설정에서 확인해 주세요."};rec.status="fail";save();render();return}
+      let title=calTitle(t);
+      if(!title){rec.status="kept";save();pending={...pending,stage:"done",canUndo:false,note:"무슨 일정인지 알려 주세요.\n예: “내일 오후 3시 김OO 고객 상담 일정 추가”"};render();return}
+      const pre=(!mine&&cal.name===TEAM_CAL)?await myPrefix():"";
+      title=pre+title;
+      const date=f.date?ymdDate(f.date):dayS(new Date());
+      let s=date,e=addD(date,1),allDay=true;
+      if(f.time){const[h,m]=f.time.split(":").map(Number);s=new Date(date.getFullYear(),date.getMonth(),date.getDate(),h,m);e=new Date(s.getTime()+3600000);allDay=false}
+      const body={summary:title,...timesBody(s,e,allDay)};
+      pending={...pending,stage:"confirm",cal:{op:"add",opLabel:"일정 등록",calObj:cal,body},lines:[title,(date.getMonth()+1)+"월 "+date.getDate()+"일("+DAYN[date.getDay()]+") "+(allDay?"종일":f.time+" ~ "+pad(e.getHours())+":"+pad(e.getMinutes())),"캘린더: "+cal.name+(f.date?"":"  (날짜를 말하지 않아 오늘로 했어요)")]};
+      render();return;
+    }
+    // 수정·삭제: 대상 일정을 찾아서 확인 카드
+    let desc=t,ch={},tf=f;
+    if(kind==="edit"){const pe=parseEdit(t);if(!pe){rec.status="kept";save();pending={...pending,stage:"done",canUndo:false,note:"무엇을 어떻게 바꿀지 알려 주세요.\n예: “내일 3시 김OO 상담을 5시로 바꿔줘”"};render();return}desc=pe.target;ch=pe.ch;tf=pe.tf}
+    const evs=await findEvents(cals,desc,tf);
+    if(!evs.length){rec.status="kept";save();pending={...pending,stage:"done",canUndo:false,note:"찾는 일정이 없어요. 날짜나 제목을 더 알려 주세요.\n(찾는 캘린더: "+viewCals(cals).map(c=>c.name).join(", ")+")"};render();return}
+    pending={...pending,cal:{op:kind,change:ch}};
+    if(evs.length===1)return calConfirm(evs[0]);
+    pending={...pending,stage:"pick",events:evs};render();
+  }catch(e){calFail(e)}
+}
+async function calPick(i){const e=pending.events[i];if(e)await calConfirm(e)}
+async function calConfirm(ev){
+  const op=pending.cal.op,ch=pending.cal.change||{};
+  const lines=[ev.title,fmtEv(ev)+" · "+ev.calName];
+  let body=null;
+  if(op==="edit"){
+    body={};
+    if(ch.title){let nt=ch.title;const m=ev.title.match(/^([^\s)]{1,10}\))\s*/);if(m&&!nt.startsWith(m[1]))nt=m[1]+nt;body.summary=nt;lines.push("→ 제목: "+nt)}
+    if(ch.date||ch.time){
+      const d=ch.date?ymdDate(ch.date):dayS(ev.start),dur=ev.end-ev.start;
+      let s,e,allDay=ev.allDay&&!ch.time;
+      if(allDay){s=d;e=new Date(d.getTime()+dur)}
+      else{const[h,m]=ch.time?ch.time.split(":").map(Number):[ev.start.getHours(),ev.start.getMinutes()];s=new Date(d.getFullYear(),d.getMonth(),d.getDate(),h,m);e=ev.allDay?new Date(s.getTime()+3600000):new Date(s.getTime()+dur)}
+      Object.assign(body,timesBody(s,e,allDay));
+      lines.push("→ "+(s.getMonth()+1)+"/"+s.getDate()+"("+DAYN[s.getDay()]+") "+(allDay?"종일":pad(s.getHours())+":"+pad(s.getMinutes())));
+    }
+    if(!Object.keys(body).length){pending.rec.status="kept";save();pending={...pending,stage:"done",canUndo:false,note:"바꿀 내용을 못 알아들었어요. 예: “5시로”, “다음주 월요일로”"};render();return}
+  }
+  pending={...pending,stage:"confirm",lines,cal:{...pending.cal,opLabel:op==="edit"?"일정 수정":"일정 삭제",ev,body}};render();
+}
+async function calRun(){
+  if(!pending||!pending.cal)return;
+  const c=pending.cal,rec=pending.rec;
+  pending.stage="work";pending.note="처리 중…";render();
+  try{
+    let note,undoFn;
+    if(c.op==="add"){
+      const ev=await CalApi().insert(c.calObj,c.body);rec.result={calId:ev.calId,eventId:ev.id};
+      note="‘"+ev.calName+"’ 캘린더에 등록했어요.\n"+ev.title+" · "+fmtEv(ev);undoFn=()=>CalApi().remove(ev);
+    }else if(c.op==="delete"){
+      await CalApi().remove(c.ev);rec.result={calId:c.ev.calId,eventId:c.ev.id};
+      note="삭제했어요.\n"+c.ev.title+" · "+fmtEv(c.ev);undoFn=()=>CalApi().restore(c.ev);
+    }else{
+      const old=c.ev,back={summary:old.title,...timesBody(old.start,old.end,old.allDay)};
+      const ev=await CalApi().patch(old,c.body);rec.result={calId:ev.calId,eventId:ev.id};
+      note="수정했어요.\n"+ev.title+" · "+fmtEv(ev);undoFn=()=>CalApi().patch(old,back);
+    }
+    rec.status="done";rec.target={app:"gcal",kind:c.op};save();
+    pending={...pending,stage:"done",canUndo:true,undoFn,note};
+  }catch(e){return calFail(e)}
+  render();
+}
+async function fillCalSettings(){
+  const box=$("#calset");if(!box)return;
+  try{
+    const cals=await CalApi().calendars(),w=writable(cals),def=defaultCal(cals);
+    box.innerHTML=`<label for="calDef">새 일정 기본 캘린더</label><select id="calDef">${w.map(c=>`<option ${def&&c.id===def.id?"selected":""}>${esc(c.name)}</option>`).join("")}</select>
+      <label>보여줄 캘린더 (일정 보기·수정·삭제 때 찾는 곳)</label>${w.map(c=>`<label class="chk"><input type="checkbox" data-vc="${esc(c.name)}" ${viewCals(cals).some(v=>v.id===c.id)?"checked":""}>${esc(c.name)}</label>`).join("")}
+      <label for="calPfx">1팀 캘린더에 등록할 때 제목 앞 글자 (비워 두면 신한FC 설정에서 가져와요)</label><input id="calPfx" value="${esc(cfg.calPrefix||"")}" maxlength="10" placeholder="예: 최">
+      <div class="acts"><button class="btn pri" id="calsave">저장</button></div>
+      <p class="k">쓸 수 있는 캘린더만 보여요. 다른 사람 캘린더는 내가 쓰기 권한이 있을 때만 등록·수정·삭제할 수 있어요.</p>`;
+    $("#calsave").onclick=async()=>{cfg.calName=$("#calDef").value;cfg.viewNames=[...box.querySelectorAll("[data-vc]")].filter(x=>x.checked).map(x=>x.dataset.vc);cfg.calPrefix=$("#calPfx").value.trim();await saveCfg();$("#calsave").textContent="저장됨"};
+  }catch(e){
+    box.innerHTML=e.message==="CAL_SCOPE"||e.message==="GOOGLE_AUTH"?`<p class="k">구글 일정 권한이 아직 없어요.</p><div class="acts"><button class="btn pri" id="reauth2">일정 권한 연결(다시 로그인)</button></div>`:`<p class="k">캘린더 목록을 못 불러왔어요. (${esc(String(e.message).slice(0,60))})</p>`;
+    const r=$("#reauth2");if(r)r.onclick=()=>{clearTok();doLogin(false)};
+  }
 }
 boot();
 </script>
