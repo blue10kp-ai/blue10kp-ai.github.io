@@ -365,9 +365,10 @@ function openModule(n){
 }
 function deliverModule(n,dir,req){
   let m=MODS[n.app];
+  const expKey=whereKey({go:req.go,q:req.q,kind:req.kind,id:"",month:req.month,car:req.car});
   if(!m){
     const f=document.createElement("iframe");f.title=adapter(n.app).name;f.setAttribute("allow","microphone");
-    m=MODS[n.app]={frame:f,ready:false,where:{app:n.app,...req}};
+    m=MODS[n.app]={frame:f,ready:false,where:{app:n.app,...req},stack:[],restoring:null};
     f.addEventListener("load",()=>{m.ready=true});
     f.src=dir+"?embed=1#"+modHash(req);
     $("#modbody").appendChild(f);
@@ -376,15 +377,34 @@ function deliverModule(n,dir,req){
     if(m.ready){try{m.frame.contentWindow.postMessage({type:"blue10kp-go",...req},location.origin)}catch(e){}}
     else m.frame.src=dir+"?embed=1#"+modHash(req); // 아직 읽는 중이면 새 주소로
   }
+  if(m.stack.length){ // 이미 화면 기록이 있으면: 요청한 화면이 도착할 때까지 중간 화면은 건너뜀(1.5초 안전장치)
+    m.expect=expKey;
+    setTimeout(()=>{if(m.expect===expKey){m.expect=null;if(m.where&&m.where.go)pushWhere(m,m.where)}},1500);
+  }
   showMod(n.app);
 }
-function modBack(){ // 앱 안에서 한 단계 뒤로, 더 갈 곳이 없으면 모듈을 닫고 말만해요 첫 화면
-  const m=modApp&&MODS[modApp];if(!m)return;
-  if(m.where&&m.where.canBack){try{m.frame.contentWindow.postMessage({type:"blue10kp-back"},location.origin)}catch(e){closeMod()}}
-  else closeMod();
+/* 뒤로: 모듈 안에서 본 화면을 차례로 기억(stack)했다가 "바로 전에 본 화면"을 앱에 다시 열라고 요청한다.
+   예) 김현성 검색 → 김현성 고객정보 → 최수진 검색 에서 뒤로 = 김현성 고객정보 */
+function pushWhere(m,w){
+  const k=whereKey(w),top=m.stack[m.stack.length-1];
+  if(top&&top.k===k)top.w=w;else{m.stack.push({k,w});if(m.stack.length>30)m.stack.shift()}
 }
+const whereKey=w=>[w.go,w.q,w.kind,w.id,w.month,w.car].map(x=>x||"").join("|");
+function modBackStep(){ // 모듈 안에서 처리했으면 true, 더 갈 곳이 없으면 false
+  const m=modApp&&MODS[modApp];if(!m)return false;
+  if(m.stack.length>1){
+    m.stack.pop();const prev=m.stack[m.stack.length-1].w;
+    m.where={...prev};m.restoring=whereKey(prev);
+    setTimeout(()=>{m.restoring=null},1500);
+    try{m.frame.contentWindow.postMessage({type:"blue10kp-go",go:prev.go,q:prev.q||"",kind:prev.kind||"",id:prev.id||"",month:prev.month||"",car:prev.car||""},location.origin)}catch(e){return false}
+    return true;
+  }
+  if(m.where&&m.where.canBack){try{m.frame.contentWindow.postMessage({type:"blue10kp-back"},location.origin);return true}catch(e){return false}}
+  return false;
+}
+function modBack(){if(!modBackStep())closeMod()}
 function closeMod(skipHist){
-  Object.keys(MODS).forEach(k=>{MODS[k].fabHide=false;MODS[k].fabLift=0});modApp=null;$("#mod").hidden=true;document.documentElement.style.removeProperty("--fabb");updateFab();
+  Object.keys(MODS).forEach(k=>{MODS[k].fabHide=false;MODS[k].fabLift=0;MODS[k].stack=[];MODS[k].restoring=null});modApp=null;$("#mod").hidden=true;document.documentElement.style.removeProperty("--fabb");updateFab();
   const p=modPushed;modPushed=false;
   if(p&&!skipHist)popLayer();
   if(db)go(view==="talk"?"log":view);
@@ -424,8 +444,7 @@ window.addEventListener("popstate",()=>{
   if(ignorePop){ignorePop=false;clearTimeout(popT);const c=popCb;popCb=null;c&&c();return}
   if(sheetOpen){sheetPushed=false;closeSheet(true)}
   else if(modApp){
-    const m=MODS[modApp];
-    if(m&&m.where&&m.where.canBack){pushLayer();try{m.frame.contentWindow.postMessage({type:"blue10kp-back"},location.origin)}catch(e){}} // 폰 뒤로도 같은 규칙: 앱 안 뒤로
+    if(modBackStep())pushLayer(); // 폰 뒤로도 같은 규칙: 바로 전에 본 화면
     else{modPushed=false;closeMod(true)}
   }
 });
@@ -440,7 +459,11 @@ window.addEventListener("message",e=>{
     if(app===modApp)updateFab();return} // 앱의 취소·저장 줄이 떠 있는 동안 버튼을 잠깐 숨김
   if(d.type!=="blue10kp-where")return;
   const s=v=>String(v==null?"":v).slice(0,120);
-  MODS[app].where={app,go:s(d.go),q:s(d.q),kind:s(d.kind),id:s(d.id),month:s(d.month),car:s(d.car),canBack:d.canBack===true};
+  const nw={app,go:s(d.go),q:s(d.q),kind:s(d.kind),id:s(d.id),month:s(d.month),car:s(d.car),canBack:d.canBack===true},mm=MODS[app],nk=whereKey(nw);
+  mm.where=nw;
+  if(mm.restoring){if(mm.restoring===nk){mm.restoring=null;if(mm.stack.length)mm.stack[mm.stack.length-1].w=nw}return} // 되돌린 화면이 도착함: 기록에 다시 쌓지 않음
+  if(mm.expect){if(mm.expect===nk)mm.expect=null;else return} // 새 요청 처리 중 앱이 거치는 중간 화면은 기록에 쌓지 않음
+  pushWhere(mm,nw);
   if(app===modApp&&typeof d.fabBottom==="number")document.documentElement.style.setProperty("--fabb",Math.max(0,Math.min(200,d.fabBottom))+"px"); // 앱 하단 메뉴 높이를 알리면 그 위에 버튼을 놓음
 });
 function finishNav(nv,rec){
