@@ -141,8 +141,8 @@ nav .plus span.l{margin-top:-2px}
 [hidden]{display:none!important}
 /* 말만해요 안(embed): 위·아래 메뉴 없이 그 페이지만, 위쪽은 말만해요 플로팅 버튼 자리 56px */
 html.embed header,html.embed nav{display:none!important}
-html.embed body{padding-top:56px;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
-html.embed .toast{bottom:calc(16px + env(safe-area-inset-bottom))}
+html.embed body{padding-top:56px;padding-bottom:calc(104px + env(safe-area-inset-bottom))} /* 오른쪽 아래 88px는 말만해요 버튼 자리 */
+html.embed .toast{bottom:calc(88px + env(safe-area-inset-bottom))} /* 오른쪽 아래 말만해요 버튼(56px) 위로 */
 /* 로그인 화면: 차차차와 같은 모양 */
 .login{max-width:360px;margin:16vh auto 0;padding:0 24px;text-align:center}
 .login h1{font-size:28px;font-weight:700;margin:0 0 4px;letter-spacing:-.5px}
@@ -278,6 +278,22 @@ window.blue10kpGo=function(o){
   cleanHash();
 };
 function runPendingGo(){if(pendingGo&&db){const o=pendingGo;pendingGo=null;window.blue10kpGo(o)}}
+let lastLift=-1;
+function fabLift(){ // 아래쪽에 떠 있는 버튼(시트의 취소·저장 줄 등)의 가장 위 끝이 화면 바닥에서 몇 px인지 부모(말만해요)에게 알림 → 말만해요 버튼이 그만큼 올라감
+  if(!EMBED||window.parent===window)return;
+  let lift=0;
+  const sh=document.querySelector("#modal .sheet");
+  if(sh){
+    const H=innerHeight;let ty=0;try{ty=new DOMMatrix(getComputedStyle(sh).transform).m42||0}catch(e){} // 올라오는 움직임 중이어도 최종 자리 기준으로 잼
+    sh.querySelectorAll(".acts .btn").forEach(b=>{const r=b.getBoundingClientRect(),top=r.top-ty,bot=r.bottom-ty;if(r.height>0&&bot>0&&top<H)lift=Math.max(lift,Math.min(H,Math.round(H-top)))})
+  }
+  if(lift===lastLift)return;
+  lastLift=lift;
+  try{window.parent.postMessage({type:"blue10kp-fab",lift},location.origin)}catch(e){}
+}
+function schedLift(){setTimeout(fabLift,0);setTimeout(fabLift,280)} // 창이 올라오는 움직임이 끝난 뒤에도 다시 잼
+document.addEventListener("scroll",()=>fabLift(),true);
+window.addEventListener("resize",()=>fabLift());
 function canBack(){ // 앱 안에서 한 단계 뒤로 갈 곳이 있는가
   if(!db)return false;
   if($("#modal").firstChild)return !(curRec&&curRec===rootRec&&!tripOpen);
@@ -749,8 +765,8 @@ function viewSet(){
 }
 
 /* ---------- 시트(아래에서 올라오는 창) ---------- */
-function openSheet(html){$("#modal").innerHTML=`<div class="modal" data-act="bg"><div class="sheet">${html}</div></div>`;document.documentElement.classList.add("lock");reportWhere()}
-function closeSheet(){$("#modal").innerHTML="";document.documentElement.classList.remove("lock");F=null;curRec=null;reportWhere()}
+function openSheet(html){$("#modal").innerHTML=`<div class="modal" data-act="bg"><div class="sheet">${html}</div></div>`;document.documentElement.classList.add("lock");schedLift();reportWhere()}
+function closeSheet(){$("#modal").innerHTML="";document.documentElement.classList.remove("lock");F=null;curRec=null;fabLift();reportWhere()}
 let toastT=null,toastUndo=null;
 function toast(msg,undo){
   const el=$("#toast");toastUndo=undo||null;
