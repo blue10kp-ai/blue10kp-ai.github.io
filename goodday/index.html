@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#171B22" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+<meta name="robots" content="noindex,nofollow">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="항상일상">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://accounts.google.com">
+<link rel="preconnect" href="https://www.googleapis.com">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<title>항상일상</title>
+<style>
+/* 차차차·신한FC m과 같은 디자인 기준(색·글자·버튼·하단 메뉴)을 이 파일 안에 옮겨 둔 것 */
+:root{
+  --bg:#F4F5F7;--surface:#FFFFFF;--raised:#F0F2F5;--line:rgba(20,30,50,.10);
+  --t1:#151A22;--t2:#4B5361;--t3:#6B7382;
+  --accent:#1F4E8C;--accent-ink:#FFFFFF;--accent-weak:rgba(31,78,140,.08);
+  --ok:#1D7A46;--warn:#A8620B;--bad:#C0392B;--star:#C77F0A;
+  --k-video:#4F74A8;--k-place:#B4603A;--k-trip:#3B8A80;--k-daily:#9A8230;--k-other:#6B7382;
+  --font:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;
+  --r-ctl:8px;--r-card:12px;--r-panel:16px;
+  --ease:cubic-bezier(.2,.8,.2,1);--t-fast:120ms;--t-in:200ms;--navh:60px
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0F1217;--surface:#171B22;--raised:#1E232B;--line:rgba(255,255,255,.09);
+  --t1:#E8EBF0;--t2:#A5ADBA;--t3:#747C8A;
+  --accent:#7FAEF0;--accent-ink:#0F1217;--accent-weak:rgba(127,174,240,.12);
+  --ok:#4CC282;--warn:#E0A04A;--bad:#EF7A6C;--star:#E8B04A;
+  --k-video:#7FA3D6;--k-place:#E08E66;--k-trip:#6CC0B4;--k-daily:#D2BA5E;--k-other:#A5ADBA}}
+:root[data-theme="dark"]{
+  --bg:#0F1217;--surface:#171B22;--raised:#1E232B;--line:rgba(255,255,255,.09);
+  --t1:#E8EBF0;--t2:#A5ADBA;--t3:#747C8A;
+  --accent:#7FAEF0;--accent-ink:#0F1217;--accent-weak:rgba(127,174,240,.12);
+  --ok:#4CC282;--warn:#E0A04A;--bad:#EF7A6C;--star:#E8B04A;
+  --k-video:#7FA3D6;--k-place:#E08E66;--k-trip:#6CC0B4;--k-daily:#D2BA5E;--k-other:#A5ADBA}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html.lock{overflow:hidden}
+html,body{font-family:var(--font);font-size:15px;line-height:1.5;background:var(--bg);color:var(--t1)}
+body{margin:0;padding-bottom:calc(var(--navh) + 24px + env(safe-area-inset-bottom))}
+button,input,select,textarea{font-family:var(--font)}
+button{color:inherit;cursor:pointer}
+.btn,.rec,.chips button,.seg button,.rowbtn,nav button{transition:background-color var(--t-fast) var(--ease),border-color var(--t-fast) var(--ease),color var(--t-fast) var(--ease),transform var(--t-fast) var(--ease)}
+.btn:active,.rec:active{transform:scale(.98)}
+button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+header{position:sticky;top:0;z-index:5;background:var(--surface);color:var(--t1);border-bottom:1px solid var(--line);padding:calc(8px + env(safe-area-inset-top)) 16px 8px;min-height:56px;display:flex;align-items:center;font-size:17px;font-weight:600}
+header small{margin-left:auto;font-size:11px;font-weight:500;color:var(--t3)}
+header small.fail{color:var(--bad)}
+.wrap{padding:16px 16px 0;max-width:640px;margin:0 auto}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);padding:16px;margin-bottom:8px}
+.card h3{margin:0 0 8px;font-size:13px;font-weight:500;color:var(--t3)}
+.sub{color:var(--t2);font-size:13px;line-height:1.45}
+.k{color:var(--t3);font-size:12px}
+.empty{color:var(--t3);text-align:center;padding:28px 0;font-size:14px;line-height:1.6}
+.note{font-size:13px;color:var(--t3);margin-top:8px}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:36px;padding:0 16px;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--surface);color:var(--t2);font-size:14px;font-weight:600;line-height:1;white-space:nowrap}
+.btn:active{background:var(--raised)}
+.btn.pri{border-color:var(--accent);color:var(--accent)}
+.btn.dng{color:var(--bad)}
+.btn.sm{height:28px;padding:0 12px;font-size:12px}
+.btn:disabled{opacity:.4}
+.acts{display:flex;gap:8px;margin-top:16px}.acts .btn{flex:1}
+label{display:block;font-size:13px;color:var(--t3);margin:16px 0 4px}
+input,select,textarea{width:100%;height:44px;padding:0 12px;font:inherit;font-size:16px;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--surface);color:var(--t1)}
+textarea{height:auto;padding:8px 12px;line-height:1.45}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.inl{display:flex;gap:8px}.inl>*{flex:1;min-width:0}
+.seg{display:flex;gap:2px;background:var(--raised);border-radius:var(--r-ctl);padding:2px}
+.seg button{flex:1;min-height:34px;padding:0 8px;border:0;border-radius:6px;background:none;color:var(--t2);font-size:13px;font-weight:500}
+.seg button.on{background:var(--surface);color:var(--t1);box-shadow:0 0 0 1px var(--line)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{min-height:34px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:0 12px;font-size:13px;color:var(--t2)}
+.chips button.on{border-color:var(--accent);color:var(--accent);background:var(--accent-weak);font-weight:600}
+/* 기록 카드 */
+.dh{font-size:13px;font-weight:500;color:var(--t2);margin:20px 4px 8px}
+.dh:first-child{margin-top:0}
+.rec{display:block;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);padding:12px 16px;margin-bottom:8px}
+.rec:active{background:var(--raised)}
+.rec .top{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--t3)}
+.rec .top .kd{font-weight:500;color:var(--t2);display:inline-flex;align-items:center;gap:8px}
+.kdot{display:inline-block;vertical-align:middle;margin-right:4px;width:8px;height:8px;border-radius:50%;background:var(--kc,var(--k-other));flex:none}
+.kdot.video{--kc:var(--k-video)}.kdot.place{--kc:var(--k-place)}.kdot.trip{--kc:var(--k-trip)}.kdot.daily{--kc:var(--k-daily)}
+.rec .top .st{margin-left:auto}
+.rec .tt{font-size:16px;font-weight:600;margin:4px 0 0;word-break:break-word}
+.rec .nt{font-size:13px;color:var(--t2);margin-top:4px;word-break:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.rec .tg{margin-top:8px;font-size:12px;color:var(--accent)}
+.st{color:var(--star);letter-spacing:1px;font-size:13px;white-space:nowrap}
+.trash{opacity:.9}
+/* 오늘 한 줄 */
+.today{display:flex;align-items:baseline;gap:8px;margin-bottom:12px}
+.today .d{font-size:32px;line-height:1;font-weight:600;font-variant-numeric:tabular-nums}
+.today .m{font-size:13px;color:var(--t3)}
+.quick form{display:flex;gap:8px}.quick input{flex:1}
+.quick .btn{height:44px}
+/* 하단 메뉴 */
+nav{position:fixed;left:0;right:0;bottom:0;z-index:12;display:flex;background:var(--surface);border-top:1px solid var(--line);padding:0 8px max(0px,calc(env(safe-area-inset-bottom) - 10px))}
+nav button{flex:1;min-height:var(--navh);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:0;border-radius:0;background:none;position:relative;font-size:11px;font-weight:500;color:var(--t3)}
+nav .ni{display:block;line-height:0}
+nav .ni svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+nav button.on{color:var(--accent)}
+nav button.on::before{content:"";position:absolute;top:-1px;left:28%;right:28%;height:2px;background:var(--accent);border-radius:0 0 2px 2px}
+nav .plus .pc{width:44px;height:44px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;margin-top:-12px;box-shadow:0 0 0 4px var(--surface)}
+nav .plus .pc svg{width:24px;height:24px;stroke:currentColor;stroke-width:2}
+nav .plus{color:var(--accent)}
+nav .plus span.l{margin-top:-2px}
+/* 입력 창(시트) */
+.modal{position:fixed;inset:0;background:rgba(10,15,25,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);color:var(--t1);border-radius:20px 20px 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.18);width:100%;max-width:640px;max-height:92vh;max-height:92dvh;overflow:auto;padding:8px 16px calc(16px + env(safe-area-inset-bottom));animation:up var(--t-in) var(--ease)}
+.sheet::before{content:"";display:block;width:40px;height:5px;border-radius:3px;background:var(--t3);opacity:.5;margin:2px auto 12px}
+.sheet h3{margin:0 0 4px;font-size:18px;font-weight:600;word-break:break-word}
+@keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.sheet .acts.stk{position:sticky;bottom:calc(-16px - env(safe-area-inset-bottom));background:var(--surface);padding:12px 0 calc(16px + env(safe-area-inset-bottom));margin-bottom:calc(-16px - env(safe-area-inset-bottom))}
+.stars{display:flex;gap:2px}
+.stars button{width:44px;height:44px;border:0;background:none;font-size:28px;line-height:1;color:var(--t3)}
+.stars button.on{color:var(--star)}
+.kv{display:flex;gap:12px;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+.kv .a{flex:0 0 84px;color:var(--t3);font-size:13px}.kv .b{flex:1;word-break:break-word}
+.kv a{color:var(--accent)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 0;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row .t{font-weight:500}.row .r{text-align:right;color:var(--t3);font-size:13px}
+.rowbtn{display:flex;width:100%;justify-content:space-between;align-items:center;padding:12px 0;border:0;border-top:1px solid var(--line);background:none;text-align:left;font-size:15px;font-weight:500}
+.rowbtn:first-child{border-top:0}
+.rowbtn .r{color:var(--t3);font-size:13px;font-weight:400}
+.sec{font-size:13px;font-weight:500;color:var(--t2);margin:20px 4px 8px}
+.toast{position:fixed;left:16px;right:16px;bottom:calc(var(--navh) + 16px + env(safe-area-inset-bottom));z-index:30;max-width:420px;margin:0 auto;background:var(--t1);color:var(--bg);border-radius:var(--r-ctl);padding:12px 16px;font-size:14px;display:flex;align-items:center;gap:12px;animation:up var(--t-in) var(--ease)}
+.toast button{margin-left:auto;border:0;background:none;color:var(--bg);font-weight:700;font-size:14px;text-decoration:underline}
+.back{border:0;background:none;color:var(--accent);font-size:14px;font-weight:600;padding:4px 0;margin-bottom:8px}
+.demo{font-size:11px;color:var(--warn);margin-left:8px;font-weight:500}
+[hidden]{display:none!important}
+/* 로그인 화면: 차차차와 같은 모양 */
+.login{max-width:360px;margin:16vh auto 0;padding:0 24px;text-align:center}
+.login h1{font-size:28px;font-weight:700;margin:0 0 4px;letter-spacing:-.5px}
+.login p{margin:0 0 24px;color:var(--t2);font-size:14px}
+.login .btn{width:100%;height:44px;font-size:15px;margin-top:8px}
+.login .lm{min-height:22px;margin:0 0 12px;font-size:13px;color:var(--t3)}
+.login .lm.err{color:var(--bad)}
+.login .hint{margin-top:20px;font-size:12px;color:var(--t3)}
+</style>
+</head>
+<body>
+<section id="login" class="login">
+  <h1>항상일상</h1>
+  <p>나의 일상 기록장</p>
+  <div class="lm" id="lmsg">확인 중…</div>
+  <button class="btn pri" id="loginBtn" hidden>Google 계정으로 로그인</button>
+  <button class="btn" id="loginOtherBtn" hidden>다른 계정으로 로그인</button>
+  <div class="hint">로그인한 뒤에만 기록이 보입니다. 기록은 내 Google Drive에 저장됩니다.</div>
+</section>
+<header id="title" hidden><span>항상일상</span><span class="demo" id="demoTag" hidden>체험 모드</span><small id="sync"></small></header>
+<div class="wrap" id="main" hidden></div>
+<nav id="nav" hidden></nav>
+<div id="modal"></div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+"use strict";
+/* ===== 설정 (여기만 고치면 됩니다) ===== */
+const ALLOWED=["blue10kp@gmail.com"]; // 로그인을 허용할 구글 계정 (소문자로, 여러 명이면 쉼표로 추가). 화면 보호용이며, 실제 보호는 각자의 Google Drive 권한입니다.
+const GCLIENT="482206908404-5sdbvetcrc8j7ctrhe6aa23ccmd3d05d.apps.googleusercontent.com"; // 구글 로그인 클라이언트 ID (차차차와 같은 값, 공개되어도 되는 값)
+const GSCOPE="openid email https://www.googleapis.com/auth/drive.file"; // 이 앱이 만든 파일만 접근 (Drive 전체 권한 아님)
+const GPICKER_KEY=""; // 파일 선택 창(Google Picker)용 브라우저 API 키. 사용자가 구글 클라우드에서 발급해 여기에 붙여 넣음(출처 제한 키는 공개되어도 됨). 비어 있으면 받은편지함 연결은 "준비 중"으로 보임
+const GPROJECT="482206908404"; // 구글 클라우드 프로젝트 번호(클라이언트 ID 앞 숫자)
+const DRIVE_PATH=["goodday"],DRIVE_FILE="goodday_기록.json"; // 각자의 내 드라이브 안 저장 위치
+const VER="1단계 (2026-11-14)";
+/* ===== 끝 ===== */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const today=()=>iso(new Date());
+const WD="일월화수목금토";
+const DEMO=/^(localhost|127\.0\.0\.1)$/.test(location.hostname)&&/[?&]demo=1/.test(location.search); // 내 컴퓨터에서 화면 확인용(구글 로그인·Drive 저장 없음)
+/* localStorage는 막힐 수 있어 항상 감쌈 (화면 모드·파일 번호 같은 기기 편의 값만 둠. 기록은 두지 않음) */
+const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+const lsDel=k=>{try{localStorage.removeItem(k)}catch(e){}};
+
+/* ---------- 기본 종류 ---------- */
+const BASE=[
+ {id:"video",name:"영상·음악",noteLabel:"한 줄 감상",fields:[
+  {k:"type",l:"구분",t:"sel",o:["영화","드라마","공연","음악","기타"]},
+  {k:"where",l:"본 곳·들은 곳",t:"text",ph:"극장, 넷플릭스…"},
+  {k:"with",l:"함께한 사람",t:"text"}]},
+ {id:"place",name:"맛집·장소",noteLabel:"한 줄 메모",fields:[
+  {k:"addr",l:"주소",t:"text"},
+  {k:"map",l:"지도 링크",t:"url",ph:"지도 앱에서 공유한 링크를 붙여 넣기"},
+  {k:"menu",l:"먹은 메뉴",t:"text"},
+  {k:"price",l:"가격(원)",t:"num"},
+  {k:"again",l:"또 갈까요",t:"sel",o:["또 갈래요","글쎄요","다시는 안 가요"]}]},
+ {id:"trip",name:"여행",noteLabel:"한 줄 메모",fields:[
+  {k:"region",l:"지역",t:"text"},
+  {k:"start",l:"시작일",t:"date"},
+  {k:"end",l:"끝난 날",t:"date"}]},
+ {id:"daily",name:"일상",noteLabel:"오늘의 한 줄",fields:[
+  {k:"mood",l:"기분",t:"sel",o:["좋음","괜찮음","그저 그럼","별로"]}]}
+];
+const CUSTOM_FIELDS=[{k:"detail",l:"자세히",t:"area"}];
+
+/* ---------- 자료 모양 ---------- */
+let db=null,dirty=false,me="";
+function norm(d){
+  d=d&&typeof d==="object"?d:{};d.v=1;
+  d.records=Array.isArray(d.records)?d.records:[];
+  const s=d.settings=d.settings&&typeof d.settings==="object"?d.settings:{};
+  s.stars=s.stars==="num"?"num":"star";
+  s.theme=["auto","light","dark"].includes(s.theme)?s.theme:"auto";
+  s.hidden=Array.isArray(s.hidden)?s.hidden:[];
+  s.custom=Array.isArray(s.custom)?s.custom:[];
+  s.lastKind??="";
+  s.inboxFile=s.inboxFile&&typeof s.inboxFile.id==="string"?{id:s.inboxFile.id,name:String(s.inboxFile.name||"")}:null;
+  d.records.forEach(r=>{r.tags=Array.isArray(r.tags)?r.tags:[];r.x=r.x&&typeof r.x==="object"?r.x:{};r.rating=+r.rating||0;r.note??="";r.date??=""});
+  const lim=Date.now()-30*864e5; // 휴지통은 30일 뒤 자동 정리
+  d.records=d.records.filter(r=>!(r.del&&r.del<lim));
+  return d;
+}
+const allKinds=()=>[...BASE,...db.settings.custom.map(c=>({id:c.id,name:c.name,noteLabel:"한 줄 메모",fields:CUSTOM_FIELDS,custom:true}))];
+const kindOf=id=>allKinds().find(k=>k.id===id)||{id,name:"(없어진 종류)",noteLabel:"한 줄 메모",fields:[]};
+const visKinds=()=>allKinds().filter(k=>!db.settings.hidden.includes(k.id));
+const live=()=>db.records.filter(r=>!r.del);
+const sortRecs=a=>a.sort((x,y)=>(y.date||"").localeCompare(x.date||"")||(y.upd||0)-(x.upd||0));
+function seedDemo(){
+  const t=new Date(),d=n=>{const x=new Date(t);x.setDate(x.getDate()-n);return iso(x)},now=Date.now();
+  const R=(kind,date,title,note,rating,tags,x)=>({id:uid(),kind,date,title,note,rating,tags,x,ts:now,upd:now});
+  return norm({records:[
+    R("video",d(1),"괜찮은 영화 한 편","엔딩이 오래 남았다",8,["영화","혼자"],{type:"영화",where:"동네 극장",with:""}),
+    R("place",d(2),"성수 칼국수집","국물이 깔끔함. 줄이 길다",9,["점심","또가고싶다"],{addr:"서울 성동구",map:"https://map.naver.com/",menu:"바지락칼국수",price:"11000",again:"또 갈래요"}),
+    R("daily",d(0),"비 오는 날, 커피 한 잔","창가 자리에 앉았다",0,[],{mood:"괜찮음"}),
+    R("trip",d(20),"제주 가을 여행","3박 4일",10,["가족"],{region:"제주",start:d(20),end:d(17)}),
+    R("place",d(19),"제주 흑돼지 거리","저녁 식사",7,["저녁"],{menu:"흑돼지",price:"58000",again:"글쎄요"})
+  ]});
+}
+
+/* ---------- 말만해요 받은편지함 (파일 선택 창으로 고른 파일 하나만 읽고, 처리한 쪽지는 done 표시) ---------- */
+let inbox=[],inboxMsg="",inboxHide=false;
+const INBOX_KINDS=["video","place","trip","daily"];
+let demoDoc={items:[
+  {id:"d1",at:new Date().toISOString(),from:"onething",kind:"place",text:"점심에 성수동 만두집 갔다. 육즙이 좋았고 또 가고 싶다",fields:{title:"성수동 만두집",menu:"군만두",price:9000},status:"new"},
+  {id:"d2",at:new Date().toISOString(),from:"onething",kind:"video",text:"어제 본 영화 괜찮았다",fields:{},status:"new"},
+  {id:"d3",at:new Date().toISOString(),from:"onething",kind:"daily",text:"취소한 쪽지",fields:{},status:"cancelled"}]};
+async function inboxDoc(){
+  const f=db.settings.inboxFile;
+  if(DEMO)return demoDoc;
+  return parseDoc(await gfetch(DAPI+"/files/"+f.id+"?alt=media",null,true));
+}
+async function inboxCheck(){
+  inbox=[];inboxMsg="";
+  const f=db.settings.inboxFile;if(!f||!f.id)return;
+  try{
+    const doc=await inboxDoc(),items=Array.isArray(doc&&doc.items)?doc.items:[];
+    const have=new Set(db.records.map(r=>r.srcId).filter(Boolean));
+    const fresh=items.filter(i=>i&&i.id&&i.status==="new");
+    inbox=fresh.filter(i=>!have.has(String(i.id))).slice(0,50);
+    const dup=fresh.filter(i=>have.has(String(i.id))).map(i=>i.id); // 기록엔 들어갔는데 done 표시가 빠진 것
+    if(dup.length)inboxMarkDone(dup);
+  }catch(e){if(e.message!=="GOOGLE_AUTH")inboxMsg="받은편지함 파일을 열지 못했어요. 설정에서 다시 연결해 주세요."}
+}
+function inboxToRec(it,now){
+  const kind=INBOX_KINDS.includes(it.kind)?it.kind:"daily",k=kindOf(kind);
+  const f=it.fields&&typeof it.fields==="object"?it.fields:{},text=String(it.text||"").trim();
+  const first=text.split(/\n/)[0],title=String(f.title||first||"말만해요 메모").trim().slice(0,120);
+  const at=new Date(it.at),date=/^\d{4}-\d\d-\d\d$/.test(String(f.date||""))?f.date:(isNaN(at)?today():iso(at));
+  const x={};k.fields.forEach(fl=>{const v=f[fl.k];if(v!=null&&v!==""&&typeof v!=="object")x[fl.k]=String(v).slice(0,200)});
+  const rating=Math.max(0,Math.min(10,Math.round(+f.rating)||0));
+  return{id:uid(),kind,date,title,note:text&&text!==title?text.slice(0,300):"",rating,tags:Array.isArray(f.tags)?parseTags(f.tags.join(" ")):[],x,ts:now,upd:now,src:"말만해요",srcId:String(it.id)};
+}
+async function inboxAccept(){
+  const items=inbox.slice();if(!items.length)return;
+  const now=Date.now();
+  items.forEach(it=>db.records.push(inboxToRec(it,now)));
+  const ids=items.map(i=>i.id);
+  inbox=[];save();render();toast(items.length+"통을 기록에 넣었어요");
+  await inboxMarkDone(ids);
+}
+async function inboxMarkDone(ids){
+  const f=db.settings.inboxFile;if(!f||!f.id||!ids.length)return;
+  try{
+    const doc=await inboxDoc();let ch=false;
+    (doc.items||[]).forEach(i=>{if(ids.includes(i.id)&&i.status==="new"){i.status="done";i.doneAt=new Date().toISOString();ch=true}});
+    if(ch&&!DEMO)await gfetch(DUP+"/files/"+f.id+"?uploadType=media&fields=id",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(doc)});
+  }catch(e){inboxMsg="받은편지함에 완료 표시를 못 했어요. 기록은 들어갔고, 다음에 다시 시도해요."}
+}
+let pickerLoad=null;
+function loadPicker(){return pickerLoad||(pickerLoad=new Promise((res,rej)=>{const sc=document.createElement("script");sc.src="https://apis.google.com/js/api.js";sc.onload=()=>gapi.load("picker",{callback:res,onerror:rej});sc.onerror=()=>rej(new Error("load"));document.head.appendChild(sc)}))}
+async function pickInbox(){
+  if(DEMO){db.settings.inboxFile={id:"demo",name:"goodday.json"};save();await inboxCheck();inboxHide=false;render();openInbox();return}
+  if(!GPICKER_KEY){toast("아직 준비 중이에요 (구글 설정이 필요해요)");return}
+  try{
+    await loadPicker();const t=gTok||storedTok();if(!t)throw new Error("GOOGLE_AUTH");
+    const view=new google.picker.DocsView(google.picker.ViewId.DOCS).setIncludeFolders(true).setSelectFolderEnabled(false).setMode(google.picker.DocsViewMode.LIST);
+    new google.picker.PickerBuilder().setOAuthToken(t).setDeveloperKey(GPICKER_KEY).setAppId(GPROJECT).addView(view).setLocale("ko").setTitle("받은편지함 파일(goodday.json) 고르기")
+     .setCallback(async d=>{if(d.action===google.picker.Action.PICKED&&d.docs&&d.docs[0]){const o=d.docs[0];db.settings.inboxFile={id:o.id,name:String(o.name||"")};save();inboxHide=false;await inboxCheck();render();openInbox()}}).build().setVisible(true);
+  }catch(e){toast(e.message==="GOOGLE_AUTH"?"다시 로그인해 주세요":"파일 선택 창을 열지 못했어요")}
+}
+function openInbox(){
+  const f=db.settings.inboxFile;
+  openSheet(`<h3>말만해요 받은편지함</h3>
+   <div class="sub" style="margin-top:4px">말만해요가 보낸 쪽지를 앱을 열 때 확인해서, 카드로 보여 드려요. 확인하고 넣기를 누른 쪽지만 기록이 됩니다.</div>
+   <div class="kv" style="margin-top:16px"><div class="a">상태</div><div class="b">${f?"연결됨 · "+esc(f.name||"선택한 파일"):"연결 안 됨"}</div></div>
+   ${f?`<div class="kv"><div class="a">대기</div><div class="b">${inbox.length}통</div></div>`:""}
+   ${inboxMsg?`<div class="note" style="color:var(--bad)">${esc(inboxMsg)}</div>`:""}
+   <div class="note">연결할 때 파일 선택 창이 열리면 내 드라이브의 Claude › app › onething › 받은편지함 › goodday.json 을 한 번 골라 주세요. 이 앱은 고른 그 파일만 읽습니다.</div>
+   <div class="acts"><button class="btn pri" data-act="inboxPick">${f?"다시 고르기":"파일 고르기"}</button>${f?`<button class="btn" data-act="inboxRecheck">지금 확인</button>`:""}</div>
+   <div class="acts">${f?`<button class="btn dng" data-act="inboxOff">연결 끊기</button>`:""}<button class="btn" data-act="close">닫기</button></div>`);
+}
+function inboxCard(){
+  if(!inbox.length||inboxHide)return"";
+  return`<div class="card"><h3>말만해요에서 ${inbox.length}통이 왔어요</h3>
+   ${inbox.slice(0,5).map(i=>`<div class="row"><span class="t" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><i class="kdot ${esc(INBOX_KINDS.includes(i.kind)?i.kind:"daily")}"></i> ${esc(String(i.text||"").slice(0,60))}</span></div>`).join("")}
+   ${inbox.length>5?`<div class="note">외 ${inbox.length-5}통</div>`:""}
+   <div class="acts"><button class="btn" data-act="inboxLater">나중에</button><button class="btn pri" data-act="inboxYes">기록에 넣기</button></div></div>`;
+}
+
+/* ---------- 구글 로그인 (차차차와 같은 방식: Google Identity Services 토큰) ---------- */
+const GTK="goodday.gtoken",GAC="goodday.gaccount",FID_KEY="goodday.fid"; // GTK = 예전 전용 토큰(한 번 공통 출입증으로 옮김)
+const GA="blue10kp.gauth"; // 공통 출입증: 모든 앱이 같이 쓰는 이름 (app\_공통\공통로그인.md)
+const DRIVEFILE="https://www.googleapis.com/auth/drive.file";
+const SUPER={"https://www.googleapis.com/auth/drive.file":["https://www.googleapis.com/auth/drive"]};
+let gTok=null,pend=null,gaSeen=false;
+const allowedEm=e=>ALLOWED.map(x=>x.toLowerCase()).includes(String(e||"").toLowerCase());
+const hasScope=(sc,need)=>sc.includes(need)||(SUPER[need]||[]).some(x=>sc.includes(x));
+function readGa(){try{const g=JSON.parse(lsGet(GA)||"null");return g&&g.v===1&&typeof g.token==="string"&&+g.exp&&Array.isArray(g.scopes)?g:null}catch(e){return null}}
+function writeGa(token,exp,scopes,email){lsSet(GA,JSON.stringify({v:1,token,exp,scopes,email:email||""}));gaSeen=!!readGa()}
+const gaFresh=g=>!!g&&g.exp>Date.now()+120000; // 만료까지 2분 이상
+const gaScopeOk=g=>!!g&&hasScope(g.scopes,DRIVEFILE);
+function storedTok(){const g=readGa();return gaFresh(g)&&gaScopeOk(g)?g.token:null}
+function clearTok(t){const g=readGa();if(g&&(!t||g.token===t))lsDel(GA);gTok=null}
+function migrateOld(){ // 예전 전용 토큰을 공통 출입증으로 한 번 옮김
+  try{
+    const o=JSON.parse(lsGet(GTK)||"null");
+    if(o&&o.token&&o.exp>Date.now()+120000&&!readGa()&&gAcct())writeGa(o.token,o.exp,["openid","email",DRIVEFILE],gAcct());
+  }catch(e){}
+  lsDel(GTK);
+}
+const gAcct=()=>{const g=readGa();return(g&&g.email)||lsGet(GAC)||""};
+function requestTok(prompt,noHint){
+  return new Promise((res,rej)=>{
+    const g=window.google&&google.accounts&&google.accounts.oauth2;
+    if(!g)return rej(new Error("구글 로그인 모듈을 불러오지 못했습니다. 잠시 후 다시 시도하세요."));
+    const c=g.initTokenClient({client_id:GCLIENT,scope:GSCOPE,include_granted_scopes:true,hint:noHint?undefined:(gAcct()||undefined),
+      callback:r=>{
+        if(r.error)return rej(new Error("구글 연결 실패: "+r.error));
+        const sc=String(r.scope||"").split(/\s+/).filter(Boolean);
+        if(!hasScope(sc,DRIVEFILE))return rej(new Error("Google Drive 권한을 허용해야 합니다. 다시 로그인하면서 모든 항목에 체크해 주세요."));
+        pend={exp:Date.now()+(r.expires_in||3600)*1000,scopes:sc};
+        gTok=r.access_token;res(r.access_token);
+      },
+      error_callback:e=>rej(new Error(e&&e.type==="popup_closed"?"구글 로그인 창이 닫혔습니다.":"구글 로그인 창을 열 수 없습니다. 팝업 차단을 확인하세요."))});
+    c.requestAccessToken({prompt:prompt==null?"":prompt});
+  });
+}
+async function gfetch(url,opt,asText,retry){
+  const t=gTok||storedTok();if(!t)throw new Error("GOOGLE_AUTH");
+  const o=opt||{},r=await fetch(url,{...o,headers:{Authorization:"Bearer "+t,...(o.headers||{})},cache:"no-store"});
+  if(r.status===401){
+    const n=storedTok();
+    if(n&&n!==t&&!retry){gTok=n;return gfetch(url,opt,asText,true)} // 다른 앱에서 새로 로그인했으면 그 토큰으로 이어서
+    clearTok(t);throw new Error("GOOGLE_AUTH");
+  }
+  if(!r.ok)throw new Error("Drive "+r.status+": "+(await r.text()).slice(0,160));
+  return asText?r.text():r.json();
+}
+/* 화면이 다시 보일 때 공통 출입증을 다시 읽음: 다른 앱에서 로그인했으면 이어 쓰고, 로그아웃했으면 함께 로그아웃 */
+function gaSync(){
+  if(DEMO||!db)return;
+  const g=readGa();
+  if(g){
+    gaSeen=true;
+    if(g.token!==gTok&&gaFresh(g)&&gaScopeOk(g)&&allowedEm(g.email)){
+      if(me&&g.email.toLowerCase()!==me.toLowerCase()){ // 다른 앱에서 다른 계정으로 바꿈
+        if(dirty)return;
+        lsSet(GAC,g.email.toLowerCase());lsDel(FID_KEY);db=null;fileId=null;folderId=null;lastMod=null;me=g.email.toLowerCase();gTok=g.token;inbox=[];
+        startApp().catch(e=>showLogin(e.message==="GOOGLE_AUTH"?"":"기록을 불러오지 못했어요. ("+String(e.message).slice(0,60)+")"));
+        return;
+      }
+      gTok=g.token;
+    }
+    return;
+  }
+  if(gaSeen&&!dirty){ // 다른 앱에서 로그아웃함
+    gaSeen=false;gTok=null;db=null;fileId=null;folderId=null;lastMod=null;me="";inbox=[];
+    showLogin("다른 앱에서 로그아웃했어요. 다시 로그인해 주세요.",false);
+  }
+}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)gaSync()});
+window.addEventListener("focus",gaSync);
+
+/* ---------- 내 Google Drive 저장 (내 드라이브/goodday/goodday_기록.json, 이 앱이 만든 파일만 접근) ---------- */
+const DAPI="https://www.googleapis.com/drive/v3",DUP="https://www.googleapis.com/upload/drive/v3";
+let fileId=null,folderId=null,lastMod=null,saving=false,again=false,retryT=null,saveT=null;
+const qv=x=>String(x).replace(/\\/g,"\\\\").replace(/'/g,"\\'");
+async function dFind(parent,name,folder){
+  const q="'"+qv(parent)+"' in parents and name='"+qv(name)+"' and trashed=false"+(folder?" and mimeType='application/vnd.google-apps.folder'":"");
+  const d=await gfetch(DAPI+"/files?pageSize=10&fields="+encodeURIComponent("files(id,name,modifiedTime)")+"&q="+encodeURIComponent(q));
+  return(d.files||[])[0]||null;
+}
+async function dFolder(create){
+  if(folderId)return folderId;
+  let id="root";
+  for(const n of DRIVE_PATH){
+    let f=await dFind(id,n,true);
+    if(!f){if(!create)return null;f=await gfetch(DAPI+"/files?fields=id",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:n,mimeType:"application/vnd.google-apps.folder",parents:[id]})})}
+    id=f.id;
+  }
+  return folderId=id;
+}
+const cachedFid=()=>{try{return JSON.parse(lsGet(FID_KEY)||"null")}catch(e){return null}};
+const cacheFid=()=>lsSet(FID_KEY,JSON.stringify({file:fileId,folder:folderId,acct:gAcct()}));
+const parseDoc=t=>JSON.parse(t.replace(/^﻿/,""));
+async function loadDrive(){ // 드라이브의 기록 파일 → 객체 (없으면 null)
+  const c=cachedFid();
+  if(c&&c.file&&c.acct===gAcct()){
+    try{
+      const [meta,txt]=await Promise.all([gfetch(DAPI+"/files/"+c.file+"?fields=modifiedTime,trashed"),gfetch(DAPI+"/files/"+c.file+"?alt=media",null,true)]);
+      if(!meta.trashed){fileId=c.file;folderId=c.folder||null;lastMod=meta.modifiedTime;return parseDoc(txt)}
+    }catch(e){if(e.message==="GOOGLE_AUTH")throw e}
+  }
+  const fo=await dFolder(false);if(!fo)return null;
+  const f=await dFind(fo,DRIVE_FILE,false);if(!f)return null;
+  fileId=f.id;lastMod=f.modifiedTime;cacheFid();
+  return parseDoc(await gfetch(DAPI+"/files/"+f.id+"?alt=media",null,true));
+}
+function setSync(st){
+  const el=$("#sync");if(!el)return;
+  const t=new Date(),hm=String(t.getHours()).padStart(2,"0")+":"+String(t.getMinutes()).padStart(2,"0");
+  el.className=st==="fail"?"fail":"";
+  el.textContent=st==="saving"?"저장 중…":st==="ok"?"저장됨 "+hm:st==="fail"?"저장 안 됨 (다시 시도 중)":"";
+  if(view==="set"&&$("#syncRow"))$("#syncRow").textContent=el.textContent||"–";
+}
+function save(){ // 기록이 바뀔 때마다 부름 → 잠시 뒤 드라이브에 저장
+  if(DEMO){setSync("");return}
+  dirty=true;setSync("saving");clearTimeout(saveT);saveT=setTimeout(()=>driveSave(),500);
+}
+async function driveSave(force){
+  if(DEMO||!db||!dirty&&!force)return;
+  if(saving){again=true;return}
+  saving=true;clearTimeout(retryT);
+  try{
+    if(!fileId){const fo0=await dFolder(true),f=await dFind(fo0,DRIVE_FILE,false);if(f){fileId=f.id;lastMod=f.modifiedTime;cacheFid()}}
+    const body=JSON.stringify(db);let meta;
+    if(fileId){
+      if(!force){
+        const cur=await gfetch(DAPI+"/files/"+fileId+"?fields=modifiedTime");
+        if(lastMod&&cur.modifiedTime!==lastMod&&!confirm("다른 기기에서 기록이 바뀌었어요.\n확인 = 지금 화면의 기록으로 덮어쓰기\n취소 = 드라이브에 있는 기록 불러오기")){
+          const d=await loadDrive();if(d){db=norm(d);dirty=false;setSync("ok");applyTheme();render()}return;
+        }
+      }
+      meta=await gfetch(DUP+"/files/"+fileId+"?uploadType=media&fields=id,modifiedTime",{method:"PATCH",headers:{"Content-Type":"application/json"},body});
+    }else{
+      const fo=await dFolder(true),bd="gd"+uid();
+      const mp="--"+bd+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+JSON.stringify({name:DRIVE_FILE,parents:[fo],mimeType:"application/json"})+"\r\n--"+bd+"\r\nContent-Type: application/json\r\n\r\n"+body+"\r\n--"+bd+"--";
+      meta=await gfetch(DUP+"/files?uploadType=multipart&fields=id,modifiedTime",{method:"POST",headers:{"Content-Type":"multipart/related; boundary="+bd},body:mp});
+      fileId=meta.id;cacheFid();
+    }
+    lastMod=meta.modifiedTime;dirty=false;setSync("ok");
+  }catch(e){
+    setSync("fail");
+    if(e.message==="GOOGLE_AUTH")showLogin("로그인이 만료되었습니다. 다시 로그인하면 저장되지 않은 기록이 자동으로 저장됩니다.");
+    else retryT=setTimeout(()=>driveSave(),15000);
+  }finally{saving=false;if(again){again=false;driveSave()}}
+}
+window.addEventListener("online",()=>{if(dirty&&db)driveSave()});
+window.addEventListener("beforeunload",e=>{if(dirty){e.preventDefault();e.returnValue=""}});
+
+/* ---------- 로그인 화면 · 허용 계정 ---------- */
+function setShell(on){["title","main","nav"].forEach(i=>{$("#"+i).hidden=!on});$("#login").hidden=on}
+function showLogin(msg,isErr){ // 로그인 전·만료 때: 화면에서 기록을 모두 치움
+  $("#modal").innerHTML="";$("#main").innerHTML="";$("#nav").innerHTML="";
+  setShell(false);
+  const m=$("#lmsg");m.textContent=msg||"";m.className="lm"+(msg&&isErr!==false&&/권한|실패|만료|못|않|닫혔|허용/.test(msg)?" err":"");
+  $("#loginBtn").textContent="Google 계정으로 로그인";$("#loginBtn").hidden=false;$("#loginOtherBtn").hidden=false;
+}
+async function denyAccount(em){
+  gTok=null;pend=null;lsDel(FID_KEY);
+  db=null;dirty=false;fileId=null;folderId=null;lastMod=null;me="";
+  showLogin("권한이 없습니다. 이 앱은 허용된 계정만 쓸 수 있어요. 허용된 계정으로 다시 로그인해 주세요.");
+}
+async function checkAccount(){
+  const u=await gfetch("https://www.googleapis.com/oauth2/v3/userinfo");
+  const em=String(u.email||"").toLowerCase();
+  if(!em)throw new Error("구글 계정 이메일을 읽지 못했습니다.");
+  return{em,ok:ALLOWED.map(x=>x.toLowerCase()).includes(em)&&u.email_verified!==false};
+}
+async function afterToken(){
+  const a=await checkAccount();
+  if(!a.ok){await denyAccount(a.em);return}
+  const changed=gAcct()&&gAcct()!==a.em;
+  lsSet(GAC,a.em);me=a.em;
+  if(pend&&gTok)writeGa(gTok,pend.exp,pend.scopes,a.em);
+  if(changed){db=null;dirty=false;fileId=null;folderId=null;lastMod=null;lsDel(FID_KEY)}
+  await startApp();
+}
+async function startApp(){
+  $("#lmsg").className="lm";$("#lmsg").textContent="기록을 불러오는 중…";
+  $("#loginBtn").hidden=true;$("#loginOtherBtn").hidden=true;
+  if(db&&dirty){await driveSave(true)} // 만료 동안 저장 못 한 기록이 있으면 먼저 저장
+  else{
+    const d=await loadDrive();
+    if(d)db=norm(d);
+    else{db=norm({});dirty=true;await driveSave(true)} // 처음 쓰는 계정: 빈 기록 파일 만들기
+  }
+  me=me||gAcct();
+  applyTheme();setShell(true);setSync("ok");view="home";render();scrollTo(0,0);
+  inboxCheck().then(()=>{if(db&&view==="home"&&!$("#modal").firstChild)render()});
+}
+async function doLogin(other){
+  $("#lmsg").className="lm";$("#lmsg").textContent="로그인 중…";
+  try{await requestTok(other?"select_account":undefined,other);await afterToken()}
+  catch(e){showLogin(e.message==="GOOGLE_AUTH"?"로그인이 만료되었습니다. 다시 로그인해 주세요.":e.message)}
+}
+$("#loginBtn").addEventListener("click",()=>doLogin(false));
+$("#loginOtherBtn").addEventListener("click",()=>doLogin(true));
+async function boot(){ // 열자마자: 공통 출입증(권한·계정·만료)이 맞으면 로그인 화면 없이 시작, 아니면 로그인 화면
+  applyTheme();
+  if(DEMO){db=seedDemo();me="demo@local";$("#demoTag").hidden=false;setShell(true);render();return}
+  migrateOld();
+  const g=readGa();
+  if(g)gaSeen=true;
+  if(gaFresh(g)&&gaScopeOk(g)&&allowedEm(g.email)){
+    try{
+      me=g.email.toLowerCase();lsSet(GAC,me);gTok=g.token;
+      checkAccount().then(a=>{if(!a.ok)denyAccount(a.em)},()=>{});
+      await startApp();return;
+    }catch(e){showLogin(e.message==="GOOGLE_AUTH"?"":"기록을 불러오지 못했어요. 인터넷을 확인하고 다시 시도해 주세요. ("+e.message.slice(0,60)+")");return}
+  }
+  showLogin("");
+  if(gaFresh(g)&&allowedEm(g.email)&&!gaScopeOk(g))$("#loginBtn").textContent="구글 연결 (권한 추가)"; // 계정은 같은데 권한만 모자람
+}
+async function logout(){
+  if(!confirm("모든 앱에서 로그아웃됩니다. 로그아웃할까요?"))return;
+  if(!DEMO){
+    await driveSave();
+    if(dirty&&!confirm("저장되지 않은 기록이 있습니다. 그래도 로그아웃할까요?"))return;
+    clearTok();gaSeen=false;lsDel(GA);
+  }
+  db=null;dirty=false;fileId=null;folderId=null;lastMod=null;me="";inbox=[];inboxMsg="";
+  closeSheet();
+  showLogin("로그아웃했습니다.",false);
+}
+
+/* ---------- 화면 모드 ---------- */
+function applyTheme(){
+  const m=db?db.settings.theme:(lsGet("goodday.theme")||"auto");
+  if(db)lsSet("goodday.theme",m);
+  if(m==="auto")document.documentElement.removeAttribute("data-theme");else document.documentElement.setAttribute("data-theme",m);
+}
+
+/* ---------- 보여주기 도우미 ---------- */
+function dlabel(d){
+  const m=/^(\d{4})-(\d\d)-(\d\d)$/.exec(d||"");if(!m)return"날짜 없음";
+  const dt=new Date(+m[1],+m[2]-1,+m[3]);
+  return(d===today()?"오늘 · ":"")+(+m[2])+"월 "+(+m[3])+"일 ("+WD[dt.getDay()]+")"+(+m[1]!==new Date().getFullYear()?" "+m[1]:"");
+}
+function ratingTxt(r){
+  if(!r)return"";
+  if(db.settings.stars==="num")return r+"/10";
+  const n=Math.max(1,Math.round(r/2));return"★".repeat(n)+"☆".repeat(5-n);
+}
+const safeUrl=u=>/^https?:\/\//i.test(String(u||"").trim())?String(u).trim():"";
+const money=n=>(+n||0).toLocaleString("ko-KR")+"원";
+function fieldVal(f,v){
+  if(v==null||v==="")return"";
+  if(f.t==="url"){const u=safeUrl(v);return u?`<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">지도 열기</a>`:esc(v)}
+  if(f.t==="num")return esc(money(v));
+  if(f.t==="date")return esc(dlabel(v));
+  return esc(v).replace(/\n/g,"<br>");
+}
+function recCard(r){
+  const k=kindOf(r.kind),tg=r.tags.map(t=>"#"+esc(t)).join(" ");
+  return`<button class="rec${r.del?" trash":""}" data-act="open" data-id="${r.id}">
+   <div class="top"><span class="kd"><i class="kdot ${esc(r.kind)}"></i>${esc(k.name)}</span><span class="st">${ratingTxt(r.rating)}</span></div>
+   <div class="tt">${esc(r.title)}</div>${r.note?`<div class="nt">${esc(r.note)}</div>`:""}${tg?`<div class="tg">${tg}</div>`:""}</button>`;
+}
+function groupList(arr){
+  let out="",cur=null;
+  arr.forEach(r=>{if(r.date!==cur){cur=r.date;out+=`<div class="dh">${esc(dlabel(r.date))}</div>`}out+=recCard(r)});
+  return out;
+}
+
+/* ---------- 화면 ---------- */
+let view="home",limit=30,tripOpen=null;
+const S={q:"",kind:"",min:0,from:"",to:"",tag:""};
+const ICON={
+ home:'<svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z"/></svg>',
+ find:'<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
+ plus:'<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
+ trip:'<svg viewBox="0 0 24 24"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>',
+ set:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>'
+};
+function renderNav(){
+  const b=(id,l,ic,cls)=>`<button class="${cls||""}${view===id?" on":""}" data-act="tab" data-v="${id}"><span class="ni">${ic}</span><span class="l">${l}</span></button>`;
+  $("#nav").innerHTML=b("home","홈",ICON.home)+b("find","찾기",ICON.find)+
+   `<button class="plus" data-act="new" aria-label="기록하기"><span class="pc">${ICON.plus}</span><span class="l">기록</span></button>`+
+   b("trip","여행",ICON.trip)+b("set","설정",ICON.set);
+}
+function render(){
+  if(!db)return;
+  renderNav();
+  const m=$("#main");
+  if(view==="home")m.innerHTML=viewHome();
+  else if(view==="find"){m.innerHTML=viewFind();updateResults()}
+  else if(view==="trip")m.innerHTML=tripOpen?viewTripDetail():viewTrips();
+  else m.innerHTML=viewSet();
+}
+function viewHome(){
+  const all=sortRecs(live().slice()),part=all.slice(0,limit);
+  return inboxCard()+`<div class="card quick"><div class="today"><span class="d">${new Date().getDate()}</span><span class="m">${new Date().getMonth()+1}월 ${WD[new Date().getDay()]}요일 · 오늘 한 줄</span></div><form id="qf" data-form="quick"><input id="qt" placeholder="오늘은 어땠나요?" autocomplete="off" maxlength="200"><button class="btn pri" type="submit">저장</button></form></div>`+
+   (all.length?`<div class="sec" style="margin-top:16px">최근 기록 ${all.length}개</div>`+groupList(part)+(all.length>limit?`<div class="acts"><button class="btn" data-act="more">더 보기</button></div>`:""):
+   `<div class="empty">아직 기록이 없어요.<br>가운데 ＋ 를 눌러 첫 기록을 남겨 보세요.<br>제목만 적어도 저장돼요.</div>`);
+}
+function matchRec(r,q){
+  if(!q)return true;
+  const k=kindOf(r.kind),hay=[r.title,r.note,r.tags.join(" "),k.name,...Object.values(r.x)].join(" ").toLowerCase();
+  return q.toLowerCase().split(/\s+/).filter(Boolean).every(w=>hay.includes(w));
+}
+function viewFind(){
+  const tags=[...new Set(live().flatMap(r=>r.tags))].sort((a,b)=>a.localeCompare(b,"ko")).slice(0,40);
+  const kinds=allKinds().filter(k=>!db.settings.hidden.includes(k.id)||live().some(r=>r.kind===k.id));
+  return`<div class="card"><input id="fq" type="search" placeholder="제목·메모·태그로 찾기" value="${esc(S.q)}" autocomplete="off">
+   <div class="chips" id="fk" style="margin-top:12px"><button data-act="fkind" data-id="" class="${S.kind?"":"on"}">전체</button>${kinds.map(k=>`<button data-act="fkind" data-id="${k.id}" class="${S.kind===k.id?"on":""}">${esc(k.name)}</button>`).join("")}</div>
+   <div class="inl" style="margin-top:4px"><div><label>별점</label><select id="fmin">${[["0","전체"],["4","별 2개 이상"],["6","별 3개 이상"],["8","별 4개 이상"],["10","별 5개"]].map(([v,l])=>`<option value="${v}"${+v===S.min?" selected":""}>${l}</option>`).join("")}</select></div></div>
+   <div class="inl"><div><label>부터</label><input id="ffrom" type="date" value="${esc(S.from)}"></div><div><label>까지</label><input id="fto" type="date" value="${esc(S.to)}"></div></div>
+   ${tags.length?`<label>태그</label><div class="chips" id="ft">${tags.map(t=>`<button data-act="ftag" data-t="${esc(t)}" class="${S.tag===t?"on":""}">#${esc(t)}</button>`).join("")}</div>`:""}
+  </div><div id="fres"></div>`;
+}
+function updateResults(){
+  const el=$("#fres");if(!el)return;
+  const arr=sortRecs(live().filter(r=>matchRec(r,S.q)&&(!S.kind||r.kind===S.kind)&&(!S.min||r.rating>=S.min)&&(!S.tag||r.tags.includes(S.tag))&&(!S.from||(r.date||"")>=S.from)&&(!S.to||(r.date||"")<=S.to)));
+  el.innerHTML=`<div class="sec">${arr.length}개</div>`+(arr.length?groupList(arr.slice(0,200)):`<div class="empty">찾는 기록이 없어요.<br>조건을 줄여 보세요.</div>`);
+}
+/* 여행: 여행 종류 기록 + 그 기간(시작~끝)에 쓴 다른 기록을 날짜별로 자동으로 묶어 보여줌 (직접 연결·묶음 편집은 2단계) */
+function tripRange(t){const s=t.x.start||t.date||"",e=t.x.end||s;return[s,e<s?s:e]}
+function tripRecs(t){const[s,e]=tripRange(t);return s?sortRecs(live().filter(r=>r.kind!=="trip"&&r.date>=s&&r.date<=e)):[]}
+function viewTrips(){
+  const ts=sortRecs(live().filter(r=>r.kind==="trip").map(r=>({...r,date:tripRange(r)[0]})));
+  return ts.length?ts.map(t=>{
+    const[s,e]=tripRange(t),n=tripRecs(t).length;
+    return`<button class="rec" data-act="trip" data-id="${t.id}"><div class="top"><span class="kd">${esc(t.x.region||"여행")}</span><span>${esc(s?s+(e!==s?" ~ "+e:""):"기간 없음")}</span><span class="st">${ratingTxt(t.rating)}</span></div><div class="tt">${esc(t.title)}</div><div class="nt">그동안의 기록 ${n}개</div></button>`;
+  }).join(""):`<div class="empty">아직 여행 기록이 없어요.<br>여행 이름과 기간을 적어 두면, 그 기간의 맛집·장소 기록이 여기에 날짜별로 모여요.</div><div class="acts"><button class="btn pri" data-act="new" data-kind="trip">여행 기록하기</button></div>`;
+}
+function viewTripDetail(){
+  const t=db.records.find(r=>r.id===tripOpen&&!r.del);if(!t){tripOpen=null;return viewTrips()}
+  const[s,e]=tripRange(t),recs=tripRecs(t);
+  return`<button class="back" data-act="tripBack">‹ 여행 목록</button><div class="card"><h3>${esc(t.x.region||"여행")} · ${esc(s?s+(e!==s?" ~ "+e:""):"기간 없음")}</h3><div style="font-size:18px;font-weight:600">${esc(t.title)}</div>${t.note?`<div class="sub" style="margin-top:4px">${esc(t.note)}</div>`:""}<div class="acts"><button class="btn" data-act="open" data-id="${t.id}">여행 정보 보기·수정</button></div></div>`+
+   (recs.length?groupList(recs):`<div class="empty">이 기간에 쓴 다른 기록이 없어요.</div>`);
+}
+function viewSet(){
+  const s=db.settings,trash=db.records.filter(r=>r.del).length;
+  const seg=(act,cur,opts)=>`<div class="seg">${opts.map(([v,l])=>`<button data-act="${act}" data-v="${v}" class="${cur===v?"on":""}">${l}</button>`).join("")}</div>`;
+  return`<div class="card"><h3>계정</h3><div class="row"><span class="t">${esc(me||"–")}</span><span class="r" id="syncRow">${esc($("#sync").textContent||"–")}</span></div>
+   <div class="note" style="margin-top:0">${DEMO?"체험 모드: 이 화면의 기록은 저장되지 않습니다.":"기록은 내 Google Drive의 goodday 폴더에 저장됩니다."}</div></div>
+  <div class="card"><h3>기록 설정</h3>
+   <button class="rowbtn" data-act="kinds"><span>종류 관리</span><span class="r">${visKinds().length}개 사용 중 ›</span></button>
+   <label style="margin-top:8px">별점 방식</label>${seg("stars",s.stars,[["star","별 5개"],["num","10점"]])}
+   <label>화면 모드</label>${seg("theme",s.theme,[["auto","자동"],["light","라이트"],["dark","다크"]])}</div>
+  <div class="card"><h3>내 기록</h3>
+   <button class="rowbtn" data-act="exp" data-f="json"><span>내보내기 (JSON)</span><span class="r">백업용 ›</span></button>
+   <button class="rowbtn" data-act="exp" data-f="csv"><span>내보내기 (엑셀용 표)</span><span class="r">엑셀에서 열기 ›</span></button>
+   <button class="rowbtn" data-act="inboxOpen"><span>말만해요 받은편지함</span><span class="r">${s.inboxFile?(inbox.length?inbox.length+"통 대기":"연결됨"):"연결 안 됨"} ›</span></button>
+   <button class="rowbtn" data-act="trash"><span>휴지통</span><span class="r">${trash}개 ›</span></button></div>
+  <div class="card"><h3>도움</h3>
+   <button class="rowbtn" data-act="help"><span>사용 설명서</span><span class="r">›</span></button>
+   <button class="rowbtn" data-act="logout"><span style="color:var(--bad)">로그아웃</span></button></div>
+  <div class="note" style="text-align:center">항상일상 · ${VER}</div>`;
+}
+
+/* ---------- 시트(아래에서 올라오는 창) ---------- */
+function openSheet(html){$("#modal").innerHTML=`<div class="modal" data-act="bg"><div class="sheet">${html}</div></div>`;document.documentElement.classList.add("lock")}
+function closeSheet(){$("#modal").innerHTML="";document.documentElement.classList.remove("lock");F=null}
+let toastT=null,toastUndo=null;
+function toast(msg,undo){
+  const el=$("#toast");toastUndo=undo||null;
+  el.innerHTML=`<span>${esc(msg)}</span>${undo?`<button data-act="undo">되돌리기</button>`:""}`;el.hidden=false;
+  clearTimeout(toastT);toastT=setTimeout(()=>{el.hidden=true;toastUndo=null},undo?6000:2200);
+}
+
+/* ---------- 기록 등록·수정 ---------- */
+let F=null; // 입력 중인 기록
+const parseTags=s=>[...new Set(String(s||"").split(/[,\s]+/).map(t=>t.replace(/^#+/,"").trim()).filter(Boolean))].slice(0,12);
+function openForm(rec,kind){
+  const vk=visKinds().map(k=>k.id);
+  let k0=rec?rec.kind:(kind||(vk.includes(db.settings.lastKind)?db.settings.lastKind:vk[0])||"daily");
+  F={id:rec?rec.id:null,kind:k0,v:rec?{title:rec.title,date:rec.date,note:rec.note,rating:rec.rating||0,tags:rec.tags.join(", "),x:{...rec.x}}:{title:"",date:today(),note:"",rating:0,tags:"",x:{}}};
+  drawForm();
+}
+function readForm(){
+  if(!F||!$("#f_title"))return;
+  F.v.title=$("#f_title").value;F.v.date=$("#f_date").value;F.v.note=$("#f_note").value;F.v.tags=$("#f_tags").value;
+  if($("#f_rate"))F.v.rating=+$("#f_rate").value||0;
+  kindOf(F.kind).fields.forEach(f=>{const el=$("#fx_"+f.k);if(el)F.v.x[f.k]=el.value});
+}
+function drawForm(){
+  const k=kindOf(F.kind),vs=visKinds();
+  const kinds=vs.some(x=>x.id===F.kind)?vs:[...vs,k];
+  const rate=db.settings.stars==="num"?
+   `<select id="f_rate"><option value="0">안 매김</option>${Array.from({length:10},(_,i)=>`<option value="${i+1}"${F.v.rating===i+1?" selected":""}>${i+1}점</option>`).join("")}</select>`:
+   `<div class="stars" id="f_stars">${[1,2,3,4,5].map(n=>`<button type="button" data-act="star" data-n="${n}" class="${F.v.rating>=n*2-1&&F.v.rating>0?"on":""}" aria-label="별 ${n}개">★</button>`).join("")}</div>`;
+  const extra=k.fields.map(f=>{
+    const v=F.v.x[f.k]??"",id="fx_"+f.k;
+    if(f.t==="sel")return`<label for="${id}">${f.l}</label><select id="${id}"><option value="">선택 안 함</option>${f.o.map(o=>`<option${o===v?" selected":""}>${esc(o)}</option>`).join("")}</select>`;
+    if(f.t==="area")return`<label for="${id}">${f.l}</label><textarea id="${id}" rows="3">${esc(v)}</textarea>`;
+    return`<label for="${id}">${f.l}</label><input id="${id}" type="${f.t==="num"?"number":f.t==="date"?"date":f.t==="url"?"url":"text"}"${f.t==="num"?' inputmode="numeric" min="0"':""} value="${esc(v)}" placeholder="${esc(f.ph||"")}" autocomplete="off">`;
+  }).join("");
+  openSheet(`<h3>${F.id?"기록 고치기":"기록하기"}</h3>
+   <label>종류</label><div class="chips">${kinds.map(x=>`<button type="button" data-act="fk" data-id="${x.id}" class="${x.id===F.kind?"on":""}">${esc(x.name)}</button>`).join("")}</div>
+   <label for="f_title">제목 (꼭 필요한 칸)</label><input id="f_title" value="${esc(F.v.title)}" maxlength="120" autocomplete="off" placeholder="예: 성수 칼국수집, 오늘의 영화">
+   <label for="f_note">${esc(k.noteLabel)}</label><input id="f_note" value="${esc(F.v.note)}" maxlength="300" autocomplete="off">
+   <label>별점</label>${rate}
+   <label for="f_date">날짜</label><input id="f_date" type="date" value="${esc(F.v.date)}">
+   <label for="f_tags">태그 (쉼표나 띄어쓰기로 구분)</label><input id="f_tags" value="${esc(F.v.tags)}" autocomplete="off" placeholder="예: 가족, 점심">
+   ${extra}
+   <div class="acts stk"><button class="btn" data-act="close">취소</button><button class="btn pri" data-act="saveRec">저장</button></div>`);
+  if(!F.id&&!F.v.title)setTimeout(()=>{const t=$("#f_title");if(t)t.focus()},50);
+}
+function saveRec(){
+  readForm();
+  const t=F.v.title.trim();
+  if(!t){toast("제목을 적어 주세요");const el=$("#f_title");if(el)el.focus();return}
+  const now=Date.now(),k=kindOf(F.kind);
+  let r=F.id&&db.records.find(x=>x.id===F.id);
+  if(!r){r={id:uid(),ts:now};db.records.push(r)}
+  const x={};k.fields.forEach(f=>{const v=String(F.v.x[f.k]??"").trim();if(v)x[f.k]=v});
+  Object.assign(r,{kind:F.kind,date:F.v.date||today(),title:t,note:F.v.note.trim(),rating:+F.v.rating||0,tags:parseTags(F.v.tags),x,upd:now});
+  delete r.del;
+  db.settings.lastKind=F.kind;
+  save();closeSheet();render();toast("저장했어요");
+}
+function openDetail(id){
+  const r=db.records.find(x=>x.id===id);if(!r)return;
+  const k=kindOf(r.kind);
+  const kv=(a,b)=>b?`<div class="kv"><div class="a">${a}</div><div class="b">${b}</div></div>`:"";
+  openSheet(`<div class="k" style="display:flex;align-items:center;gap:8px"><i class="kdot ${esc(r.kind)}"></i>${esc(k.name)}${r.del?" · 휴지통":""}</div><h3>${esc(r.title)}</h3>
+   <div class="sub">${esc(dlabel(r.date).replace("오늘 · ",""))} <span class="st">${ratingTxt(r.rating)}</span></div>
+   <div style="margin-top:12px">${kv(esc(k.noteLabel),esc(r.note))}${k.fields.map(f=>kv(f.l,fieldVal(f,r.x[f.k]))).join("")}${kv("태그",r.tags.map(t=>"#"+esc(t)).join(" "))}${kv("출처",esc(r.src||""))}</div>
+   <div class="acts">${r.del?`<button class="btn" data-act="close">닫기</button><button class="btn pri" data-act="restore" data-id="${r.id}">되살리기</button>`:
+   `<button class="btn dng" data-act="del" data-id="${r.id}">삭제</button><button class="btn" data-act="close">닫기</button><button class="btn pri" data-act="edit" data-id="${r.id}">고치기</button>`}</div>`);
+}
+function delRec(id){
+  const r=db.records.find(x=>x.id===id);if(!r)return;
+  r.del=Date.now();save();closeSheet();render();
+  toast("휴지통으로 옮겼어요 (30일간 보관)",()=>{r.del=null;delete r.del;save();render()});
+}
+
+/* ---------- 설정 안의 창들 ---------- */
+function openKinds(){
+  const hid=db.settings.hidden;
+  openSheet(`<h3>종류 관리</h3><div class="sub">안 쓰는 종류는 숨기고, 책·운동처럼 나만의 종류를 더할 수 있어요. 숨겨도 기존 기록은 그대로 보입니다.</div>
+   <div style="margin-top:8px">${allKinds().map(k=>`<div class="row"><span class="t">${esc(k.name)}${k.custom?' <span class="k">(내가 추가)</span>':""}</span><span>
+     <button class="btn sm" data-act="khide" data-id="${k.id}">${hid.includes(k.id)?"다시 보이기":"숨기기"}</button>${k.custom?` <button class="btn sm dng" data-act="kdel" data-id="${k.id}">삭제</button>`:""}</span></div>`).join("")}</div>
+   <label for="knew">새 종류 이름</label><div class="inl"><input id="knew" maxlength="12" placeholder="예: 책, 운동" autocomplete="off"><button class="btn pri" style="flex:0 0 72px;height:42px" data-act="kadd">추가</button></div>
+   <div class="acts"><button class="btn" data-act="close">닫기</button></div>`);
+}
+function openTrash(){
+  const arr=db.records.filter(r=>r.del).sort((a,b)=>b.del-a.del);
+  openSheet(`<h3>휴지통</h3><div class="sub">지운 기록은 30일 동안 여기 남고, 그 뒤 저절로 정리돼요.</div>
+   <div style="margin-top:12px">${arr.length?arr.map(r=>`<div class="row"><span class="t" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.title)}<br><span class="k">${esc(kindOf(r.kind).name)} · ${esc(r.date)}</span></span><span style="white-space:nowrap"><button class="btn sm" data-act="restore" data-id="${r.id}" data-keep="1">되살리기</button> <button class="btn sm dng" data-act="purge" data-id="${r.id}">완전 삭제</button></span></div>`).join(""):`<div class="empty">휴지통이 비어 있어요.</div>`}</div>
+   <div class="acts"><button class="btn" data-act="close">닫기</button>${arr.length?`<button class="btn dng" data-act="purgeall">모두 비우기</button>`:""}</div>`);
+}
+function openHelp(){
+  openSheet(`<h3>사용 설명서</h3><div class="sub" style="line-height:1.7">
+   <b>기록하기</b><br>아래 가운데 ＋ 를 누르고 종류와 제목만 적으면 저장돼요. 한 줄 메모, 별점, 태그, 종류별 칸은 나중에 기록을 눌러 고치면서 채워도 됩니다.<br><br>
+   <b>찾기</b><br>글자로 찾고, 종류·별점·기간·태그로 좁힐 수 있어요.<br><br>
+   <b>여행</b><br>‘여행’ 종류로 이름과 시작일·끝난 날을 적어 두면, 그 기간에 쓴 기록이 날짜별로 모여 보여요.<br><br>
+   <b>지우기</b><br>지운 기록은 설정의 휴지통에서 30일 동안 되살릴 수 있어요.<br><br>
+   <b>내 기록은 어디에?</b><br>내 Google Drive의 goodday 폴더에 저장되며, 다른 사람은 볼 수 없어요. 이 앱은 앱이 만든 파일만 열 수 있는 권한만 씁니다.<br><br>
+   <b>한 번 로그인하면 다른 앱도 함께</b><br>같은 브라우저에서 내 다른 앱(신한FC, 차차차 등)에 로그인했다면 항상일상도 로그인 화면 없이 바로 열려요. 로그아웃하면 모든 앱에서 함께 로그아웃됩니다. 로그인은 한 시간마다 다시 필요할 수 있어요. 아이폰 홈 화면 앱은 앱마다 따로라 서로 나눠 쓰지 못해요.<br><br>
+   <b>함께 쓰려면</b><br>허용된 계정만 로그인할 수 있어요. 쓸 사람을 추가하려면 앱을 관리하는 사람에게 구글 계정(이메일)을 알려 주세요.<br><br>
+   <b>말만해요 받은편지함</b><br>설정에서 받은편지함 파일을 한 번 고르면, 말만해요가 보낸 쪽지가 앱을 열 때 카드로 나타나요. 기록에 넣기를 누르면 기록이 되고 쪽지는 처리 완료로 표시됩니다.<br><br>
+   <b>다음에 더해질 기능</b><br>사진 붙이기, 여행 묶음 편집, 지도 보기, 영화·장소 정보 자동 채우기.</div>
+   <div class="acts"><button class="btn" data-act="close">닫기</button></div>`);
+}
+
+/* ---------- 내보내기 ---------- */
+function dl(name,mime,text){
+  const b=new Blob([text],{type:mime}),a=document.createElement("a");
+  a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);
+}
+function exportData(f){
+  const stamp=today().replace(/-/g,"");
+  if(f==="json"){dl("항상일상_"+stamp+".json","application/json",JSON.stringify(db,null,1));toast("JSON 파일을 내려받았어요");return}
+  const q=v=>'"'+String(v??"").replace(/"/g,'""')+'"';
+  const rows=[["날짜","종류","제목","한 줄","별점(10점 기준)","태그","자세한 내용"]];
+  sortRecs(live().slice()).forEach(r=>{const k=kindOf(r.kind);rows.push([r.date,k.name,r.title,r.note,r.rating||"",r.tags.join(" "),k.fields.map(fl=>r.x[fl.k]?fl.l+": "+r.x[fl.k]:"").filter(Boolean).join(" / ")])});
+  dl("항상일상_"+stamp+".csv","text/csv;charset=utf-8","﻿"+rows.map(r=>r.map(q).join(",")).join("\r\n"));
+  toast("엑셀용 표(CSV)를 내려받았어요");
+}
+
+/* ---------- 눌렀을 때 ---------- */
+document.addEventListener("click",e=>{
+  const el=e.target.closest("[data-act]");if(!el||!db)return;
+  const a=el.dataset.act,id=el.dataset.id;
+  if(a==="bg"){if(e.target===el)closeSheet();return}
+  if(a==="tab"){view=el.dataset.v;tripOpen=null;render();scrollTo(0,0)}
+  else if(a==="new"){openForm(null,el.dataset.kind)}
+  else if(a==="open")openDetail(id);
+  else if(a==="more"){limit+=30;render()}
+  else if(a==="close")closeSheet();
+  else if(a==="edit"){const r=db.records.find(x=>x.id===id);closeSheet();if(r)openForm(r)}
+  else if(a==="del")delRec(id);
+  else if(a==="restore"){const r=db.records.find(x=>x.id===id);if(r){delete r.del;save();toast("되살렸어요");if(el.dataset.keep)openTrash();else closeSheet();render()}}
+  else if(a==="undo"){if(toastUndo)toastUndo();$("#toast").hidden=true;toastUndo=null}
+  else if(a==="fk"){readForm();F.kind=id;drawForm()}
+  else if(a==="star"){readForm();const n=+el.dataset.n;F.v.rating=F.v.rating===n*2?0:n*2;drawForm()}
+  else if(a==="saveRec")saveRec();
+  else if(a==="fkind"){S.kind=id;$("#fk").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.id===S.kind));updateResults()}
+  else if(a==="ftag"){S.tag=S.tag===el.dataset.t?"":el.dataset.t;$("#ft").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.t===S.tag));updateResults()}
+  else if(a==="trip"){tripOpen=id;render();scrollTo(0,0)}
+  else if(a==="tripBack"){tripOpen=null;render()}
+  else if(a==="stars"){db.settings.stars=el.dataset.v;save();render()}
+  else if(a==="theme"){db.settings.theme=el.dataset.v;applyTheme();save();render()}
+  else if(a==="kinds")openKinds();
+  else if(a==="khide"){
+    const h=db.settings.hidden,i=h.indexOf(id);
+    if(i>=0)h.splice(i,1);else if(visKinds().length<=1){toast("종류가 하나는 보여야 해요");return}else h.push(id);
+    save();openKinds();render();
+  }
+  else if(a==="kadd"){
+    const n=($("#knew").value||"").trim();if(!n){toast("이름을 적어 주세요");return}
+    if(allKinds().some(k=>k.name===n)){toast("이미 있는 이름이에요");return}
+    db.settings.custom.push({id:"c"+uid(),name:n});save();openKinds();
+  }
+  else if(a==="kdel"){
+    const n=db.records.filter(r=>r.kind===id).length;
+    if(n){toast("기록이 "+n+"개 있어요. 삭제 대신 숨기기를 써 주세요");return}
+    if(confirm("이 종류를 삭제할까요?")){db.settings.custom=db.settings.custom.filter(c=>c.id!==id);db.settings.hidden=db.settings.hidden.filter(x=>x!==id);save();openKinds()}
+  }
+  else if(a==="exp")exportData(el.dataset.f);
+  else if(a==="trash")openTrash();
+  else if(a==="purge"){if(confirm("이 기록을 완전히 지울까요? 되돌릴 수 없어요.")){db.records=db.records.filter(r=>r.id!==id);save();openTrash();render()}}
+  else if(a==="purgeall"){const n=db.records.filter(r=>r.del).length;if(confirm("휴지통의 기록 "+n+"개를 모두 완전히 지울까요? 되돌릴 수 없어요.")){db.records=db.records.filter(r=>!r.del);save();openTrash();render()}}
+  else if(a==="inboxOpen")openInbox();
+  else if(a==="inboxPick")pickInbox();
+  else if(a==="inboxRecheck"){inboxHide=false;inboxCheck().then(()=>{render();openInbox()})}
+  else if(a==="inboxOff"){if(confirm("받은편지함 연결을 끊을까요? 이미 넣은 기록은 그대로예요.")){db.settings.inboxFile=null;inbox=[];inboxMsg="";save();render();openInbox()}}
+  else if(a==="inboxYes")inboxAccept();
+  else if(a==="inboxLater"){inboxHide=true;render()}
+  else if(a==="help")openHelp();
+  else if(a==="logout")logout();
+});
+document.addEventListener("submit",e=>{
+  if(e.target.dataset.form==="quick"){
+    e.preventDefault();
+    const t=$("#qt").value.trim();if(!t){toast("한 줄을 적어 주세요");return}
+    const now=Date.now(),kid=allKinds().some(k=>k.id==="daily")?"daily":visKinds()[0].id;
+    db.records.push({id:uid(),kind:kid,date:today(),title:t,note:"",rating:0,tags:[],x:{},ts:now,upd:now});
+    save();render();toast("저장했어요");
+  }
+});
+document.addEventListener("input",e=>{
+  const id=e.target.id;
+  if(id==="fq"){S.q=e.target.value;updateResults()}
+  else if(id==="fmin"){S.min=+e.target.value;updateResults()}
+  else if(id==="ffrom"){S.from=e.target.value;updateResults()}
+  else if(id==="fto"){S.to=e.target.value;updateResults()}
+});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#modal").firstChild)closeSheet()});
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+boot();
+</script>
+</body>
+</html>
