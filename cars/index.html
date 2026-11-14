@@ -341,6 +341,7 @@ async function driveSave(force){
       fileId=meta.id;cacheFid();
     }
     lastMod=meta.modifiedTime;dirty=false;setSync("ok");
+    syncIndex().catch(()=>{});
   }catch(e){
     setSync("fail");
     if(e.message==="GOOGLE_AUTH")showLogin("로그인이 만료되었습니다. 다시 로그인하면 저장되지 않은 기록이 자동으로 저장됩니다.");
@@ -399,6 +400,30 @@ async function startApp(pre){
   setShell(true);setSync("ok");render();scrollTo(0,0);
   applyGo();
   importInbox().catch(()=>{}); // 말만해요 받은편지함 (실패해도 앱은 그대로)
+  syncIndex().catch(()=>{});
+}
+/* ---------- 말만해요 해석용 색인: Drive Claude/app/차차차/설정/말만해요_색인.json ----------
+   차 ID·별명·차종·정비 항목 이름·최근 누적 km만. 차량번호·금액·메모·보험·정비소는 넣지 않음. 같으면 다시 쓰지 않음 */
+const IDX_FILE="말만해요_색인.json";let idxId=null,idxLast=null,idxBusy=false,idxAgain=false;
+function buildIndex(){
+  return{v:1,app:"차차차",cars:db.cars.map(c=>({id:c.id,nick:c.nick,model:[c.model,c.trim].filter(Boolean).join(" "),lastKm:lastKm(c)==null?null:Math.round(lastKm(c)),maintItems:[...new Set(c.maint.map(m=>String(m.item||"").trim()).filter(Boolean))].slice(0,60)}))};
+}
+async function syncIndex(){
+  if(!db)return;
+  if(idxBusy){idxAgain=true;return}
+  const body=JSON.stringify(buildIndex());
+  if(body===idxLast)return;
+  idxBusy=true;
+  try{
+    const fo=await dFolder(true);
+    if(!idxId){const f=await dFind(fo,IDX_FILE,false);if(f){idxId=f.id;if(idxLast===null){const cur=await gfetch(DAPI+"/files/"+f.id+"?alt=media",null,true);if(cur.replace(/^﻿/,"")===body){idxLast=body;return}}}}
+    if(idxId)await gfetch(DUP+"/files/"+idxId+"?uploadType=media&fields=id",{method:"PATCH",headers:{"Content-Type":"application/json"},body});
+    else{
+      const bd="cha"+uid(),mp="--"+bd+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+JSON.stringify({name:IDX_FILE,parents:[fo],mimeType:"application/json"})+"\r\n--"+bd+"\r\nContent-Type: application/json\r\n\r\n"+body+"\r\n--"+bd+"--";
+      idxId=(await gfetch(DUP+"/files?uploadType=multipart&fields=id",{method:"POST",headers:{"Content-Type":"multipart/related; boundary="+bd},body:mp})).id;
+    }
+    idxLast=body;
+  }catch(e){}finally{idxBusy=false;if(idxAgain){idxAgain=false;syncIndex().catch(()=>{})}}
 }
 /* ---------- 말만해요 받은편지함: Drive Claude/app/onething/받은편지함/chachacha.json ---------- */
 const INBOX_PATH=["Claude","app","onething","받은편지함"],INBOX_FILE="chachacha.json";
