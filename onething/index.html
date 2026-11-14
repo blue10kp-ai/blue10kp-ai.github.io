@@ -33,7 +33,7 @@
   --ok:#4CC282;--warn:#E0A04A;--bad:#EF7A6C}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{font-family:var(--font);font-size:15px;line-height:1.5;background:var(--bg);color:var(--t1)}
-body{margin:0;padding-bottom:calc(var(--navh) + 24px + env(safe-area-inset-bottom))}
+body{margin:0;padding-bottom:calc(var(--navh) + 96px + env(safe-area-inset-bottom))} /* 아래 96px: 오른쪽 아래 말만해요 버튼에 취소·저장·보내기 버튼이 가리지 않게 */
 button,input,select,textarea{font-family:var(--font)}
 button{color:inherit;cursor:pointer}
 header{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--line);padding:calc(8px + env(safe-area-inset-top)) 16px 8px;min-height:56px;display:flex;align-items:center;font-size:17px;font-weight:600}
@@ -102,7 +102,7 @@ nav button.on::before{content:"";position:absolute;top:-1px;left:28%;right:28%;h
 .mfl svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .mfl.pill{left:auto;right:12px;width:auto;height:32px;padding:0 12px;border-radius:16px;font-size:12px;font-weight:600;color:var(--t2)}
 #modbody iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:var(--surface)}
-#fab{position:fixed;right:16px;bottom:calc(var(--fabb,72px) + env(safe-area-inset-bottom));z-index:30;width:56px;height:56px;border-radius:50%;border:0;padding:0;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.2);transition:transform var(--t-fast) var(--ease)}
+#fab{position:fixed;right:16px;bottom:var(--fabl,calc(var(--fabb,72px) + env(safe-area-inset-bottom)));z-index:30;width:56px;height:56px;border-radius:50%;border:0;padding:0;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.2);transition:transform var(--t-fast) var(--ease),bottom 200ms var(--ease)}
 #fab:active{transform:scale(.96)}
 #fab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 #scrim{position:fixed;inset:0;z-index:40;background:rgba(10,14,20,.4);opacity:0;visibility:hidden;transition:opacity 200ms,visibility 0s linear 200ms}
@@ -110,6 +110,11 @@ nav button.on::before{content:"";position:absolute;top:-1px;left:28%;right:28%;h
 #sheet{position:fixed;left:0;right:0;bottom:0;margin:0 auto;max-width:640px;height:70vh;height:70dvh;z-index:41;background:var(--surface);border:1px solid var(--line);border-bottom:0;border-radius:16px 16px 0 0;display:flex;flex-direction:column;transform:translateY(100%);visibility:hidden;transition:transform 240ms var(--ease),visibility 0s linear 240ms}
 #sheet.open{transform:none;visibility:visible;transition-delay:0s}
 #sheet .modbar{border-radius:16px 16px 0 0;padding-top:4px}
+@media (min-width:700px){ /* 넓은 화면: 아래에서 올라오는 시트 대신 가운데 창 */
+  #sheet{bottom:auto;top:50%;left:50%;right:auto;margin:0;width:480px;max-width:calc(100vw - 32px);height:560px;max-height:80vh;border-bottom:1px solid var(--line);border-radius:16px;transform:translate(-50%,-46%);opacity:0;transition:transform 240ms var(--ease),opacity 200ms,visibility 0s linear 240ms}
+  #sheet.open{transform:translate(-50%,-50%);opacity:1}
+  #sheet .modbar{border-radius:16px 16px 0 0}
+}
 #sheetBody{flex:1;min-height:0;overflow:auto;padding:8px 16px 16px}
 #sheetBody .card{background:transparent;border:0;padding:8px 0;margin-bottom:0}
 #sheetBody textarea{min-height:64px}
@@ -294,7 +299,8 @@ const labelOf=(app,kind)=>{const a=adapter(app),k=kindOf(app,kind);return a?a.na
 const APPDIR={shinhanfc:"/shlife/",goodday:"/goodday/",chachacha:"/cars/"};
 function goUrl(n){const p=new URLSearchParams({go:n.go});if(n.q)p.set("q",n.q);if(n.kind)p.set("kind",n.kind);return APPDIR[n.app]+"?"+p.toString()}
 const NAV_KIND=[["맛집",/맛집|식당|카페/],["영상",/영화|드라마|영상|음악|노래|예능/],["여행",/여행|숙소/],["일상",/일상|일기/]];
-const NAV_STOP=/^(고객님?|님|검색(해줘|해|해주세요|해봐|해봐줘)?|찾아(줘|줄래|봐|주세요|봐줘)?|찾기|보여(줘|주세요)?|조회(해줘)?|알려(줘|주세요)?|열어(줘)?|정보(좀|를|도)?|보기|해줘|좀|줘|본|간|먹은|갔던|기록|내역|목록|리스트|전체|은|는|정보는|정보은|누구|어때)$/;
+const NAV_STOP=/^(고객님?|님|검색(해줘|해|해주세요|해봐|해봐줘)?|찾아(줘|줄래|봐|주세요|봐줘)?|찾기|보여(줘|주세요)?|조회(해줘)?|알려(줘|주세요)?|열어(줘)?|정보(좀|를|도)?|보기|해줘|좀|줘|본|간|먹은|갔던|기록|내역|목록|리스트|전체|은|는|정보는|정보은|누구|어때|뭐야|뭐지|얼마야|확인|확인해줘|좀|번호)$/;
+const SENS=/주민\s?(등록)?\s?번호|계좌|연락처|전화번호|전화|휴대폰|핸드폰|이메일|주소|생년월일|증권|계약\s?(내용|정보|현황)?/; // 고객 민감정보 낱말: 보여 줄지는 신한FC가 권한(canSens)으로 정함
 function carsIntent(t){ // 차차차 모듈: 읽는 말만(기록·남겨·적어 같은 쓰기 말이 있으면 편지로 보냄)
   if(/기록해|남겨|적어|저장|입력/.test(t))return null;
   if(!/요약|보여|알려|조회|확인|얼마|몇\s?km|내역|[?？]|어때|궁금/.test(t))return null;
@@ -314,10 +320,14 @@ function carsIntent(t){ // 차차차 모듈: 읽는 말만(기록·남겨·적�
 }
 function navIntent(t){
   if(/일정|약속|미팅|예약|따행|이관|상담기록|엑셀|보장분석/.test(t))return null;
-  if(!/고객/.test(t)){const c=carsIntent(t);if(c)return c}
-  if(!/검색|찾아|찾기|찾고|보여|조회|알려|열어|정보|보기|[은는]\s?\?|어때|누구/.test(t))return null;
   const toks=s=>s.replace(/[?？]/g," ").replace(/고객님?/g," ").split(/\s+/).filter(x=>x&&x.length>1&&!NAV_STOP.test(x));
-  if(/고객/.test(t))return{app:"shinhanfc",go:"customers",q:toks(t).join(" ").slice(0,30),kind:"",label:"고객 검색"};
+  if(!/고객/.test(t)){const c=carsIntent(t);if(c)return c}
+  if(!/고객/.test(t)&&SENS.test(t)&&/알려|보여|조회|검색|찾|정보|확인|뭐|얼마|[?？]|어때/.test(t)){ // "김OO 주민번호/연락처 알려줘" → 막지 않고 신한FC 고객 모듈로
+    const q=toks(t.replace(new RegExp(SENS.source,"g")," ")).join(" ").slice(0,30);
+    if(q)return{app:"shinhanfc",go:"customers",q,kind:"",label:"고객 검색"};
+  }
+  if(!/검색|찾아|찾기|찾고|보여|조회|알려|열어|정보|보기|[은는]\s?\?|어때|누구/.test(t))return null;
+  if(/고객/.test(t))return{app:"shinhanfc",go:"customers",q:toks(t.replace(new RegExp(SENS.source,"g")," ")).join(" ").slice(0,30),kind:"",label:"고객 검색"};
   for(const[k,re]of NAV_KIND){
     if(re.test(t)){
       const rest=t.replace(/맛집|식당|영화|드라마|영상|음악|노래|예능|여행|숙소|일상|일기/g," ");
@@ -330,14 +340,19 @@ function navIntent(t){
    아래 앱(신한FC·항상일상)의 지금 화면을 말만해요 안에 화면 전체 iframe으로 띄움(같은 주소라 공통 로그인으로 바로 열림).
    한 번 띄운 iframe은 숨겨 두고 다시 씀. 새 요청은 postMessage. 검색어·고객 키는 # 뒤에 둠(서버로 안 나감). */
 const MODS={}; // 앱 번호 → {frame, ready, where}
-let modApp=null,sheetOpen=false,modPushed=false,sheetPushed=false,ignorePop=false;
+let suppressOpen=false,modApp=null,sheetOpen=false,modPushed=false,sheetPushed=false,ignorePop=false;
 const modHash=o=>{const p=new URLSearchParams();["go","q","kind","id","month","car"].forEach(k=>{if(o[k])p.set(k,o[k])});return p.toString()};
-function updateFab(){$("#fab").hidden=!(db&&$("#login").hidden&&!sheetOpen)} // 앱을 연 뒤에는 늘 오른쪽 아래에 떠 있음
+function updateFab(){
+  const m=modApp&&MODS[modApp],r=document.documentElement.style;
+  $("#fab").hidden=!(db&&$("#login").hidden&&!sheetOpen)||!!(m&&m.fabHide);
+  // 앱의 떠 있는 버튼과 겹치면 위로: 바닥에서 max(16, lift+12)px, 화면 위 절반은 넘지 않게. lift 0이면 원래 자리
+  if(m&&m.fabLift>0)r.setProperty("--fabl","min(50vh,"+Math.max(16,m.fabLift+12)+"px)");else r.removeProperty("--fabl");
+} // 앱을 연 뒤에는 늘 오른쪽 아래에 떠 있음
 function pushLayer(){try{history.pushState({ot:1},"");return true}catch(e){return false}}
 function popLayer(){ignorePop=true;try{history.back()}catch(e){ignorePop=false}}
 function showMod(app){
   modApp=app;
-  Object.keys(MODS).forEach(k=>{MODS[k].frame.hidden=k!==app});
+  Object.keys(MODS).forEach(k=>{MODS[k].frame.hidden=k!==app;MODS[k].fabHide=false;MODS[k].fabLift=0}); // 다른 모듈로 바뀌면 버튼 원래 자리
   if(!modPushed)modPushed=pushLayer();
   $("#mod").hidden=false;updateFab();
 }
@@ -355,8 +370,9 @@ function openModule(n){
     if(m.ready){try{m.frame.contentWindow.postMessage({type:"blue10kp-go",...req},location.origin)}catch(e){}}
     else m.frame.src=dir+"?embed=1#"+modHash(req); // 아직 읽는 중이면 새 주소로
   }
+  showMod(n.app);
   if(sheetOpen)closeSheet(true);
-  showMod(n.app);return true;
+  return true;
 }
 function modBack(){ // 앱 안에서 한 단계 뒤로, 더 갈 곳이 없으면 모듈을 닫고 말만해요 첫 화면
   const m=modApp&&MODS[modApp];if(!m)return;
@@ -364,30 +380,31 @@ function modBack(){ // 앱 안에서 한 단계 뒤로, 더 갈 곳이 없으면
   else closeMod();
 }
 function closeMod(skipHist){
-  modApp=null;$("#mod").hidden=true;document.documentElement.style.removeProperty("--fabb");updateFab();
+  Object.keys(MODS).forEach(k=>{MODS[k].fabHide=false;MODS[k].fabLift=0});modApp=null;$("#mod").hidden=true;document.documentElement.style.removeProperty("--fabb");updateFab();
   const p=modPushed;modPushed=false;
   if(p&&!skipHist)popLayer();
-  if(db)go("talk");
+  if(db)go(view==="talk"?"log":view);
 }
 function resetMods(){ // 로그아웃·계정 거부·로그인 화면: 띄워 둔 앱과 창을 모두 걷음
   Object.keys(MODS).forEach(k=>{try{MODS[k].frame.remove()}catch(e){}delete MODS[k]});
   modApp=null;modPushed=false;sheetOpen=false;sheetPushed=false;
   $("#mod").hidden=true;$("#fab").hidden=true;$("#sheet").classList.remove("open");$("#scrim").classList.remove("open");
 }
-function openSheet(){
+function openSheet(keep){
   if(sheetOpen||!db)return;
   sheetOpen=true;$("#main").innerHTML="";
-  if(pending&&["done","answer","name"].includes(pending.stage))pending=null;
+  if(keep!==true&&pending&&["done","answer","name"].includes(pending.stage))pending=null;
   $("#sheet").classList.add("open");$("#scrim").classList.add("open");
   sheetPushed=pushLayer();updateFab();render();
-  setTimeout(()=>{const t=$("#txt");if(t&&!t.disabled)t.focus()},260);
+  setTimeout(()=>{const t=$("#txt");if(t&&!t.disabled&&!matchMedia("(pointer:coarse)").matches)t.focus()},260); // 폰은 키보드를 자동으로 띄우지 않음
 }
 function closeSheet(skipHist){
   if(!sheetOpen)return;
   sheetOpen=false;$("#sheet").classList.remove("open");$("#scrim").classList.remove("open");$("#sheetBody").innerHTML="";
   const p=sheetPushed;sheetPushed=false;
   if(p&&!skipHist)popLayer();
-  updateFab();render();
+  if(pending&&["done","answer","name"].includes(pending.stage))pending=null; // 끝난 카드는 닫으면 치움
+  updateFab();suppressOpen=true;render();suppressOpen=false;
 }
 function openAppAsIs(){ // [앱으로 열기]: 모듈에서 보던 바로 그 화면으로 그 앱을 같은 창에서 연다
   if(!modApp)return;const w=MODS[modApp].where||{},h=modHash(w);
@@ -412,7 +429,12 @@ window.addEventListener("popstate",()=>{
 window.addEventListener("message",e=>{
   if(e.origin!==location.origin)return;
   const app=Object.keys(MODS).find(k=>MODS[k].frame.contentWindow===e.source);if(!app)return;
-  const d=e.data||{};if(d.type!=="blue10kp-where")return;
+  const d=e.data||{};
+  if(d.type==="blue10kp-fab"){
+    if(typeof d.lift==="number")MODS[app].fabLift=Math.max(0,Math.min(2000,d.lift)); // 올리기(새 방식)
+    if("hide"in d)MODS[app].fabHide=d.hide===true; // 예전 hide 메시지는 숨김으로 호환
+    if(app===modApp)updateFab();return} // 앱의 취소·저장 줄이 떠 있는 동안 버튼을 잠깐 숨김
+  if(d.type!=="blue10kp-where")return;
   const s=v=>String(v==null?"":v).slice(0,120);
   MODS[app].where={app,go:s(d.go),q:s(d.q),kind:s(d.kind),id:s(d.id),month:s(d.month),car:s(d.car),canBack:d.canBack===true};
   if(app===modApp&&typeof d.fabBottom==="number")document.documentElement.style.setProperty("--fabb",Math.max(0,Math.min(200,d.fabBottom))+"px"); // 앱 하단 메뉴 높이를 알리면 그 위에 버튼을 놓음
@@ -421,8 +443,7 @@ function finishNav(nv,rec){
   const a=adapter(nv.app);
   rec.status="done";rec.target={app:nv.app,kind:"nav"};save();
   openModule(nv);
-  pending={rec,stage:"done",canUndo:false,note:"‘"+a.name+"’ 화면을 열었어요 ("+nv.label+(nv.q?": "+nv.q:"")+")."};
-  render();
+  pending=null;render(); // 모듈이 화면을 채우므로 묻는 창 카드는 남기지 않음
 }
 async function navFlow(nv,rec){
   const a=adapter(nv.app);
@@ -618,7 +639,7 @@ async function startApp(pre){
     if(!r.d){dirty=true;await driveSave()}
   }
   await loadCfg();
-  setShell(true);setSync("ok");go("talk");scrollTo(0,0);
+  setShell(true);setSync("ok");go("log");openSheet();scrollTo(0,0);
 }
 async function doLogin(other){
   $("#lmsg").className="lm";$("#lmsg").textContent="로그인 중…";
@@ -640,7 +661,7 @@ async function boot(){
   const local=/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)||location.protocol==="file:";
   if(local&&/[?&]demo=1/.test(location.search)){
     DEMO=true;me="demo@test";USERS[me]=(new URLSearchParams(location.search).get("apps")||"goodday,shinhanfc,chachacha").split(",");
-    db=normDb(null);setShell(true);setSync("ok");go("talk");return;
+    db=normDb(null);setShell(true);setSync("ok");go("log");openSheet();return;
   }
   migrateOld();
   const au=readAuth();
@@ -676,21 +697,24 @@ document.addEventListener("visibilitychange",syncAuth);window.addEventListener("
 // 내게 열린 앱 = 관리자가 열어 준 것(USERS) 중 내가 끄지 않은 것
 const openApps=()=>(USERS[me]||[]).map(adapter).filter(Boolean);
 const activeApps=()=>openApps().filter(a=>!db.off.includes(a.id));
-let view="talk",pending=null,recog=null,listening=false;
+let view="log",pending=null,recog=null,listening=false;
 const ICON={
   talk:'<svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
   log:'<svg viewBox="0 0 24 24"><path d="M5 5h14M5 12h14M5 19h9"/></svg>',
   set:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>'
 };
 function go(v){
+  if(v==="talk"){openSheet(true);return} // 말하기는 별도 화면이 아니라 떠오르는 묻는 창(진행 중인 카드는 그대로)
   view=v;
   $("#nav").hidden=false;
   $("#nav").innerHTML=[["talk","말하기"],["log","기록"],["set","설정"]].map(([k,t])=>`<button class="${k===v?"on":""}" data-v="${k}">${ICON[k]}<span>${t}</span></button>`).join("");
-  $("#nav").querySelectorAll("button").forEach(b=>b.onclick=()=>go(b.dataset.v));
+  $("#nav").querySelectorAll("button").forEach(b=>b.onclick=()=>b.dataset.v==="talk"?openSheet():go(b.dataset.v));
   render();
 }
 function render(){
   if(!db)return;
+  // 결과·확인 카드는 늘 묻는 창 안에 나옴: 창이 닫혀 있고 모듈도 없으면 열어서 보여 줌
+  if(!sheetOpen&&pending&&!modApp&&!suppressOpen){openSheet(true);return}
   const m=sheetOpen?$("#sheetBody"):$("#main");
   if(sheetOpen||view==="talk")m.innerHTML=talkHtml();
   else if(view==="log")m.innerHTML=logHtml();
@@ -743,7 +767,7 @@ function pendingHtml(){
 }
 function logHtml(){
   const rs=db.records.slice().reverse();
-  if(!rs.length)return `<div class="card"><div class="empty">아직 기록이 없어요.<br>‘말하기’에서 말해 보세요.</div></div>`;
+  if(!rs.length)return `<div class="card"><div class="empty">아직 기록이 없어요.<br>오른쪽 아래 말만해요 버튼으로 말해 보세요.</div></div>`;
   return `<div class="card">`+rs.map(r=>{
     const direct=r.target&&adapter(r.target.app)&&adapter(r.target.app).direct;
     const st=r.status==="done"?["ok",direct?"바로 처리함":(r.target&&r.target.kind==="nav")?"화면 열기":"받은편지함에 담음"]:r.status==="ask"?["ask","되묻는 중"]:r.status==="cancelled"?["bad","취소함"]:r.status==="kept"?["","기록만 함"]:["bad","실패"];
@@ -765,9 +789,9 @@ function setHtml(){
     <b>일정 삭제</b>: “내일 김OO 상담 일정 삭제해줘” — 여러 개가 걸리면 고르게 해요.<br>
     <b>일정 질문</b>: “오늘 일정은?”, “내일 약속 있어?”, “이번 주 일정 알려줘”, “다음 일정은 언제야?” — 답이 바로 카드로 나오고, 카드에서 [수정]·[삭제]를 누를 수 있어요. 일정 내용은 AI로 보내지 않고 앱 안에서만 정리해요.<br>
     수정·삭제·등록은 항상 확인 카드를 보여 주고, 끝난 뒤 되돌릴 수 있어요. 맛집·여행·차계부처럼 앱 안의 기록은 받은편지함에 담아 그 앱을 열 때 반영돼요.<br>
-    <b>찾기·보기는 바로</b>: “김OO 고객 검색해줘”라고 하면 말만해요 안에 신한FC m의 고객 목록이 열리고, “맛집 검색해줘”, “강남 맛집 찾아줘”, “본 영화 찾아줘”, “여행 기록 보여줘”라고 하면 항상일상 찾기 결과가 열려요. 고객 이름은 말만해요 기록에 남기지 않고 AI로도 보내지 않아요. 열린 화면에는 그 페이지만 보이고, 왼쪽 위 뒤로 버튼은 앱 안에서 한 단계 뒤로 가다가 더 갈 곳이 없으면 닫고 말만해요로 돌아와요(폰 뒤로 동작도 같아요). 오른쪽 위 [앱으로 열기]를 누르면 지금 보던 화면 그대로 그 앱이 열려요. 화면이 열려 있는 동안 오른쪽 아래 말만해요 버튼을 누르면 아래에서 묻는 창이 떠올라요. 내게 열리지 않은 앱은 열 수 없다고 알려 줘요.<br>
+    <b>찾기·보기는 바로</b>: “김OO 고객 검색해줘”라고 하면 말만해요 안에 신한FC m의 고객 목록이 열리고, “맛집 검색해줘”, “강남 맛집 찾아줘”, “본 영화 찾아줘”, “여행 기록 보여줘”라고 하면 항상일상 찾기 결과가 열려요. “김OO 주민번호·연락처·계좌 알려줘”처럼 민감정보를 묻는 말도 막지 않고 신한FC 고객 화면으로 열어 줘요. 보여 줄지는 신한FC가 내 권한으로 정하고, 말만해요는 고객 데이터를 읽지 않아요. 고객 이름은 말만해요 기록에 남기지 않고 AI로도 보내지 않아요. 열린 화면에는 그 페이지만 보이고, 왼쪽 위 뒤로 버튼은 앱 안에서 한 단계 뒤로 가다가 더 갈 곳이 없으면 닫고 말만해요로 돌아와요(폰 뒤로 동작도 같아요). 오른쪽 위 [앱으로 열기]를 누르면 지금 보던 화면 그대로 그 앱이 열려요. 화면이 열려 있는 동안 오른쪽 아래 말만해요 버튼을 누르면 아래에서 묻는 창이 떠올라요. 내게 열리지 않은 앱은 열 수 없다고 알려 줘요.<br>
     <b>차차차</b>: “이번 달 주행 얼마야”, “차 요약 보여줘”, “지난달 충전비 알려줘”는 요약, “주행 기록 보여줘”는 기록, “정비 기록 보여줘”·“충전 비용 알려줘”는 정비·비용 화면이 열려요. “빨강이 …”처럼 차 이름을 말하면 그 차로 열려요.<br>
-    <b>말만해요 버튼</b>: 앱을 연 뒤에는 어느 화면에서나 오른쪽 아래에 떠 있어요. 누르면 아래에서 묻는 창이 올라와요.<br>
+    <b>묻는 창과 말만해요 버튼</b>: 앱을 열면 묻는 창이 열린 채로 시작해요(넓은 화면에서는 가운데 창). 답 카드도 이 창 안에 나와요. X로 닫으면 뒤의 최근 기록이 보이고, 오른쪽 아래 말만해요 버튼은 어느 화면에서나 떠 있어서 누르면 창이 다시 열려요.<br>
     <b>새로 적는 것은 편지로</b>: “오늘 본 영화 기록해줘”, “충전 40kWh 기록해줘”처럼 다른 앱에 기록을 새로 남기는 말은 그 앱의 받은편지함에 남기고, 카드의 [앱으로 열기]로 그 앱을 열 수 있어요(앱을 열면 반영돼요). 신한FC 상담 메모는 신한FC 고객 화면을 열어 직접 적어요. 읽기인지 쓰기인지 애매하면 어디로 보낼지 물어봐요.<br>
     <b>로그인</b>: 한 번 로그인하면 같은 브라우저에서 다른 앱(신한FC·차차차·항상일상 등)도 로그인 없이 열려요. 로그아웃하면 <b>모든 앱에서 로그아웃</b>돼요. 로그인은 1시간 정도 유지되고, 끝나면 아무 앱에서나 다시 연결하면 돼요. (아이폰은 홈 화면에 추가한 앱끼리는 나눠 쓰지 못해요.)</p></details></div>
   <div class="card"><h3>AI 해석 (Gemini)</h3><div class="t">${cfg.geminiKey?"Gemini 연결됨 (애매한 말만 물어봐요)":"규칙 기반만 사용 중 (키 없음)"}</div>
@@ -828,7 +852,7 @@ async function submit(raw){
   const res=await Providers[providerId].classify(s.text,apps);
   rec.fields={title:s.text.length>60?s.text.slice(0,60)+"…":s.text,...res.fields}; // 받는 앱이 필수로 쓰는 제목 칸(항상일상 등)
   const d=decide(res,apps);
-  if(d.mode==="ask"&&cfg.geminiKey&&!/고객/.test(s.text)){ // 애매한 것만 Gemini에게 (가린 글만 보냄). 고객 이야기가 든 말은 AI로 보내지 않음
+  if(d.mode==="ask"&&cfg.geminiKey&&!/고객/.test(s.text)&&!SENS.test(s.text)){ // 애매한 것만 Gemini에게 (가린 글만 보냄). 고객 이야기가 든 말은 AI로 보내지 않음
     try{
       const g=await geminiClassify(s.text,apps,cfg);
       if(g){
@@ -855,15 +879,13 @@ async function apply(pick,how){
     const day=rec.fields.date||todayStr();
     rec.status="done";rec.target={app:"shinhanfc",kind:"nav"};save();
     openModule({app:"shinhanfc",go:"schedule",q:day,kind:""});
-    pending={rec,stage:"done",canUndo:false,note:"신한FC 일정 화면을 열었어요 ("+day+")."};
-    render();return;
+    pending=null;render();return;
   }
   if(a.direct==="calendar"){pending.stage="work";pending.note="확인하는 중…";render();await calFlow(pick.kind,rec);return} // 앱을 거치지 않고 바로 처리
   if(pick.app==="shinhanfc"){ // 신한FC는 아직 받은편지함을 안 읽음 → 고객 화면을 띄워 직접 쓰게 안내
     rec.status="done";rec.target={app:"shinhanfc",kind:"nav"};save();
     openModule({app:"shinhanfc",go:"customers",q:"",kind:""});
-    pending={rec,stage:"done",canUndo:false,note:"고객 상담 메모는 신한FC 고객 화면에서 직접 남겨요. 신한FC 화면을 열었어요. 고객을 찾아 메모를 적어 주세요."};
-    render();return;
+    pending=null;render();return;
   }
   pending.stage="work";pending.note="보내는 중…";render();
   const item={id:rec.id,at:rec.at,from:"onething",kind:pick.kind,text:rec.text,fields:rec.fields,status:"new"};
