@@ -90,6 +90,7 @@ nav button.on::before{content:"";position:absolute;top:-1px;left:28%;right:28%;h
 .login .hint{margin-top:20px;font-size:12px;color:var(--t3)}
 /* 모듈 틀: 아래 앱 화면을 말만해요 안에 끼워 보여 줌 + 말만해요 버튼 + 묻는 창 */
 .hint a{color:var(--accent)}
+html.modopen,html.modopen body{overflow:hidden} /* 모듈이 떠 있을 땐 뒤 페이지 스크롤바를 없애 앱 화면의 스크롤 하나만 보이게 */
 #mod{position:fixed;inset:0;z-index:20;background:var(--surface);display:flex;flex-direction:column}
 .modbar{flex:none;display:flex;align-items:center;gap:8px;min-height:48px;padding:calc(4px + env(safe-area-inset-top)) 8px 4px 16px;border-bottom:1px solid var(--line);background:var(--surface)}
 .modbar .nm{font-size:15px;font-weight:600;margin-right:auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -104,13 +105,15 @@ nav button.on::before{content:"";position:absolute;top:-1px;left:28%;right:28%;h
 #modbody iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:var(--surface)}
 #fab{position:fixed;right:max(24px,env(safe-area-inset-right));bottom:var(--fabl,calc(var(--fabb,72px) + env(safe-area-inset-bottom)));z-index:30;width:56px;height:56px;border-radius:50%;border:0;padding:0;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.2);transition:transform var(--t-fast) var(--ease),bottom 200ms var(--ease)}
 #fab:active{transform:scale(.96)}
+#fab.rec{background:var(--bad);color:#fff}
+html.sheetopen #fab{z-index:42;right:max(24px,calc((100vw - 640px)/2 + 24px));bottom:calc(24px + env(safe-area-inset-bottom))!important} /* 묻는 창이 열려 있으면 마이크 버튼이 창 오른쪽 아래에서 음성 입력 버튼이 됨 */
 #fab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 #scrim{position:fixed;inset:0;z-index:40;background:rgba(10,14,20,.4);opacity:0;visibility:hidden;transition:opacity 200ms,visibility 0s linear 200ms}
 #scrim.open{opacity:1;visibility:visible;transition-delay:0s}
-#sheet{position:fixed;left:0;right:0;bottom:0;margin:0 auto;max-width:640px;height:70vh;height:70dvh;z-index:41;background:var(--surface);border:1px solid var(--line);border-bottom:0;border-radius:16px 16px 0 0;display:flex;flex-direction:column;transform:translateY(100%);visibility:hidden;transition:transform 240ms var(--ease),visibility 0s linear 240ms}
+#sheet{position:fixed;left:0;right:0;bottom:0;margin:0 auto;max-width:640px;height:auto;min-height:300px;max-height:56vh;max-height:56dvh;z-index:41;background:var(--surface);border:1px solid var(--line);border-bottom:0;border-radius:16px 16px 0 0;display:flex;flex-direction:column;transform:translateY(100%);visibility:hidden;transition:transform 240ms var(--ease),visibility 0s linear 240ms}
 #sheet.open{transform:none;visibility:visible;transition-delay:0s}
 #sheet .modbar{border-radius:16px 16px 0 0;padding-top:4px}
-#sheetBody{flex:1;min-height:0;overflow:auto;padding:8px 16px 16px}
+#sheetBody{flex:1;min-height:0;overflow:auto;padding:8px 16px 88px} /* 아래 88px: 오른쪽 아래 마이크 버튼 자리 */
 #sheetBody .card{background:transparent;border:0;padding:8px 0;margin-bottom:0}
 #sheetBody textarea{min-height:64px}
 @media (prefers-reduced-motion:reduce){#sheet,#scrim,#fab{transition:none}}
@@ -356,7 +359,9 @@ let suppressOpen=false,modApp=null,sheetOpen=false,modPushed=false,sheetPushed=f
 const modHash=o=>{const p=new URLSearchParams();["go","q","kind","id","month","car"].forEach(k=>{if(o[k])p.set(k,o[k])});return p.toString()};
 function updateFab(){
   const m=modApp&&MODS[modApp],r=document.documentElement.style;
-  $("#fab").hidden=!(db&&$("#login").hidden&&!sheetOpen)||!!(m&&m.fabHide);
+  $("#fab").hidden=!(db&&$("#login").hidden)||(!sheetOpen&&!!(m&&m.fabHide));
+  $("#fab").classList.toggle("rec",!!listening);
+  $("#fab").setAttribute("aria-label",sheetOpen?"말로 입력":"말만해요 열기");
   // 앱의 떠 있는 버튼과 겹치면 위로: 바닥에서 max(16, lift+12)px, 화면 위 절반은 넘지 않게. lift 0이면 원래 자리
   if(m&&m.fabLift>0)r.setProperty("--fabl","min(50vh,"+Math.max(16,m.fabLift+12)+"px)");else r.removeProperty("--fabl");
 } // 앱을 연 뒤에는 늘 오른쪽 아래에 떠 있음
@@ -372,7 +377,7 @@ function showMod(app){
   modApp=app;
   Object.keys(MODS).forEach(k=>{MODS[k].frame.hidden=k!==app;MODS[k].fabHide=false;MODS[k].fabLift=0}); // 다른 모듈로 바뀌면 버튼 원래 자리
   if(!modPushed)modPushed=pushLayer();
-  $("#mod").hidden=false;updateFab();
+  $("#mod").hidden=false;document.documentElement.classList.add("modopen");updateFab();
 }
 function openModule(n){
   const dir=APPDIR[n.app];if(!dir)return false;
@@ -421,7 +426,7 @@ function modBackStep(){ // 모듈 안에서 처리했으면 true, 더 갈 곳이
 }
 function modBack(){if(!modBackStep())closeMod()}
 function closeMod(skipHist){
-  Object.keys(MODS).forEach(k=>{MODS[k].fabHide=false;MODS[k].fabLift=0;MODS[k].stack=[];MODS[k].restoring=null});modApp=null;$("#mod").hidden=true;document.documentElement.style.removeProperty("--fabb");updateFab();
+  Object.keys(MODS).forEach(k=>{MODS[k].fabHide=false;MODS[k].fabLift=0;MODS[k].stack=[];MODS[k].restoring=null});modApp=null;$("#mod").hidden=true;document.documentElement.classList.remove("modopen");document.documentElement.style.removeProperty("--fabb");updateFab();
   const p=modPushed;modPushed=false;
   if(p&&!skipHist)popLayer();
   if(db)go(view==="talk"?"log":view);
@@ -429,19 +434,19 @@ function closeMod(skipHist){
 function resetMods(){ // 로그아웃·계정 거부·로그인 화면: 띄워 둔 앱과 창을 모두 걷음
   Object.keys(MODS).forEach(k=>{try{MODS[k].frame.remove()}catch(e){}delete MODS[k]});
   modApp=null;modPushed=false;sheetOpen=false;sheetPushed=false;
-  $("#mod").hidden=true;$("#fab").hidden=true;$("#sheet").classList.remove("open");$("#scrim").classList.remove("open");
+  $("#mod").hidden=true;document.documentElement.classList.remove("modopen");$("#fab").hidden=true;$("#sheet").classList.remove("open");$("#scrim").classList.remove("open");document.documentElement.classList.remove("sheetopen");
 }
 function openSheet(keep){
   if(sheetOpen||!db)return;
   sheetOpen=true;$("#main").innerHTML="";
   if(keep!==true&&pending&&["done","answer","name"].includes(pending.stage))pending=null;
-  $("#sheet").classList.add("open");$("#scrim").classList.add("open");
+  $("#sheet").classList.add("open");$("#scrim").classList.add("open");document.documentElement.classList.add("sheetopen");
   sheetPushed=pushLayer();updateFab();render();
   setTimeout(()=>{const t=$("#txt");if(t&&!t.disabled&&!matchMedia("(pointer:coarse)").matches)t.focus()},260); // 폰은 키보드를 자동으로 띄우지 않음
 }
 function closeSheet(skipHist,cb){
   if(!sheetOpen)return;
-  sheetOpen=false;$("#sheet").classList.remove("open");$("#scrim").classList.remove("open");$("#sheetBody").innerHTML="";
+  sheetOpen=false;$("#sheet").classList.remove("open");$("#scrim").classList.remove("open");document.documentElement.classList.remove("sheetopen");$("#sheetBody").innerHTML="";
   const p=sheetPushed;sheetPushed=false;
   if(pending&&["done","answer","name"].includes(pending.stage))pending=null; // 끝난 카드는 닫으면 치움
   updateFab();suppressOpen=true;render();suppressOpen=false;
@@ -451,7 +456,7 @@ function openAppAsIs(){ // [앱으로 열기]: 모듈에서 보던 바로 그 �
   if(!modApp)return;const w=MODS[modApp].where||{},h=modHash(w);
   location.href=APPDIR[modApp]+(h?"#"+h:"");
 }
-$("#fab").addEventListener("click",openSheet);
+$("#fab").addEventListener("click",()=>{if(sheetOpen)toggleMic();else openSheet()});
 $("#scrim").addEventListener("click",()=>closeSheet());
 $("#sheetclose").addEventListener("click",()=>closeSheet());
 $("#modback").addEventListener("click",modBack);
@@ -763,13 +768,12 @@ function render(){
   if(sheetOpen||view==="talk")m.innerHTML=talkHtml();
   else if(view==="log")m.innerHTML=logHtml();
   else m.innerHTML=setHtml();
-  bind();
+  bind();updateFab();
 }
 function talkHtml(){
   const apps=activeApps();
   const names=apps.length?apps.map(a=>a.name).join(" · "):"열린 앱 없음";
   return `<div class="card">
-    <button class="mic${listening?" rec":""}" id="mic" aria-label="말로 입력"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
     <p class="ast" id="ast">${listening?"듣고 있어요… 다시 누르면 멈춰요":""}</p>
     <textarea id="txt" placeholder="예) 김OO 고객 검색 / 내일 3시 김OO AP / 하양이 누적 235000" ${pending&&pending.stage==="work"?"disabled":""}></textarea>
     <div class="acts"><button class="btn pri" id="send" ${(pending&&pending.stage==="work")||!apps.length?"disabled":""}>보내기</button></div>
