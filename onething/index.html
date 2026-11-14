@@ -8,7 +8,11 @@
 <meta name="color-scheme" content="light dark">
 <meta name="robots" content="noindex,nofollow">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231F4E8C'/%3E%3Crect x='25' y='12' width='14' height='26' rx='7' fill='none' stroke='white' stroke-width='4'/%3E%3Cpath d='M16 31a16 16 0 0 0 32 0M32 47v8' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="48x48" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="말만해요">
 <link rel="preconnect" href="https://accounts.google.com">
 <link rel="preconnect" href="https://www.googleapis.com">
@@ -110,12 +114,16 @@ html.sheetopen #fab{z-index:42;right:max(24px,calc((100vw - 640px)/2 + 24px));bo
 #fab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 #scrim{position:fixed;inset:0;z-index:40;background:rgba(10,14,20,.4);opacity:0;visibility:hidden;transition:opacity 200ms,visibility 0s linear 200ms}
 #scrim.open{opacity:1;visibility:visible;transition-delay:0s}
-#sheet{position:fixed;left:0;right:0;bottom:0;margin:0 auto;max-width:640px;height:auto;min-height:300px;max-height:56vh;max-height:56dvh;z-index:41;background:var(--surface);border:1px solid var(--line);border-bottom:0;border-radius:16px 16px 0 0;display:flex;flex-direction:column;transform:translateY(100%);visibility:hidden;transition:transform 240ms var(--ease),visibility 0s linear 240ms}
+#sheet{position:fixed;left:0;right:0;bottom:0;margin:0 auto;max-width:640px;height:auto;min-height:210px;max-height:40vh;max-height:40dvh;z-index:41;background:var(--surface);border:1px solid var(--line);border-bottom:0;border-radius:16px 16px 0 0;display:flex;flex-direction:column;transform:translateY(100%);visibility:hidden;transition:transform 240ms var(--ease),visibility 0s linear 240ms}
 #sheet.open{transform:none;visibility:visible;transition-delay:0s}
 #sheet .modbar{border-radius:16px 16px 0 0;padding-top:4px}
-#sheetBody{flex:1;min-height:0;overflow:auto;padding:8px 16px 88px} /* 아래 88px: 오른쪽 아래 마이크 버튼 자리 */
+#sheetBody{flex:1;min-height:0;overflow:auto;padding:4px 16px 16px}
+#sheetBody.hascard{padding-bottom:88px} /* 카드가 있을 땐 아래 88px: 오른쪽 아래 마이크 버튼에 안 가리게 */
+#sheetBody .acts{padding-right:72px;margin-top:8px} /* 보내기 줄은 마이크 버튼 왼쪽에 */
 #sheetBody .card{background:transparent;border:0;padding:8px 0;margin-bottom:0}
-#sheetBody textarea{min-height:64px}
+#sheetBody textarea{min-height:68px;height:68px}
+#sheetBody .ast{margin:0 0 4px}
+#sheetBody .ast:empty{display:none}
 @media (prefers-reduced-motion:reduce){#sheet,#scrim,#fab{transition:none}}
 </style>
 </head>
@@ -765,6 +773,7 @@ function render(){
   // 결과·확인 카드는 늘 묻는 창 안에 나옴: 창이 닫혀 있고 모듈도 없으면 열어서 보여 줌
   if(!sheetOpen&&pending&&!modApp&&!suppressOpen){openSheet(true);return}
   const m=sheetOpen?$("#sheetBody"):$("#main");
+  if(sheetOpen)m.classList.toggle("hascard",!!pending);
   if(sheetOpen||view==="talk")m.innerHTML=talkHtml();
   else if(view==="log")m.innerHTML=logHtml();
   else m.innerHTML=setHtml();
@@ -843,6 +852,9 @@ function setHtml(){
     <b>묻는 창과 말만해요 버튼</b>: 앱을 열면 묻는 창이 열린 채로 시작해요. 답 카드도 이 창 안에 나와요. X로 닫으면 뒤의 최근 기록이 보이고, 오른쪽 아래 말만해요 버튼은 어느 화면에서나 떠 있어서 누르면 창이 다시 열려요.<br>
     <b>새로 적는 것은 편지로</b>: “오늘 본 영화 기록해줘”, “충전 40kWh 기록해줘”처럼 다른 앱에 기록을 새로 남기는 말은 그 앱의 받은편지함에 남기고, 카드의 [앱으로 열기]로 그 앱을 열 수 있어요(앱을 열면 반영돼요). 신한FC 상담 메모는 신한FC 고객 화면을 열어 직접 적어요. 읽기인지 쓰기인지 애매하면 어디로 보낼지 물어봐요.<br>
     <b>로그인</b>: 한 번 로그인하면 같은 브라우저에서 다른 앱(신한FC·차차차·항상일상 등)도 로그인 없이 열려요. 로그아웃하면 <b>모든 앱에서 로그아웃</b>돼요. 로그인은 1시간 정도 유지되고, 끝나면 아무 앱에서나 다시 연결하면 돼요. (아이폰은 홈 화면에 추가한 앱끼리는 나눠 쓰지 못해요.)</p></details></div>
+  ${isStandalone()?"":`<div class="card" id="installcard"><h3>앱 설치</h3><div class="t">홈 화면에 추가해서 앱처럼 쓰세요</div>
+    <p class="k" style="margin:6px 0 0">안드로이드 크롬: 브라우저 메뉴 → ‘앱 설치’ 또는 ‘홈 화면에 추가’. 아이폰 사파리: 공유 → ‘홈 화면에 추가’.</p>
+    <div class="acts"><button class="btn pri" id="installbtn" ${installEv?"":"hidden"}>앱 설치</button></div></div>`}
   <div class="card"><h3>AI 해석 (Gemini)</h3><div class="t">${cfg.geminiKey?"Gemini 연결됨 (애매한 말만 물어봐요)":"규칙 기반만 사용 중 (키 없음)"}</div>
     <label for="gkey">Gemini API 키 (Google AI Studio에서 직접 발급)</label>
     <input id="gkey" type="password" autocomplete="off" placeholder="${cfg.geminiKey?"저장된 키가 있어요 (바꾸려면 새로 붙여넣기)":"키를 붙여넣기"}">
@@ -860,6 +872,7 @@ function bind(){
   const nx=$("#next");if(nx)nx.onclick=()=>{pending=null;render()};
   const un=$("#undo");if(un)un.onclick=undo;
   const cg=$("#calgo");if(cg)cg.onclick=calRun;
+  const ib=$("#installbtn");if(ib)ib.onclick=async()=>{if(!installEv)return;installEv.prompt();try{await installEv.userChoice}catch(e){}installEv=null;ib.hidden=true};
   const oa=$("#openapp");if(oa)oa.onclick=()=>{location.href=oa.dataset.dir}; // 편지를 남긴 앱을 같은 창에서 열기
   const tx0=$("#txt");if(tx0&&pending&&["ask","pick","confirm"].includes(pending.stage)&&!matchMedia("(pointer:coarse)").matches)tx0.focus(); // 고르는 중에도 바로 새로 쓸 수 있게 커서
   const ng=$("#navgo"),nq=$("#navq");
@@ -1180,6 +1193,12 @@ async function fillCalSettings(){
     const r=$("#reauth2");if(r)r.onclick=()=>doLogin(false);
   }
 }
+/* ===== 설치 준비: 서비스워커 + [앱 설치] 버튼 (규칙: app\_공통\설치준비.md) ===== */
+let installEv=null;
+const isStandalone=()=>{try{return matchMedia("(display-mode: standalone)").matches||navigator.standalone===true}catch(e){return false}};
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installEv=e;const b=$("#installbtn");if(b)b.hidden=false});
+window.addEventListener("appinstalled",()=>{installEv=null;const c=$("#installcard");if(c)c.hidden=true});
+try{if("serviceWorker"in navigator&&!DEMO)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}catch(e){}
 boot();
 </script>
 </body>
