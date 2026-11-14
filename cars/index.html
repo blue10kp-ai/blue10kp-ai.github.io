@@ -147,16 +147,21 @@ header small.fail{color:var(--bad)}
 .login .lm{min-height:22px;margin:0 0 12px;font-size:13px;color:var(--t3)}
 .login .lm.err{color:var(--bad)}
 .login .hint{margin-top:20px;font-size:12px;color:var(--t3)}
+/* 말만해요 안에 모듈로 뜰 때(?embed=1): 위·아래 메뉴 없이 내용만 */
+.embed header,.embed nav,.embed .ai,.embed .scrim{display:none!important}
+.embed body{padding-top:56px;padding-bottom:24px}
+.embed [data-act="logout"]{display:none}
+.embed .login{margin-top:22vh}
 </style>
 </head>
 <body>
+<script>try{if(new URLSearchParams(location.search).get('embed')==='1')document.documentElement.classList.add('embed')}catch(e){}</script>
 <section id="login" class="login">
   <h1>차차차</h1>
   <p>나의 차 기록장</p>
   <div class="lm" id="lmsg">확인 중…</div>
   <button class="btn pri" id="loginBtn" hidden>Google 계정으로 로그인</button>
   <button class="btn" id="loginOtherBtn" hidden>다른 계정으로 로그인</button>
-  <div class="hint">로그인한 뒤에만 기록이 보입니다. 기록은 내 Google Drive에 저장됩니다.</div>
 </section>
 <header id="title" hidden><span>차차차</span><small id="sync"></small></header>
 <div class="cars" id="cars" hidden></div>
@@ -195,7 +200,7 @@ const num=n=>Math.round(n).toLocaleString("ko-KR");
 const fuelDef=()=>({comp:COMPS[0][0],kmL:11.0,price:1840,kmkWh:5.0,kwh:319});
 
 function norm(d){ // 옛 파일·새 파일 모두 같은 모양으로 맞춤
-  d.events??=[];
+  d.events??=[];d.inboxDone??=[];
   d.cars.forEach(c=>{c.photo??="";c.photoCredit??="";c.startKm??=0;c.plate??="";c.notes??="";c.fuel??=fuelDef();
     ["odo","maint","tires","mounts","ins","plans"].forEach(k=>{c[k]??=[]});
     c.tires.forEach(t=>{t.newDepth??=0;t.treads??=[];t.baseKm??=0;t.lifeKm??=0;t.price??="";t.note??="";t.size??="";t.bought??=""})});
@@ -208,21 +213,49 @@ let db=null,dirty=false; // db는 로그인 뒤에야 채워짐
 const legacyRaw=()=>{try{for(const k of [KEY,...OLDKEYS]){const r=localStorage.getItem(k);if(r)return r}}catch(e){}return null};
 
 /* ---------- 구글 로그인 (신한FC m과 같은 방식: Google Identity Services 토큰) ---------- */
-const GTK="chacha.gtoken",GAC="chacha.gaccount";
-let gTok=null;
-function storedTok(){try{const t=JSON.parse(localStorage.getItem(GTK)||"null");return t&&t.exp>Date.now()+60000?t.token:null}catch(e){return null}}
-function clearTok(){try{localStorage.removeItem(GTK)}catch(e){}gTok=null}
+/* 공통 로그인: 모든 앱이 localStorage "blue10kp.gauth" {v,token,exp,scopes,email} 를 같이 씀 (규칙: app\_공통\공통로그인.md)
+   이 토큰은 구글 API 호출에만 쓰고, 다른 서버·파일에는 보내거나 저장하지 않음 */
+const EMBED=(()=>{try{return new URLSearchParams(location.search).get('embed')==='1'}catch(e){return false}})(); // 말만해요 안에 모듈로 뜬 모드
+const GAUTH="blue10kp.gauth",GTK="chacha.gtoken",GAC="chacha.gaccount"; // GTK = 예전 전용 저장값(한 번 옮기고 지움)
+let gTok=null,lsBad=false;
+const normScope=s=>({email:"https://www.googleapis.com/auth/userinfo.email",profile:"https://www.googleapis.com/auth/userinfo.profile"})[s]||s;
+const SCOPE_UP={"https://www.googleapis.com/auth/drive.file":["https://www.googleapis.com/auth/drive"],"https://www.googleapis.com/auth/drive.readonly":["https://www.googleapis.com/auth/drive"],"https://www.googleapis.com/auth/calendar.events":["https://www.googleapis.com/auth/calendar"],"https://www.googleapis.com/auth/calendar.readonly":["https://www.googleapis.com/auth/calendar"],"https://www.googleapis.com/auth/calendar.events.readonly":["https://www.googleapis.com/auth/calendar.events","https://www.googleapis.com/auth/calendar"]};
+function scopesCover(have,need){have=(have||[]).map(normScope);return need.map(normScope).every(n=>have.includes(n)||(SCOPE_UP[n]||[]).some(u=>have.includes(u)))}
+function readAuth(){ // 공통 출입증 읽기 (없거나 깨졌으면 null) + 예전 전용 토큰은 한 번 옮김
+  try{
+    let a=null;try{a=JSON.parse(localStorage.getItem(GAUTH)||"null")}catch(e){}
+    if(!a||typeof a!=="object"||typeof a.token!=="string"||!a.token||!(a.exp>0))a=null;
+    if(!a){
+      const o=JSON.parse(localStorage.getItem(GTK)||"null");
+      if(o&&o.token&&o.exp>Date.now()){a={v:1,token:o.token,exp:o.exp,scopes:GSCOPE.split(" "),email:localStorage.getItem(GAC)||""};localStorage.setItem(GAUTH,JSON.stringify(a))}
+      if(o)localStorage.removeItem(GTK);
+    }
+    return a;
+  }catch(e){return null}
+}
+function writeAuth(a){try{localStorage.setItem(GAUTH,JSON.stringify(a));lsBad=false}catch(e){lsBad=true}}
+function storedTok(){const a=readAuth();return a&&a.exp>Date.now()+60000?a.token:(lsBad?gTok:null)}
+function authOK(){const a=readAuth(); // 열 때: 만료 2분 이상 + 필요한 권한 + 허용 계정
+  return!!(a&&a.exp>Date.now()+120000&&scopesCover(a.scopes,GSCOPE.split(" "))&&ALLOWED.map(x=>x.toLowerCase()).includes(String(a.email||"").toLowerCase()))}
+function setAuthEmail(em){const a=readAuth();if(a){a.email=em;writeAuth(a)}}
+function clearTok(onlyIf){ // 공통 출입증 삭제 (onlyIf가 있으면 그 토큰일 때만)
+  try{const a=readAuth();if(!onlyIf||(a&&a.token===onlyIf))localStorage.removeItem(GAUTH)}catch(e){}
+  if(!onlyIf||gTok===onlyIf)gTok=null;
+}
 const gAcct=()=>{try{return localStorage.getItem(GAC)||""}catch(e){return""}};
 function requestTok(prompt,noHint){
   return new Promise((res,rej)=>{
     const g=window.google&&google.accounts&&google.accounts.oauth2;
     if(!g)return rej(new Error("구글 로그인 모듈을 불러오지 못했습니다. 잠시 후 다시 시도하세요."));
-    const c=g.initTokenClient({client_id:GCLIENT,scope:GSCOPE,hint:noHint?undefined:(gAcct()||undefined),
+    const sa=readAuth(),hintEm=gAcct()||(sa&&ALLOWED.map(x=>x.toLowerCase()).includes(String(sa.email||"").toLowerCase())?sa.email:"");
+    const c=g.initTokenClient({client_id:GCLIENT,scope:GSCOPE,include_granted_scopes:true,hint:noHint?undefined:(hintEm||undefined),
       callback:r=>{
         if(r.error)return rej(new Error("구글 연결 실패: "+r.error));
-        if(!g.hasGrantedAllScopes(r,"https://www.googleapis.com/auth/drive"))return rej(new Error("Google Drive 권한을 허용해야 합니다. 다시 로그인하면서 모든 항목에 체크해 주세요."));
-        try{localStorage.setItem(GTK,JSON.stringify({token:r.access_token,exp:Date.now()+(r.expires_in||3600)*1000}))}catch(e){}
-        gTok=r.access_token;res(r.access_token);
+        const sc=r.scope?String(r.scope).split(/\s+/).filter(Boolean):(g.hasGrantedAllScopes(r,"https://www.googleapis.com/auth/drive")?GSCOPE.split(" "):[]);
+        if(!scopesCover(sc,GSCOPE.split(" ")))return rej(new Error("Google Drive 권한을 허용해야 합니다. 다시 로그인하면서 모든 항목에 체크해 주세요."));
+        gTok=r.access_token;
+        writeAuth({v:1,token:r.access_token,exp:Date.now()+(r.expires_in||3600)*1000,scopes:sc,email:""}); // 이메일은 계정 확인 뒤에 채움
+        res(r.access_token);
       },
       error_callback:e=>rej(new Error(e&&e.type==="popup_closed"?"구글 로그인 창이 닫혔습니다.":"구글 로그인 창을 열 수 없습니다. 팝업 차단을 확인하세요."))});
     c.requestAccessToken({prompt:prompt==null?"":prompt});
@@ -230,8 +263,12 @@ function requestTok(prompt,noHint){
 }
 async function gfetch(url,opt,asText){
   const t=storedTok()||gTok;if(!t)throw new Error("GOOGLE_AUTH");
-  const o=opt||{},r=await fetch(url,{...o,headers:{Authorization:"Bearer "+t,...(o.headers||{})},cache:"no-store"});
-  if(r.status===401){clearTok();throw new Error("GOOGLE_AUTH")}
+  const o=opt||{};let r=await fetch(url,{...o,headers:{Authorization:"Bearer "+t,...(o.headers||{})},cache:"no-store"});
+  if(r.status===401){ // 다른 앱에서 새로 로그인했으면 공통 출입증을 다시 읽어 이어서 씀
+    const a=readAuth();
+    if(a&&a.token!==t&&a.exp>Date.now()+60000)r=await fetch(url,{...o,headers:{Authorization:"Bearer "+a.token,...(o.headers||{})},cache:"no-store"});
+    if(r.status===401){clearTok(t);if(a)clearTok(a.token);throw new Error("GOOGLE_AUTH")}
+  }
   if(!r.ok)throw new Error("Drive "+r.status+": "+(await r.text()).slice(0,160));
   return asText?r.text():r.json();
 }
@@ -320,11 +357,12 @@ function showLogin(msg,isErr){ // 로그인 전·만료 때: 화면에서 기록
   $("#modal").innerHTML="";$("#cars").innerHTML="";$("#main").innerHTML="";$("#nav").innerHTML="";
   setShell(false);
   const m=$("#lmsg");m.textContent=msg||"";m.className="lm"+(msg&&isErr!==false&&/권한|실패|만료|못|않|닫혔|허용/.test(msg)?" err":"");
-  $("#loginBtn").hidden=false;$("#loginOtherBtn").hidden=false;
+  $("#loginBtn").textContent="Google 계정으로 로그인";$("#loginBtn").hidden=false;$("#loginOtherBtn").hidden=false;
+  if(EMBED){$("#lmsg").textContent="말만해요에서 다시 로그인해 주세요.";$("#lmsg").className="lm";$("#loginBtn").hidden=true;$("#loginOtherBtn").hidden=true}
 }
 async function denyAccount(em){
-  try{const t=storedTok()||gTok;if(t&&window.google&&google.accounts.oauth2.revoke)google.accounts.oauth2.revoke(t,()=>{})}catch(e){}
-  clearTok();try{localStorage.removeItem(GAC);localStorage.removeItem(FID_KEY)}catch(e){}
+  // 공통 출입증은 지우지 않고(다른 앱이 쓰는 중일 수 있음) 계정만 표시, revoke 안 함
+  setAuthEmail(em);try{localStorage.removeItem(GAC);localStorage.removeItem(FID_KEY)}catch(e){}
   db=null;dirty=false;fileId=null;folderId=null;lastMod=null;
   showLogin("권한이 없습니다. 이 앱은 허용된 계정만 쓸 수 있어요. 허용된 계정으로 다시 로그인해 주세요.");
 }
@@ -338,6 +376,7 @@ async function afterToken(){ // 토큰을 받은 뒤: 계정 확인과 기록 �
   const pre=loadDrive().then(d=>({d}),e=>({e}));
   const a=await checkAccount();
   if(!a.ok){await denyAccount(a.em);return}
+  setAuthEmail(a.em);
   const changed=gAcct()&&gAcct()!==a.em;
   try{localStorage.setItem(GAC,a.em)}catch(e){}
   if(changed){db=null;dirty=false;fileId=null;folderId=null;lastMod=null}
@@ -358,6 +397,50 @@ async function startApp(pre){
     }
   }
   setShell(true);setSync("ok");render();scrollTo(0,0);
+  applyGo();
+  importInbox().catch(()=>{}); // 말만해요 받은편지함 (실패해도 앱은 그대로)
+}
+/* ---------- 말만해요 받은편지함: Drive Claude/app/onething/받은편지함/chachacha.json ---------- */
+const INBOX_PATH=["Claude","app","onething","받은편지함"],INBOX_FILE="chachacha.json";
+async function importInbox(){
+  if(!db)return;
+  let id="root";
+  for(const n of INBOX_PATH){const f=await dFind(id,n,true);if(!f)return;id=f.id}
+  const f=await dFind(id,INBOX_FILE,false);if(!f)return;
+  const box=parseDoc(await gfetch(DAPI+"/files/"+f.id+"?alt=media",null,true));
+  const items=Array.isArray(box.items)?box.items:[];
+  const todo=items.filter(x=>x&&x.status==="new"&&x.id!=null);
+  if(!todo.length)return;
+  const done=[];
+  for(const it of todo){
+    const sid=String(it.id),fl=it.fields||{};
+    if(db.inboxDone.includes(sid)){done.push(sid);continue} // 이미 반영됨(중복 방지) → 편지만 done 처리
+    const txt=String(it.text||"");
+    let c=db.cars.find(x=>x.nick&&txt.includes(x.nick));
+    if(!c&&db.cars.length>1){
+      const col=/빨강|빨간|레드/.test(txt)?"빨":/하양|흰|화이트/.test(txt)?"흰":"";
+      if(col)c=db.cars.find(x=>x.color&&x.color.startsWith(col)||(x.nick||"").startsWith(col==="빨"?"빨":"하"));
+    }
+    if(!c){
+      c=db.cars.find(x=>x.id===db.sel)||db.cars[0];
+      if(db.cars.length>1&&!confirm("말만해요 편지를 차계부에 넣을게요.\n\n\""+txt.slice(0,80)+"\"\n\n어느 차인지 몰라서 '"+c.nick+"'에 기록합니다.\n확인 = 기록, 취소 = 나중에")) continue;
+    }
+    const d=/^\d{4}-\d{2}-\d{2}/.test(fl.date||"")?fl.date.slice(0,10):iso(new Date(it.at||Date.now()));
+    const km=+fl.km||0,cost=+fl.cost||0;
+    if(it.kind==="odo"){if(!km)continue;c.odo.push({id:uid(),date:d,km})}
+    else if(it.kind==="fuel"||it.kind==="maint"){
+      const item=it.kind==="fuel"?(fl.note||"주유·충전"):(fl.item||"정비·관리");
+      c.maint.push({id:uid(),date:d,item,amount:cost,shop:"",km:km||"",memo:"말만해요"});
+      if(it.kind==="fuel"&&km)c.odo.push({id:uid(),date:d,km});
+    }else continue;
+    db.inboxDone.push(sid);done.push(sid);
+  }
+  if(!done.length)return;
+  dirty=true;await driveSave(true);render(); // 기록을 먼저 저장한 뒤에 편지를 done으로
+  const cur=parseDoc(await gfetch(DAPI+"/files/"+f.id+"?alt=media",null,true)); // 다시 읽고 해당 id만 바꿔 저장
+  const at=new Date().toISOString();let ch=false;
+  (cur.items||[]).forEach(x=>{if(x&&x.status==="new"&&done.includes(String(x.id))){x.status="done";x.doneAt=at;ch=true}});
+  if(ch)await gfetch(DUP+"/files/"+f.id+"?uploadType=media&fields=id",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(cur)});
 }
 async function doLogin(other){
   $("#lmsg").className="lm";$("#lmsg").textContent="로그인 중…";
@@ -365,24 +448,87 @@ async function doLogin(other){
   catch(e){showLogin(e.message==="GOOGLE_AUTH"?"로그인이 만료되었습니다. 다시 로그인해 주세요.":e.message)}
 }
 $("#loginBtn").addEventListener("click",()=>doLogin(false));
-$("#loginOtherBtn").addEventListener("click",()=>doLogin(true));
-async function boot(){ // 열자마자: 이미 확인된 계정으로 로그인돼 있으면 바로 시작(계정 확인은 뒤에서), 아니면 로그인 화면
-  if(storedTok()&&gAcct()&&ALLOWED.map(x=>x.toLowerCase()).includes(gAcct())){
+$("#loginOtherBtn").addEventListener("click",()=>{clearTok();doLogin(true)}); // 다른 계정: 공통 출입증을 지우고 새로 로그인
+async function boot(){ // 열자마자: 공통 출입증이 맞으면 로그인 화면 없이 시작(계정 확인은 뒤에서), 아니면 로그인 화면
+  if(authOK()){
     try{
       checkAccount().then(a=>{if(!a.ok)denyAccount(a.em)},()=>{});
       await startApp();return;
     }catch(e){showLogin(e.message==="GOOGLE_AUTH"?"":"기록을 불러오지 못했어요. 인터넷을 확인하고 다시 시도해 주세요. ("+e.message.slice(0,60)+")");return}
   }
+  const a=readAuth();
   showLogin("");
+  // 계정은 허용인데 권한만 모자라면 버튼으로 알려 줌
+  if(a&&a.exp>Date.now()&&ALLOWED.map(x=>x.toLowerCase()).includes(String(a.email||"").toLowerCase())&&!scopesCover(a.scopes,GSCOPE.split(" ")))$("#loginBtn").textContent="구글 연결 (권한 추가)";
 }
+// 화면으로 돌아왔을 때: 로그인 화면이면 다른 앱에서 로그인했는지 다시 확인
+function recheckAuth(){if(!db&&authOK()&&!$("#login").hidden)boot()}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)recheckAuth()});
+window.addEventListener("focus",recheckAuth);
 async function logout(){
   await driveSave();
   if(dirty&&!confirm("저장되지 않은 기록이 있습니다. 그래도 로그아웃할까요?"))return;
-  try{const t=storedTok()||gTok;if(t&&window.google&&google.accounts.oauth2.revoke)google.accounts.oauth2.revoke(t,()=>{})}catch(e){}
+  if(!confirm("모든 앱에서 로그아웃됩니다. 로그아웃할까요?"))return;
   clearTok();db=null;dirty=false;fileId=null;folderId=null;lastMod=null;
   showLogin("로그아웃했습니다.",false);
 }
 let view="home";
+/* ---------- 말만해요 모듈(#go=…)과 위치 알림 ----------
+   #go=records[&car=닉네임]  주행 기록(월별 합계·주행 목록)      #go=maint  정비·충전 비용 기록
+   #go=summary&month=YYYY-MM  그 달 요약(차별 주행·합계·지난달 대비·그 달 비용)
+   #go=tire / #go=ins / #go=home */
+let sumYm=null,pendingGo=null;const navStack=[];
+const GO_VIEW={records:"trip",trip:"trip",maint:"maint",tire:"tire",ins:"ins",summary:"summary",home:"home"};
+const VIEW_GO={trip:"records",maint:"maint",tire:"tire",ins:"ins",summary:"summary",home:"home"};
+function parseGo(h){ // "#go=records&car=…" → {go,month,car,id}
+  try{const p=new URLSearchParams(String(h||"").replace(/^#/,""));return p.get("go")?{go:p.get("go"),month:p.get("month")||"",car:p.get("car")||"",id:p.get("id")||""}:null}catch(e){return null}
+}
+function clearHash(){try{if(location.hash)history.replaceState(null,"",location.pathname+location.search)}catch(e){}}
+function applyGo(g){ // 열려 있는 앱에서 해당 화면으로 (db가 아직 없으면 로드 뒤에 적용)
+  g=g||pendingGo;if(!g)return;
+  if(!db){pendingGo=g;return}
+  pendingGo=null;
+  const v=GO_VIEW[g.go];if(!v){clearHash();return}
+  const key=g.car||g.id;
+  if(key){const c=db.cars.find(x=>x.id===key||x.nick===key);if(c)db.sel=c.id}
+  navStack.length=0;view=v;
+  if(v==="summary")sumYm=/^\d{4}-\d{2}$/.test(g.month||"")?g.month:today().slice(0,7);
+  render();scrollTo(0,0);clearHash();
+}
+window.blue10kpGo=g=>{if(g&&typeof g==="object")applyGo({go:String(g.go||""),month:String(g.month||""),car:String(g.car||""),id:String(g.id||"")})};
+function goBack(){ // 앱 안에서 한 단계 뒤로 (열린 입력 창 → 이전 화면)
+  if(aiIsOpen){aiClose();return true}
+  if($("#modal").innerHTML.trim()){$("#modal").innerHTML="";return true}
+  const p=navStack.pop();if(p){view=p.view;sumYm=p.sumYm;render();scrollTo(0,0);return true}
+  return false;
+}
+const canBack=()=>aiIsOpen||!!$("#modal").innerHTML.trim()||navStack.length>0;
+function notifyWhere(){ // 말만해요(부모)에게 지금 위치 알림 (embed일 때만)
+  if(!EMBED||window.parent===window)return;
+  try{const c=db&&db.cars.find(x=>x.id===db.sel);
+    window.parent.postMessage({type:"blue10kp-where",app:"cars",go:VIEW_GO[view]||"home",month:view==="summary"?sumYm:undefined,car:c?c.nick:undefined,id:c?c.id:undefined,canBack:canBack()},location.origin)}catch(e){}
+}
+window.addEventListener("message",e=>{
+  if(e.origin!==location.origin||!e.data||typeof e.data!=="object")return;
+  if(e.data.type==="blue10kp-go")window.blue10kpGo(e.data);
+  else if(e.data.type==="blue10kp-back"){goBack();notifyWhere()}
+});
+window.addEventListener("hashchange",()=>{const g=parseGo(location.hash);if(g)applyGo(g)});
+pendingGo=parseGo(location.hash);
+function vSummary(c){
+  const ym=sumYm||today().slice(0,7),rows=monthTable(),r=rows.find(x=>x.ym===ym),pv=rows.find(x=>x.ym===prevMonth(ym));
+  let h=`<div class="card"><h3>${ym.slice(0,4)}년 ${+ym.slice(5)}월 요약</h3><div class="acts"><button class="btn sm" data-act="sumMonth" data-id="${prevMonth(ym)}">◀ 지난달</button><button class="btn sm" data-act="sumMonth" data-id="${nextMonth(ym)}">다음달 ▶</button></div></div>`;
+  if(!r)h+=`<div class="card"><div class="empty">이 달 주행 기록이 없어요</div></div>`;
+  else{
+    h+=`<div class="card"><h3>주행${r.partial?" (진행 중)":""}</h3><div class="big">${num(r.tot)} km</div>`+(r.diff!=null?`<div class="sub">지난달 대비 ${sgn(r.diff)} km${pv?" (지난달 "+num(pv.tot)+" km)":""}</div>`:"")+
+      `<div class="grid2" style="margin-top:10px">`+db.cars.map((cc,i)=>`<div><div class="k">${esc(cc.nick)}</div><div class="v">${r.vals[i]?num(r.vals[i].km)+" km":"–"}</div></div>`).join("")+`</div></div>`;
+  }
+  const items=[];db.cars.forEach(cc=>cc.maint.forEach(m=>{if(String(m.date||"").slice(0,7)===ym)items.push({cc,m})}));
+  items.sort((a,b)=>b.m.date.localeCompare(a.m.date));
+  const tot=items.reduce((t,x)=>t+(+x.m.amount||0),0);
+  h+=`<div class="card"><h3>정비·충전 비용</h3>`+(items.length?`<div class="big">${won(tot)}</div>`+items.map(x=>`<div class="row"><div><div class="t">${esc(x.m.item||"")}</div><div class="sub">${esc(x.cc.nick)} · ${esc(x.m.date)}${x.m.km?" · "+num(x.m.km)+" km":""}</div></div><div class="r v">${won(+x.m.amount||0)}</div></div>`).join(""):`<div class="empty">이 달 비용 기록이 없어요</div>`)+`</div>`;
+  return h;
+}
 const car=()=>db.cars.find(c=>c.id===db.sel)||db.cars[0];
 const lastKm=c=>c.odo.length?Math.max(...c.odo.map(o=>o.km)):null;
 const lastOdo=c=>c.odo.length?c.odo.reduce((a,b)=>b.km>=a.km?b:a):null;
@@ -410,6 +556,7 @@ function kmAt(c,ds){ // 그 날짜의 누적 km 추정(기록 사이는 날짜 �
   return null;
 }
 const ymOf=s=>s.slice(0,7);
+function prevMonth(ym){let[y,m]=ym.split("-").map(Number);m--;if(m<1){m=12;y--}return y+"-"+String(m).padStart(2,"0")}
 function nextMonth(ym){let[y,m]=ym.split("-").map(Number);m++;if(m>12){m=1;y++}return y+"-"+String(m).padStart(2,"0")}
 function monthTable(){ // 달마다 차별 주행 km, 합계, 지난달 대비
   const cars=db.cars.filter(c=>c.odo.length);if(!cars.length)return[];
@@ -464,7 +611,8 @@ function render(){
   const IC={trip:'<path d="M3.3 17a9 9 0 1 1 17.4 0"/><path d="M12 14l4-5"/><circle cx="12" cy="14" r="1"/>',maint:'<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>',tire:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v6M12 15v6M3 12h6M15 12h6"/>',ins:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>'};
   $("#nav").innerHTML=`<button class="navai ${aiIsOpen?"on":""}" data-act="ai" aria-label="AI" aria-expanded="${aiIsOpen}"><span class="ni"><span class="aiico">✨</span></span>AI</button>`+T.map(([k,l])=>`<button class="${view===k?"on":""}" data-act="view" data-id="${k}"><span class="ni"><svg viewBox="0 0 24 24" aria-hidden="true">${IC[k]}</svg></span>${l}</button>`).join("");
   const c=car();
-  $("#main").innerHTML=({home:vHome,trip:vTrip,maint:vMaint,tire:vTire,ins:vIns}[view])(c);
+  $("#main").innerHTML=({home:vHome,trip:vTrip,maint:vMaint,tire:vTire,ins:vIns,summary:vSummary}[view])(c);
+  notifyWhere();
 }
 // 차 사진: 내가 올린 사진이 있으면 그것, 없으면 색에 맞는 기본 사진(앱과 같은 폴더의 파일), 그것도 없으면 그림
 const DEFAULT_PHOTOS=[
@@ -503,7 +651,7 @@ function vHome(c){
   h+=`</div>`+insCard();
   h+=fc?`<div class="card"><h3>지금까지 아낀 연료비 (${esc(c.fuel.comp)} 대비)</h3><div class="big save">${won(fc.save)}</div></div>`:`<div class="card"><h3>아낀 연료비</h3><div class="sub">주행거리를 입력하면 계산돼요</div></div>`;
   h+=`<div class="card"><h3>차량 정보${c.plate?" · "+esc(c.plate):""}</h3>${c.notes?`<div class="sub">${esc(c.notes)}</div>`:""}<div class="acts" style="margin-top:8px"><button class="btn" data-act="editCar">정보 수정</button><button class="btn" data-act="photo">내 사진 올리기</button>${c.photo?`<button class="btn" data-act="photoReset">기본 사진으로</button>`:""}</div><div class="acts"><button class="btn dng" data-act="delCar">이 차 삭제</button></div><input type="file" accept="image/*" id="photoIn" hidden></div>`;
-  h+=`<div class="card"><h3>기록 파일 (JSON)</h3><div class="sub">이 앱의 기록은 JSON 파일로 저장해 두었다가 언제든 다시 불러올 수 있어요. 두 대 이상 모든 차 기록이 한 파일에 들어갑니다.</div><div class="acts"><button class="btn pri" data-act="export">기록 저장</button><button class="btn" data-act="import">기록 불러오기</button></div><input type="file" accept="application/json" id="impIn" hidden><div class="note">기록은 내 Google Drive(Claude/app/차차차/설정)에 자동으로 저장돼요. 파일로 따로 보관하려면 기록 저장을 누르세요.</div><div class="acts"><button class="btn" data-act="logout">로그아웃</button>${legacyRaw()?`<button class="btn dng" data-act="clearLegacy">이 기기에 남은 옛 기록 지우기</button>`:""}</div></div>`;
+  h+=`<div class="card"><h3>기록 파일 (JSON)</h3><div class="sub">이 앱의 기록은 JSON 파일로 저장해 두었다가 언제든 다시 불러올 수 있어요. 두 대 이상 모든 차 기록이 한 파일에 들어갑니다.</div><div class="acts"><button class="btn pri" data-act="export">기록 저장</button><button class="btn" data-act="import">기록 불러오기</button></div><input type="file" accept="application/json" id="impIn" hidden><div class="note">기록은 내 Google Drive(Claude/app/차차차/설정)에 자동으로 저장돼요. 파일로 따로 보관하려면 기록 저장을 누르세요.</div><div class="note">한 번 로그인하면 같은 브라우저에서 다른 앱도 함께 열려요. 로그아웃은 모든 앱에서 됩니다.</div><div class="acts"><button class="btn" data-act="logout">로그아웃</button>${legacyRaw()?`<button class="btn dng" data-act="clearLegacy">이 기기에 남은 옛 기록 지우기</button>`:""}</div></div>`;
   return h;
 }
 function vTrip(c){
@@ -775,7 +923,8 @@ document.addEventListener("click",e=>{
   if(a==="sel"){db.sel=id;save();render()}
   else if(a==="logout")logout();
   else if(a==="clearLegacy"){if(confirm("이 기기(브라우저)에 남아 있는 옛 기록을 지울까요? 드라이브에 저장된 기록은 그대로 남아요.")){try{[KEY,...OLDKEYS].forEach(k=>localStorage.removeItem(k))}catch(e){}render()}}
-  else if(a==="view"){view=id;render();scrollTo(0,0)}
+  else if(a==="view"){if(view!==id)navStack.push({view,sumYm});view=id;render();scrollTo(0,0)}
+  else if(a==="sumMonth"){sumYm=id;render();scrollTo(0,0)}
   else if(a==="ai"){aiIsOpen?aiClose():aiOpen()}
   else if(a==="chip"){$("#atxt").value=b.textContent;aiRun(b.textContent)}
   else if(a==="asave")aiSave();
