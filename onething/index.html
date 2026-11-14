@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#171B22" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231F4E8C'/%3E%3Crect x='25' y='12' width='14' height='26' rx='7' fill='none' stroke='white' stroke-width='4'/%3E%3Cpath d='M16 31a16 16 0 0 0 32 0M32 47v8' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="말만해요">
+<link rel="preconnect" href="https://accounts.google.com">
+<link rel="preconnect" href="https://www.googleapis.com">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<title>말만해요</title>
+<style>
+/* 차차차와 같은 디자인 기준(색·글자·버튼)을 이 파일 안에 옮겨 둔 것 */
+:root{
+  --bg:#F4F5F7;--surface:#FFFFFF;--raised:#F0F2F5;--line:rgba(20,30,50,.10);
+  --t1:#151A22;--t2:#4B5361;--t3:#6B7382;
+  --accent:#1F4E8C;--accent-ink:#FFFFFF;--accent-weak:rgba(31,78,140,.08);
+  --ok:#1D7A46;--warn:#A8620B;--bad:#C0392B;
+  --font:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;
+  --r-ctl:8px;--r-card:12px;--ease:cubic-bezier(.2,.8,.2,1);--t-fast:120ms;--navh:60px
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0F1217;--surface:#171B22;--raised:#1E232B;--line:rgba(255,255,255,.09);
+  --t1:#E8EBF0;--t2:#A5ADBA;--t3:#747C8A;
+  --accent:#7FAEF0;--accent-ink:#0F1217;--accent-weak:rgba(127,174,240,.12);
+  --ok:#4CC282;--warn:#E0A04A;--bad:#EF7A6C}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{font-family:var(--font);font-size:15px;line-height:1.5;background:var(--bg);color:var(--t1)}
+body{margin:0;padding-bottom:calc(var(--navh) + 24px + env(safe-area-inset-bottom))}
+button,input,select,textarea{font-family:var(--font)}
+button{color:inherit;cursor:pointer}
+header{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--line);padding:calc(8px + env(safe-area-inset-top)) 16px 8px;min-height:56px;display:flex;align-items:center;font-size:17px;font-weight:600}
+header small{margin-left:auto;font-size:11px;font-weight:500;color:var(--t3)}
+header small.fail{color:var(--bad)}
+.wrap{padding:16px 16px 0;max-width:640px;margin:0 auto}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);padding:16px;margin-bottom:8px}
+.card h3{margin:0 0 8px;font-size:13px;font-weight:500;color:var(--t3)}
+.sub{color:var(--t2);font-size:13px;line-height:1.45}
+.k{color:var(--t3);font-size:12px}
+.empty{color:var(--t3);text-align:center;padding:20px 0;font-size:13px}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:34px;padding:0 14px;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--surface);color:var(--t2);font-size:13px;font-weight:600;line-height:1;white-space:nowrap}
+.btn:active{background:var(--raised)}
+.btn.pri{border-color:var(--accent);color:var(--accent)}
+.btn.dng{color:var(--bad)}
+.btn:disabled{opacity:.4}
+.btn.sm{height:26px;padding:0 10px;font-size:12px}
+label{display:block;font-size:13px;color:var(--t3);margin:12px 0 4px}
+textarea{width:100%;padding:10px 12px;font:inherit;font-size:16px;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--surface);color:var(--t1);line-height:1.45;resize:vertical;min-height:84px}
+textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.mic{width:76px;height:76px;padding:0;border:0;border-radius:50%;margin:8px auto 4px;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 9px var(--accent-weak)}
+.mic.rec{background:var(--bad);color:#fff;box-shadow:0 0 0 9px rgba(192,57,43,.15)}
+.mic:disabled{opacity:.4}
+.ast{margin:0 0 12px;font-size:13px;color:var(--t3);text-align:center;min-height:20px}
+.acts{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}.acts .btn{flex:1;min-width:30%}
+.choice{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.choice .btn{height:auto;min-height:44px;padding:8px 14px;white-space:normal;text-align:left;justify-content:flex-start;font-size:14px;color:var(--t1)}
+.choice .btn b{color:var(--accent);margin-right:6px}
+.msg{margin:0;padding:10px 12px;border-radius:var(--r-card);background:var(--accent-weak);font-size:13.5px;white-space:pre-line}
+.warn{border:1px solid var(--warn);border-left:3px solid var(--warn);background:var(--surface);border-radius:var(--r-card);padding:8px 10px;font-size:13px;margin:8px 0}
+.row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:12px 0;border-top:1px solid var(--line)}
+.row:first-of-type{border-top:0}
+.row .t{font-weight:500;word-break:break-word}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--t2);white-space:nowrap}
+.badge::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--t3);flex:none}
+.badge.ok::before{background:var(--ok)}.badge.ask::before{background:var(--warn)}.badge.bad::before{background:var(--bad)}
+.sw{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--t2);margin:0}
+.sw input{width:20px;height:20px;accent-color:var(--accent)}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:12;display:flex;background:var(--surface);border-top:1px solid var(--line);padding:0 8px max(0px,calc(env(safe-area-inset-bottom) - 10px))}
+nav button{flex:1;min-height:var(--navh);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:0;background:none;position:relative;font-size:11px;font-weight:500;color:var(--t3)}
+nav svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+nav button.on{color:var(--accent)}
+nav button.on::before{content:"";position:absolute;top:-1px;left:28%;right:28%;height:2px;background:var(--accent);border-radius:0 0 2px 2px}
+[hidden]{display:none!important}
+.login{max-width:360px;margin:16vh auto 0;padding:0 24px;text-align:center}
+.login h1{font-size:28px;font-weight:700;margin:0 0 4px;letter-spacing:-.5px}
+.login p{margin:0 0 24px;color:var(--t2);font-size:14px}
+.login .btn{width:100%;height:44px;font-size:15px;margin-top:8px}
+.login .lm{min-height:22px;margin:0 0 12px;font-size:13px;color:var(--t3)}
+.login .lm.err{color:var(--bad)}
+.login .hint{margin-top:20px;font-size:12px;color:var(--t3)}
+</style>
+</head>
+<body>
+<section id="login" class="login">
+  <h1>말만해요</h1>
+  <p>말 한마디로 알맞은 앱에 기록</p>
+  <div class="lm" id="lmsg">확인 중…</div>
+  <button class="btn pri" id="loginBtn" hidden>Google 계정으로 로그인</button>
+  <button class="btn" id="loginOtherBtn" hidden>다른 계정으로 로그인</button>
+  <div class="hint">로그인한 뒤에만 기록이 보입니다. 기록은 내 Google Drive에 저장됩니다.</div>
+</section>
+<header id="title" hidden><span>말만해요</span><small id="sync"></small></header>
+<div class="wrap" id="main" hidden></div>
+<nav id="nav" hidden></nav>
+
+<script>
+"use strict";
+/* ===== 설정 (여기만 고치면 됩니다) ===== */
+// 로그인을 허용할 구글 계정과, 그 사람에게 열어 준 앱 (소문자 이메일 → 앱 번호 목록). 여러 명이면 줄을 추가.
+const USERS={"blue10kp@gmail.com":["goodday","shinhanfc","chachacha"]};
+const GCLIENT="482206908404-5sdbvetcrc8j7ctrhe6aa23ccmd3d05d.apps.googleusercontent.com"; // 차차차와 같은 구글 로그인 클라이언트 ID (공개되어도 되는 값)
+const GSCOPE="openid email https://www.googleapis.com/auth/drive"; // 차차차와 같은 권한. 캘린더 쓰기 권한은 '실시간 일정 등록'을 정할 때 추가
+const BASE=["Claude","app","onething"]; // 내 드라이브 안 저장 위치
+/* ===== 끝 ===== */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+
+/* ================= 1. 민감정보 걸러내기 (AI로 보내기 전에 앱에서 먼저) ================= */
+const Sens={
+  rules:[
+    {name:"주민등록번호",re:/(?<!\d)\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])[-\s]?[1-8]\d{6}(?!\d)/g},
+    {name:"카드번호",re:/(?<!\d)(?:\d{4}[-\s]?){3}\d{4}(?!\d)/g,check:s=>luhn(s.replace(/\D/g,""))},
+    {name:"계좌번호",re:/(?:계좌|통장|입금|송금)[^\d\n]{0,10}[\d][\d\- ]{7,16}\d/g},
+    {name:"비밀번호·인증번호",re:/(?:비밀번호|비번|패스워드|암호|인증\s?번호|인증\s?코드|보안\s?코드|OTP|otp|pin|PIN|CVC|cvc)[^\d\n]{0,8}[\w!@#$%^&*]{3,}/g},
+    {name:"API 키",re:/\b(?:sk-[A-Za-z0-9_-]{16,}|AIza[0-9A-Za-z_-]{30,}|gh[pousr]_[A-Za-z0-9]{30,}|xox[abp]-[A-Za-z0-9-]{10,}|AKIA[0-9A-Z]{12,}|ya29\.[0-9A-Za-z_-]{20,}|eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{5,})/g}
+  ],
+  // 가림 처리한 글, 가려진 종류 목록을 돌려줌
+  mask(text){
+    let out=String(text||""),hit=[];
+    for(const r of this.rules){
+      out=out.replace(r.re,m=>{if(r.check&&!r.check(m))return m;if(!hit.includes(r.name))hit.push(r.name);return"["+r.name+" 가림]"});
+    }
+    return{text:out,hit};
+  }
+};
+function luhn(n){if(n.length<13||n.length>19)return false;let s=0,d=false;for(let i=n.length-1;i>=0;i--){let x=+n[i];if(d){x*=2;if(x>9)x-=9}s+=x;d=!d}return s%10===0}
+
+/* ================= 2. 앱 연결 목록 (어댑터) =================
+   kinds: 받을 수 있는 기록 종류와 칸 목록 / words: 규칙 분류용 낱말(가중치) / how: 반영 방법
+   how.now = 실시간 반영(아직 안 만듦, 대상 앱 세션과 협의 뒤) / how.inbox = 받은 편지함 JSON(만들어 둠) */
+const ADAPTERS=[
+ {id:"goodday",name:"항상일상",desc:"영화·드라마·음악을 보고 들은 것, 맛집·장소, 여행, 일상을 기록하는 앱",
+  folder:["Claude","app","goodday"],how:{inbox:"받은편지함/goodday.json",now:null},
+  kinds:[
+   {id:"video",label:"영상·음악",fields:["title","date","note"],words:{영화:3,드라마:3,예능:2,유튜브:3,넷플릭스:3,웨이브:2,티빙:2,노래:3,음악:3,앨범:2,봤:1,들었:1,시청:2,재밌:1,감동:1,플레이리스트:2}},
+   {id:"place",label:"맛집·장소",fields:["title","date","note"],words:{맛집:4,식당:3,카페:3,커피:1,먹었:2,맛있:2,맛없:2,메뉴:1,술집:2,빵집:2,국밥:2,파스타:2,고기:1,점심:1,저녁:1,브런치:2,디저트:2,가게:1,분위기:1}},
+   {id:"trip",label:"여행",fields:["title","date","note"],words:{여행:4,숙소:3,호텔:3,펜션:3,비행기:3,항공:2,캠핑:3,휴가:2,해외:2,제주:2,부산:1,강릉:1,일본:1,오사카:2,도쿄:2,다녀왔:2,관광:2}},
+   {id:"daily",label:"일상",fields:["title","date","note"],words:{오늘:1,일기:3,기분:2,생각:1,느낌:1,하루:2,산책:2,운동:1,날씨:1,감사:2,행복:2,피곤:1,메모:1}}
+  ]},
+ {id:"shinhanfc",name:"신한FC m",desc:"보험설계사의 고객 상담·일정 관리 앱. 일정은 구글 캘린더에 등록",
+  folder:["Claude","app","신한FC"],how:{inbox:"받은편지함/shinhanfc.json",now:"calendar"},
+  kinds:[
+   {id:"schedule",label:"일정 등록",fields:["title","date","time","customer","note"],words:{고객:3,상담:3,미팅:3,면담:3,계약:3,청약:3,증권:3,보험:2,설계:2,전달:1,방문:2,약속:2,통화:1,연락:1,보장분석:3,갱신:2,만기:2,해약:2,청구:2,일정:3,예약:1,회의:2,교육:2,"FC":1,팀장:1,지점:1}}
+  ]},
+ {id:"chachacha",name:"차차차",desc:"내 차의 주행거리·주유/충전·정비·보험을 적는 차 기록장(차계부)",
+  folder:["Claude","app","차차차"],how:{inbox:"받은편지함/chachacha.json",now:null},
+  kinds:[
+   {id:"odo",label:"주행거리",fields:["date","km"],words:{주행거리:4,계기판:2,누적:2,오도미터:3}},
+   {id:"fuel",label:"주유·충전",fields:["date","cost","km","note"],words:{주유:4,기름:3,충전:4,휘발유:3,경유:3,전기차:1,슈퍼차저:3,리터:2,가득:1}},
+   {id:"maint",label:"정비·관리",fields:["date","item","cost","km"],words:{정비:4,수리:3,엔진오일:4,오일:2,타이어:3,세차:3,보험료:3,자동차세:3,점검:2,교체:2,브레이크:3,와이퍼:3,공임:2,검사:2,정비소:3}}
+  ]}
+];
+const adapter=id=>ADAPTERS.find(a=>a.id===id);
+
+/* ================= 3. 분류 모듈 (바꿔 끼울 수 있는 방식) =================
+   provider.classify(maskedText, allowedAdapters) → {candidates:[{app,kind,score,why[]}], fields}
+   지금은 'rules'(규칙 기반)만. 'claude'는 AI 키 방식이 정해지면 같은 모양으로 추가한다. */
+const todayStr=()=>iso(new Date());
+function extractFields(t){
+  const f={};const now=new Date();
+  const addDays=n=>{const d=new Date(now);d.setDate(d.getDate()+n);return iso(d)};
+  if(/그제|그저께/.test(t))f.date=addDays(-2);else if(/어제/.test(t))f.date=addDays(-1);
+  else if(/모레/.test(t))f.date=addDays(2);else if(/내일/.test(t))f.date=addDays(1);else if(/오늘/.test(t))f.date=addDays(0);
+  const wd="일월화수목금토";let m;
+  if((m=t.match(/(다음\s?주|이번\s?주|돌아오는)?\s?([일월화수목금토])요일/))){
+    const target=wd.indexOf(m[2]);let diff=(target-now.getDay()+7)%7;
+    if(m[1]&&/다음/.test(m[1])){diff=(target-now.getDay()+7)%7+7;if(diff<7)diff+=7}
+    f.date=addDays(diff);
+  }
+  if((m=t.match(/(\d{1,2})\s?월\s?(\d{1,2})\s?일/))){const y=now.getFullYear();f.date=y+"-"+String(+m[1]).padStart(2,"0")+"-"+String(+m[2]).padStart(2,"0")}
+  if((m=t.match(/(오전|오후|저녁|아침)?\s?(\d{1,2})\s?시\s?(?:(\d{1,2})\s?분|반)?/))){
+    let h=+m[2];const min=m[3]?+m[3]:(/시\s?반/.test(m[0])?30:0);
+    if(/오후|저녁/.test(m[1]||"")&&h<12)h+=12;if(/오전|아침/.test(m[1]||"")&&h===12)h=0;
+    if(!m[1]&&h>=1&&h<=6)h+=12; // '3시'는 보통 오후
+    if(h<24)f.time=String(h).padStart(2,"0")+":"+String(min).padStart(2,"0");
+  }
+  if((m=t.match(/([\d,]+(?:\.\d+)?)\s?(?:km|킬로)/i)))f.km=+m[1].replace(/,/g,"");
+  if((m=t.match(/([\d,]+)\s?만\s?([\d,]*)\s?원/)))f.cost=(+m[1].replace(/,/g,""))*10000+(m[2]?+m[2].replace(/,/g,""):0);
+  else if((m=t.match(/([\d,]+)\s?원/)))f.cost=+m[1].replace(/,/g,"");
+  return f;
+}
+const Providers={
+  rules:{
+    label:"규칙 기반(키 없음)",
+    async classify(text,allowed){
+      const low=text.toLowerCase(),cands=[];
+      for(const a of allowed)for(const k of a.kinds){
+        let score=0;const why=[];
+        for(const w in k.words){if(low.includes(w.toLowerCase())){score+=k.words[w];why.push(w)}}
+        if(score>0)cands.push({app:a.id,kind:k.id,score,why});
+      }
+      cands.sort((x,y)=>y.score-x.score);
+      return{candidates:cands,fields:extractFields(text)};
+    }
+  }
+  // Claude 등 다른 AI로 바꾸려면 같은 모양(classify(text,allowed) → {candidates,fields})으로 여기에 추가
+};
+/* Gemini: 규칙으로 애매한 것만 물어봄. 키·모델 이름은 설정값(코드에 키 없음). 보내는 글은 이미 민감정보를 가린 글. */
+const GEMINI_MODEL_DEFAULT="gemini-2.5-flash"; // 모델·무료 한도는 바뀔 수 있어 설정 화면에서 바꿀 수 있게 함
+async function geminiClassify(text,allowed,cfg,fetcher){
+  const catalog=allowed.map(a=>({app:a.id,name:a.name,desc:a.desc,kinds:a.kinds.map(k=>({kind:k.id,label:k.label}))}));
+  const prompt="너는 사용자가 말한 한 문장을 알맞은 앱의 기록 종류로 분류한다.\n앱 목록(JSON): "+JSON.stringify(catalog)+
+    "\n사용자 말: \""+text.replace(/"/g,"'")+"\"\n오늘 날짜: "+todayStr()+
+    "\nJSON으로만 답해라: {\"app\":앱id,\"kind\":kind,\"confidence\":\"high\"|\"low\",\"alt\":[{\"app\":..,\"kind\":..}]}. 앱 목록에 없는 값은 쓰지 마라. 확신이 없으면 confidence는 low.";
+  const url="https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(cfg.model||GEMINI_MODEL_DEFAULT)+":generateContent";
+  const r=await (fetcher||fetch)(url,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":cfg.geminiKey},
+    body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:"application/json",temperature:0}})});
+  if(!r.ok)throw new Error("Gemini "+r.status);
+  const j=await r.json();
+  const raw=j.candidates&&j.candidates[0]&&j.candidates[0].content.parts.map(p=>p.text||"").join("");
+  const o=JSON.parse(String(raw||"").replace(/^```json|```$/g,"").trim());
+  const ok=x=>x&&kindOf(x.app,x.kind)&&allowed.some(a=>a.id===x.app); // 열린 앱 밖의 답은 버림
+  if(!ok(o))return null;
+  return{pick:{app:o.app,kind:o.kind,score:0,why:["AI"]},high:o.confidence==="high",alt:(o.alt||[]).filter(ok).map(x=>({app:x.app,kind:x.kind,score:0,why:["AI"]}))};
+}
+let providerId="rules";
+// 결과 해석: 확실하면 자동, 애매하면 되묻기
+function decide(res,allowed){
+  const c=res.candidates;
+  if(c.length&&c[0].score>=3&&(c.length===1||c[0].score-c[1].score>=2))return{mode:"auto",pick:c[0],options:c.slice(0,3)};
+  let opts=c.slice(0,3);
+  if(opts.length<2){ // 단서가 부족하면 열린 앱의 대표 종류로 채움
+    for(const a of allowed){if(opts.length>=3)break;if(!opts.some(o=>o.app===a.id)){const k=a.id==="shinhanfc"?a.kinds[0]:a.kinds.find(x=>x.id==="daily")||a.kinds[0];opts.push({app:a.id,kind:k.id,score:0,why:[]})}}
+  }
+  return{mode:"ask",options:opts.slice(0,3)};
+}
+const kindOf=(app,kind)=>{const a=adapter(app);return a&&a.kinds.find(k=>k.id===kind)};
+const labelOf=(app,kind)=>{const a=adapter(app),k=kindOf(app,kind);return a?a.name+" · "+(k?k.label:kind):"보관만"};
+
+/* ================= 4. 저장소 (구글 드라이브 / 시험용 메모리) ================= */
+const DAPI="https://www.googleapis.com/drive/v3",DUP="https://www.googleapis.com/upload/drive/v3";
+const GTK="onething.gtoken",GAC="onething.gaccount";
+let gTok=null,DEMO=false;
+function storedTok(){try{const t=JSON.parse(localStorage.getItem(GTK)||"null");return t&&t.exp>Date.now()+60000?t.token:null}catch(e){return null}}
+function clearTok(){try{localStorage.removeItem(GTK)}catch(e){}gTok=null}
+const gAcct=()=>{try{return localStorage.getItem(GAC)||""}catch(e){return""}};
+function requestTok(prompt,noHint){
+  return new Promise((res,rej)=>{
+    const g=window.google&&google.accounts&&google.accounts.oauth2;
+    if(!g)return rej(new Error("구글 로그인 모듈을 불러오지 못했습니다. 잠시 후 다시 시도하세요."));
+    const c=g.initTokenClient({client_id:GCLIENT,scope:GSCOPE,hint:noHint?undefined:(gAcct()||undefined),
+      callback:r=>{
+        if(r.error)return rej(new Error("구글 연결 실패: "+r.error));
+        if(!g.hasGrantedAllScopes(r,"https://www.googleapis.com/auth/drive"))return rej(new Error("Google Drive 권한을 허용해야 합니다. 다시 로그인하면서 모든 항목에 체크해 주세요."));
+        try{localStorage.setItem(GTK,JSON.stringify({token:r.access_token,exp:Date.now()+(r.expires_in||3600)*1000}))}catch(e){}
+        gTok=r.access_token;res(r.access_token);
+      },
+      error_callback:e=>rej(new Error(e&&e.type==="popup_closed"?"구글 로그인 창이 닫혔습니다.":"구글 로그인 창을 열 수 없습니다. 팝업 차단을 확인하세요."))});
+    c.requestAccessToken({prompt:prompt==null?"":prompt});
+  });
+}
+async function gfetch(url,opt,asText){
+  const t=storedTok()||gTok;if(!t)throw new Error("GOOGLE_AUTH");
+  const o=opt||{},r=await fetch(url,{...o,headers:{Authorization:"Bearer "+t,...(o.headers||{})},cache:"no-store"});
+  if(r.status===401){clearTok();throw new Error("GOOGLE_AUTH")}
+  if(!r.ok)throw new Error("Drive "+r.status+": "+(await r.text()).slice(0,160));
+  return asText?r.text():r.json();
+}
+const qv=x=>String(x).replace(/\\/g,"\\\\").replace(/'/g,"\\'");
+const parseDoc=t=>JSON.parse(t.replace(/^﻿/,""));
+const Drive={
+  dirs:{}, files:{},
+  async find(parent,name,folder){
+    const q="'"+qv(parent)+"' in parents and name='"+qv(name)+"' and trashed=false"+(folder?" and mimeType='application/vnd.google-apps.folder'":"");
+    const d=await gfetch(DAPI+"/files?pageSize=10&fields="+encodeURIComponent("files(id,name,modifiedTime)")+"&q="+encodeURIComponent(q));
+    return(d.files||[])[0]||null;
+  },
+  async dir(path,create){ // ["Claude","app","onething","설정"] → 폴더 번호
+    const key=path.join("/");if(this.dirs[key])return this.dirs[key];
+    let id="root";
+    for(let i=0;i<path.length;i++){
+      const k=path.slice(0,i+1).join("/");
+      if(this.dirs[k]){id=this.dirs[k];continue}
+      let f=await this.find(id,path[i],true);
+      if(!f){if(!create)return null;f=await gfetch(DAPI+"/files?fields=id",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:path[i],mimeType:"application/vnd.google-apps.folder",parents:[id]})})}
+      id=this.dirs[k]=f.id;
+    }
+    return id;
+  },
+  async read(path,name){ // 없으면 null
+    const fo=await this.dir(path,false);if(!fo)return null;
+    const f=await this.find(fo,name,false);if(!f)return null;
+    this.files[path.join("/")+"/"+name]=f.id;
+    return parseDoc(await gfetch(DAPI+"/files/"+f.id+"?alt=media",null,true));
+  },
+  async write(path,name,obj){
+    const fo=await this.dir(path,true),key=path.join("/")+"/"+name,body=JSON.stringify(obj,null,1);
+    let id=this.files[key];
+    if(!id){const f=await this.find(fo,name,false);if(f)id=this.files[key]=f.id}
+    if(id){await gfetch(DUP+"/files/"+id+"?uploadType=media&fields=id",{method:"PATCH",headers:{"Content-Type":"application/json"},body});return}
+    const bd="one"+uid();
+    const mp="--"+bd+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+JSON.stringify({name,parents:[fo],mimeType:"application/json"})+"\r\n--"+bd+"\r\nContent-Type: application/json\r\n\r\n"+body+"\r\n--"+bd+"--";
+    const m=await gfetch(DUP+"/files?uploadType=multipart&fields=id",{method:"POST",headers:{"Content-Type":"multipart/related; boundary="+bd},body:mp});
+    this.files[key]=m.id;
+  }
+};
+const Mem={d:{}, async read(p,n){const v=this.d[p.join("/")+"/"+n];return v?JSON.parse(v):null}, async write(p,n,o){this.d[p.join("/")+"/"+n]=JSON.stringify(o)}};
+const store=()=>DEMO?Mem:Drive;
+
+/* 파일 위치
+   Claude/app/onething/설정/말만해요_기록.json   ← 말한 내용 기록(원본) + 내 설정
+   Claude/app/onething/받은편지함/<앱>.json      ← 대상 앱이 시작할 때 가져가는 편지함 */
+const LOGDIR=[...BASE,"설정"],LOGFILE="말만해요_기록.json",INBOX_DIR=[...BASE,"받은편지함"];
+/* 내 설정(Gemini 키·모델)은 기록과 따로 내 드라이브에 보관: Claude/app/onething/설정/말만해요_설정.json */
+const CFGFILE="말만해요_설정.json";
+let cfg={geminiKey:"",model:GEMINI_MODEL_DEFAULT};
+async function loadCfg(){try{const c=await store().read(LOGDIR,CFGFILE);if(c)cfg={...cfg,...c}}catch(e){}}
+async function saveCfg(){try{await store().write(LOGDIR,CFGFILE,cfg)}catch(e){alert("설정을 저장하지 못했어요. 다시 시도해 주세요.")}}
+let db=null,me="",dirty=false,saving=false,again=false,saveT=null,retryT=null;
+const normDb=d=>{d=d||{};d.records??=[];d.off??=[];return d};
+function setSync(st){
+  const el=$("#sync");if(!el)return;
+  const t=new Date(),hm=String(t.getHours()).padStart(2,"0")+":"+String(t.getMinutes()).padStart(2,"0");
+  el.className=st==="fail"?"fail":"";
+  el.textContent=DEMO?"시험 모드(저장 안 함)":st==="saving"?"저장 중…":st==="ok"?"☁ 저장됨 "+hm:st==="fail"?"⚠ 저장 안 됨 (다시 시도 중)":"";
+}
+function save(){dirty=true;setSync("saving");clearTimeout(saveT);saveT=setTimeout(()=>driveSave(),500)}
+async function driveSave(){
+  if(!db||!dirty)return;
+  if(saving){again=true;return}
+  saving=true;clearTimeout(retryT);
+  try{await store().write(LOGDIR,LOGFILE,db);dirty=false;setSync("ok")}
+  catch(e){
+    setSync("fail");
+    if(e.message==="GOOGLE_AUTH")showLogin("로그인이 만료되었습니다. 다시 로그인하면 저장되지 않은 기록이 자동으로 저장됩니다.");
+    else retryT=setTimeout(()=>driveSave(),15000);
+  }finally{saving=false;if(again){again=false;driveSave()}}
+}
+window.addEventListener("online",()=>{if(dirty&&db)driveSave()});
+window.addEventListener("beforeunload",e=>{if(dirty){e.preventDefault();e.returnValue=""}});
+
+/* 받은 편지함에 넣기: 읽고 → 내 것을 더하고 → 쓰기 (대상 앱이 '처리됨' 표시한 것은 그대로 둠) */
+async function inboxPut(appId,item){
+  const a=adapter(appId),name=a.how.inbox.split("/")[1];
+  const cur=(await store().read(INBOX_DIR,name))||{app:appId,version:1,items:[]};
+  cur.items=cur.items.filter(x=>x.id!==item.id).concat(item);
+  await store().write(INBOX_DIR,name,cur);
+}
+async function inboxCancel(appId,id){
+  const a=adapter(appId),name=a.how.inbox.split("/")[1];
+  const cur=await store().read(INBOX_DIR,name);if(!cur)return false;
+  const it=cur.items.find(x=>x.id===id);
+  if(!it||it.status!=="new")return false; // 이미 가져간 것은 취소 못 함
+  it.status="cancelled";await store().write(INBOX_DIR,name,cur);return true;
+}
+
+/* ================= 5. 로그인 화면 · 허용 계정 ================= */
+function setShell(on){["title","main","nav"].forEach(i=>{$("#"+i).hidden=!on});$("#login").hidden=on}
+function showLogin(msg,isErr){
+  $("#main").innerHTML="";$("#nav").innerHTML="";
+  setShell(false);
+  const m=$("#lmsg");m.textContent=msg||"";m.className="lm"+(msg&&isErr!==false&&/권한|실패|만료|못|않|닫혔|허용/.test(msg)?" err":"");
+  $("#loginBtn").hidden=false;$("#loginOtherBtn").hidden=false;
+}
+const isAllowed=em=>Object.keys(USERS).map(x=>x.toLowerCase()).includes(String(em).toLowerCase());
+async function denyAccount(){
+  try{const t=storedTok()||gTok;if(t&&window.google&&google.accounts.oauth2.revoke)google.accounts.oauth2.revoke(t,()=>{})}catch(e){}
+  clearTok();try{localStorage.removeItem(GAC)}catch(e){}
+  db=null;dirty=false;me="";
+  showLogin("권한이 없습니다. 이 앱은 허용된 계정만 쓸 수 있어요. 허용된 계정으로 다시 로그인해 주세요.");
+}
+async function checkAccount(){
+  const u=await gfetch("https://www.googleapis.com/oauth2/v3/userinfo");
+  const em=String(u.email||"").toLowerCase();
+  if(!em)throw new Error("구글 계정 이메일을 읽지 못했습니다.");
+  return{em,ok:isAllowed(em)&&u.email_verified!==false};
+}
+async function afterToken(){
+  const pre=Drive.read(LOGDIR,LOGFILE).then(d=>({d}),e=>({e}));
+  const a=await checkAccount();
+  if(!a.ok){await denyAccount();return}
+  try{localStorage.setItem(GAC,a.em)}catch(e){}
+  me=a.em;await startApp(await pre);
+}
+async function startApp(pre){
+  $("#lmsg").className="lm";$("#lmsg").textContent="기록을 불러오는 중…";
+  $("#loginBtn").hidden=true;$("#loginOtherBtn").hidden=true;
+  if(!me)me=gAcct();
+  if(db&&dirty){await driveSave()}
+  else{
+    const r=pre||await Drive.read(LOGDIR,LOGFILE).then(d=>({d}),e=>({e}));
+    if(r.e)throw r.e;
+    db=normDb(r.d);
+    if(!r.d){dirty=true;await driveSave()}
+  }
+  await loadCfg();
+  setShell(true);setSync("ok");go("talk");scrollTo(0,0);
+}
+async function doLogin(other){
+  $("#lmsg").className="lm";$("#lmsg").textContent="로그인 중…";
+  try{await requestTok(other?"select_account":undefined,other);await afterToken()}
+  catch(e){showLogin(e.message==="GOOGLE_AUTH"?"로그인이 만료되었습니다. 다시 로그인해 주세요.":e.message)}
+}
+$("#loginBtn").addEventListener("click",()=>doLogin(false));
+$("#loginOtherBtn").addEventListener("click",()=>doLogin(true));
+async function logout(){
+  if(DEMO){location.href=location.pathname;return}
+  await driveSave();
+  if(dirty&&!confirm("저장되지 않은 기록이 있습니다. 그래도 로그아웃할까요?"))return;
+  try{const t=storedTok()||gTok;if(t&&window.google&&google.accounts.oauth2.revoke)google.accounts.oauth2.revoke(t,()=>{})}catch(e){}
+  clearTok();db=null;dirty=false;me="";
+  showLogin("로그아웃했습니다.",false);
+}
+async function boot(){
+  // 시험 모드: 내 컴퓨터(localhost·파일)에서만 ?demo=1 로 로그인 없이 화면 확인 (저장·AI·구글 호출 없음)
+  const local=/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)||location.protocol==="file:";
+  if(local&&/[?&]demo=1/.test(location.search)){
+    DEMO=true;me="demo@test";USERS[me]=(new URLSearchParams(location.search).get("apps")||"goodday,shinhanfc,chachacha").split(",");
+    db=normDb(null);setShell(true);setSync("ok");go("talk");return;
+  }
+  if(storedTok()&&gAcct()&&isAllowed(gAcct())){
+    try{
+      checkAccount().then(a=>{if(!a.ok)denyAccount()},()=>{});
+      me=gAcct();await startApp();return;
+    }catch(e){showLogin(e.message==="GOOGLE_AUTH"?"":"기록을 불러오지 못했어요. 인터넷을 확인하고 다시 시도해 주세요. ("+e.message.slice(0,60)+")");return}
+  }
+  showLogin("");
+}
+
+/* ================= 6. 화면 ================= */
+// 내게 열린 앱 = 관리자가 열어 준 것(USERS) 중 내가 끄지 않은 것
+const openApps=()=>(USERS[me]||[]).map(adapter).filter(Boolean);
+const activeApps=()=>openApps().filter(a=>!db.off.includes(a.id));
+let view="talk",pending=null,recog=null,listening=false;
+const ICON={
+  talk:'<svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
+  log:'<svg viewBox="0 0 24 24"><path d="M5 5h14M5 12h14M5 19h9"/></svg>',
+  set:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>'
+};
+function go(v){
+  view=v;
+  $("#nav").hidden=false;
+  $("#nav").innerHTML=[["talk","말하기"],["log","기록"],["set","설정"]].map(([k,t])=>`<button class="${k===v?"on":""}" data-v="${k}">${ICON[k]}<span>${t}</span></button>`).join("");
+  $("#nav").querySelectorAll("button").forEach(b=>b.onclick=()=>go(b.dataset.v));
+  render();
+}
+function render(){
+  if(!db)return;
+  const m=$("#main");
+  if(view==="talk")m.innerHTML=talkHtml();
+  else if(view==="log")m.innerHTML=logHtml();
+  else m.innerHTML=setHtml();
+  bind();
+}
+function talkHtml(){
+  const apps=activeApps();
+  const names=apps.length?apps.map(a=>a.name).join(" · "):"열린 앱 없음";
+  return `<div class="card">
+    <button class="mic${listening?" rec":""}" id="mic" aria-label="말로 입력"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+    <p class="ast" id="ast">${listening?"듣고 있어요… 다시 누르면 멈춰요":"눌러서 말하거나, 아래에 써 주세요"}</p>
+    <textarea id="txt" placeholder="예) 내일 3시 김OO 고객 상담 / 어제 성수동 파스타집 맛있었어 / 오늘 주유 7만원" ${pending?"disabled":""}></textarea>
+    <div class="acts"><button class="btn pri" id="send" ${pending||!apps.length?"disabled":""}>보내기</button></div>
+    <p class="k" style="margin:10px 0 0">연결된 앱: ${esc(names)}</p>
+    ${apps.length?"":`<div class="warn">열린 앱이 없어요. 설정에서 앱을 켜거나 관리자에게 열어 달라고 하세요.</div>`}
+  </div>${pending?pendingHtml():""}`;
+}
+function pendingHtml(){
+  const p=pending,r=p.rec;
+  if(p.stage==="ask"){
+    return `<div class="card"><h3>어디에 기록할까요?</h3>
+      <div class="msg">${esc(r.text)}</div>
+      <div class="choice">${p.options.map((o,i)=>`<button class="btn" data-pick="${i}"><b>${i+1}</b>${esc(labelOf(o.app,o.kind))}${o.why.length?` <span class="k">(‘${esc(o.why.slice(0,2).join("’, ‘"))}’ 때문에)</span>`:""}</button>`).join("")}
+        <button class="btn" data-pick="keep">기록만 해 두기 (어디에도 안 보냄)</button></div></div>`;
+  }
+  return `<div class="card"><h3>${p.stage==="done"?"처리했어요":"처리 중"}</h3><div class="msg">${esc(p.note||"")}</div>
+    <div class="acts">${p.canUndo?`<button class="btn dng" id="undo">취소</button>`:""}<button class="btn pri" id="next">다음 말하기</button></div></div>`;
+}
+function logHtml(){
+  const rs=db.records.slice().reverse();
+  if(!rs.length)return `<div class="card"><div class="empty">아직 기록이 없어요.<br>‘말하기’에서 말해 보세요.</div></div>`;
+  return `<div class="card">`+rs.map(r=>{
+    const st=r.status==="done"?["ok","받은편지함에 담음"]:r.status==="ask"?["ask","되묻는 중"]:r.status==="cancelled"?["bad","취소함"]:r.status==="kept"?["","기록만 함"]:["bad","실패"];
+    return `<div class="row"><div style="min-width:0"><div class="t">${esc(r.text)}</div>
+      <div class="k">${esc(new Date(r.at).toLocaleString("ko-KR",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"}))}${r.target?" · "+esc(labelOf(r.target.app,r.target.kind)):""}${r.masked.length?" · 가림: "+esc(r.masked.join(", ")):""}</div></div>
+      <div style="text-align:right"><span class="badge ${st[0]}">${st[1]}</span>${r.status==="ask"?`<br><button class="btn sm" data-resume="${r.id}" style="margin-top:6px">고르기</button>`:""}</div></div>`}).join("")+`</div>`;
+}
+function setHtml(){
+  const all=openApps();
+  return `<div class="card"><h3>계정</h3><div class="t">${esc(DEMO?"시험 모드":me)}</div><div class="acts"><button class="btn" id="logout">로그아웃</button></div></div>
+  <div class="card"><h3>내 연결 앱 (내게 열린 앱만 보여요)</h3>
+    ${all.length?all.map(a=>`<div class="row"><div style="min-width:0"><div class="t">${esc(a.name)}</div><div class="k">${esc(a.kinds.map(k=>k.label).join(" · "))}</div><div class="k">반영: 받은편지함 ${a.how.now?"(실시간은 준비 중)":""}</div></div>
+      <label class="sw"><input type="checkbox" data-app="${a.id}" ${db.off.includes(a.id)?"":"checked"}>사용</label></div>`).join(""):`<div class="empty">열린 앱이 없어요</div>`}
+    <p class="k">앱을 열고 닫는 건 관리자가 정해요. 여기서는 열린 앱 중에서 쓸 것만 고를 수 있어요.</p></div>
+  <div class="card"><h3>AI 해석 (Gemini)</h3><div class="t">${cfg.geminiKey?"Gemini 연결됨 (애매한 말만 물어봐요)":"규칙 기반만 사용 중 (키 없음)"}</div>
+    <label for="gkey">Gemini API 키 (Google AI Studio에서 직접 발급)</label>
+    <input id="gkey" type="password" autocomplete="off" placeholder="${cfg.geminiKey?"저장된 키가 있어요 (바꾸려면 새로 붙여넣기)":"키를 붙여넣기"}">
+    <label for="gmodel">모델 이름</label><input id="gmodel" value="${esc(cfg.model||GEMINI_MODEL_DEFAULT)}">
+    <div class="acts"><button class="btn pri" id="gsave">저장</button>${cfg.geminiKey?`<button class="btn dng" id="gdel">키 지우기</button>`:""}</div>
+    <p class="k">키는 내 Google Drive의 설정 파일에만 저장되고, 앱 코드나 공개 저장소에는 없어요. 모델 이름과 무료 한도는 바뀔 수 있으니 AI Studio에서 확인하세요.</p>
+    <div class="warn">무료 사용분은 구글이 서비스 개선에 쓸 수 있어요. 그래서 주민번호·카드·계좌번호·비밀번호·인증번호·API 키는 보내기 전에 앱에서 먼저 가려요. 그 밖의 말은 가리지 않고 보내요.</div></div>`;
+}
+function bind(){
+  const mic=$("#mic");if(mic)mic.onclick=toggleMic;
+  const send=$("#send");if(send)send.onclick=()=>submit($("#txt").value);
+  const tx=$("#txt");if(tx)tx.addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.ctrlKey||e.metaKey)){e.preventDefault();submit(tx.value)}});
+  document.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>choose(b.dataset.pick));
+  const nx=$("#next");if(nx)nx.onclick=()=>{pending=null;render()};
+  const un=$("#undo");if(un)un.onclick=undo;
+  document.querySelectorAll("[data-resume]").forEach(b=>b.onclick=()=>resume(b.dataset.resume));
+  document.querySelectorAll("[data-app]").forEach(c=>c.onchange=()=>{const id=c.dataset.app;db.off=db.off.filter(x=>x!==id);if(!c.checked)db.off.push(id);save();render()});
+  const lo=$("#logout");if(lo)lo.onclick=logout;
+  const gs=$("#gsave");if(gs)gs.onclick=async()=>{const k=$("#gkey").value.trim();if(k)cfg.geminiKey=k;cfg.model=$("#gmodel").value.trim()||GEMINI_MODEL_DEFAULT;await saveCfg();render()};
+  const gd=$("#gdel");if(gd)gd.onclick=async()=>{cfg.geminiKey="";await saveCfg();render()};
+}
+/* 말하기: 브라우저 음성 인식(Web Speech). 안 되는 폰은 키보드의 음성 입력(마이크 버튼)을 쓰면 됨 */
+function toggleMic(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){$("#ast").textContent="이 브라우저는 음성 인식이 안 돼요. 키보드의 마이크 버튼으로 말해 보세요.";$("#txt")&&$("#txt").focus();return}
+  if(listening&&recog){recog.stop();return}
+  recog=new SR();recog.lang="ko-KR";recog.interimResults=true;recog.continuous=false;
+  const tx=$("#txt");const base=tx.value?tx.value.trim()+" ":"";
+  recog.onresult=e=>{let s="";for(let i=0;i<e.results.length;i++)s+=e.results[i][0].transcript;tx.value=base+s};
+  recog.onerror=e=>{listening=false;render();const ast=$("#ast");if(ast)ast.textContent=e.error==="not-allowed"?"마이크 사용을 허용해 주세요.":"음성 인식이 안 됐어요. 다시 눌러 보세요."};
+  recog.onend=()=>{const keep=$("#txt")?$("#txt").value:"";listening=false;render();if($("#txt"))$("#txt").value=keep};
+  try{recog.start();listening=true;const keep=tx.value;render();$("#txt").value=keep}catch(e){listening=false}
+}
+
+/* 보내기 → 걸러내기 → 원문 기록 → 해석 → (확실하면) 반영 / (애매하면) 되묻기 */
+async function submit(raw){
+  raw=String(raw||"").trim();if(!raw||pending)return;
+  const apps=activeApps();if(!apps.length)return;
+  const s=Sens.mask(raw);
+  const rec={id:uid(),at:new Date().toISOString(),text:s.text,masked:s.hit,status:"new",target:null,fields:{}};
+  db.records.push(rec);save();
+  const res=await Providers[providerId].classify(s.text,apps);
+  rec.fields={title:s.text.length>60?s.text.slice(0,60)+"…":s.text,...res.fields}; // 받는 앱이 필수로 쓰는 제목 칸(항상일상 등)
+  const d=decide(res,apps);
+  if(d.mode==="ask"&&cfg.geminiKey){ // 애매한 것만 Gemini에게 (가린 글만 보냄)
+    try{
+      const g=await geminiClassify(s.text,apps,cfg);
+      if(g){
+        const seen=new Set([g.pick.app+"/"+g.pick.kind]),more=[];
+        for(const o of [...g.alt,...d.options]){const k=o.app+"/"+o.kind;if(!seen.has(k)){seen.add(k);more.push(o)}}
+        d.options=[g.pick,...more].slice(0,3);
+        if(g.high){d.mode="auto";d.pick=g.pick}
+      }
+    }catch(e){rec.aiError=String(e.message).slice(0,40)} // 실패하면 규칙 결과로 되묻기
+  }
+  pending={rec,options:d.options,stage:"ask"};
+  if(d.mode==="auto"){await apply(d.pick,d.pick.why.includes("AI")?"AI":"자동")}
+  else{rec.status="ask";rec.options=d.options;save();render()}
+}
+async function choose(i){
+  if(!pending)return;
+  if(i==="keep"){pending.rec.status="kept";save();pending={...pending,stage:"done",note:"기록만 해 두었어요. 어느 앱에도 보내지 않았어요.",canUndo:false};render();return}
+  await apply(pending.options[+i],"선택");
+}
+async function apply(pick,how){
+  const rec=pending.rec,a=adapter(pick.app),k=kindOf(pick.app,pick.kind);
+  pending.stage="work";pending.note="보내는 중…";render();
+  const item={id:rec.id,at:rec.at,from:"onething",kind:pick.kind,text:rec.text,fields:rec.fields,status:"new"};
+  try{
+    await inboxPut(pick.app,item);
+    rec.status="done";rec.target={app:pick.app,kind:pick.kind};delete rec.options;save();
+    const f=rec.fields,bits=[f.date&&"날짜 "+f.date,f.time&&"시간 "+f.time,f.km&&f.km+"km",f.cost&&f.cost.toLocaleString("ko-KR")+"원"].filter(Boolean);
+    pending={...pending,stage:"done",canUndo:true,pickApp:pick.app,
+      note:"‘"+a.name+" · "+k.label+"’ 받은편지함에 담았어요 ("+how+").\n"+(bits.length?"읽어낸 것: "+bits.join(", ")+"\n":"")+(rec.masked.length?"가린 정보: "+rec.masked.join(", ")+"\n":"")+a.name+"을 열면 반영돼요."};
+  }catch(e){
+    rec.status="fail";save();
+    pending={...pending,stage:"done",canUndo:false,note:"보내지 못했어요. 기록은 남겨 두었어요.\n"+String(e.message).slice(0,80)};
+  }
+  render();
+}
+async function undo(){
+  if(!pending)return;const rec=pending.rec;
+  try{
+    const ok=await inboxCancel(rec.target.app,rec.id);
+    rec.status="cancelled";save();
+    pending={...pending,canUndo:false,note:ok?"취소했어요.":"이미 앱이 가져가서 여기서는 못 되돌려요. 해당 앱에서 지워 주세요."};
+  }catch(e){pending.note="취소하지 못했어요. "+String(e.message).slice(0,60)}
+  render();
+}
+function resume(id){
+  const rec=db.records.find(r=>r.id===id);if(!rec)return;
+  pending={rec,options:rec.options||[],stage:"ask"};go("talk");
+}
+boot();
+</script>
+</body>
+</html>
