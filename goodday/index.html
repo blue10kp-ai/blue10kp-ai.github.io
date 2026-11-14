@@ -759,6 +759,7 @@ function viewSet(){
    <button class="rowbtn" data-act="inboxOpen"><span>말만해요 받은편지함</span><span class="r">${s.inboxFile?(inbox.length?inbox.length+"통 대기":"연결됨"):"연결 안 됨"} ›</span></button>
    <button class="rowbtn" data-act="trash"><span>휴지통</span><span class="r">${trash}개 ›</span></button></div>
   <div class="card"><h3>도움</h3>
+   ${EMBED||isStandalone()?"":`<button class="rowbtn" data-act="install"><span>홈 화면에 추가</span><span class="r">${installEv?"앱 설치":"방법 보기"} ›</span></button>`}
    <button class="rowbtn" data-act="help"><span>사용 설명서</span><span class="r">›</span></button>
    ${EMBED?"":`<button class="rowbtn" data-act="logout"><span style="color:var(--bad)">로그아웃</span></button>`}</div>
   <div class="note" style="text-align:center">항상일상 · ${VER}</div>`;
@@ -867,6 +868,7 @@ function openHelp(){
    <b>한 번 로그인하면 다른 앱도 함께</b><br>같은 브라우저에서 내 다른 앱(신한FC, 차차차 등)에 로그인했다면 항상일상도 로그인 화면 없이 바로 열려요. 로그아웃하면 모든 앱에서 함께 로그아웃됩니다. 로그인은 한 시간마다 다시 필요할 수 있어요. 아이폰 홈 화면 앱은 앱마다 따로라 서로 나눠 쓰지 못해요.<br><br>
    <b>함께 쓰려면</b><br>허용된 계정만 로그인할 수 있어요. 쓸 사람을 추가하려면 앱을 관리하는 사람에게 구글 계정(이메일)을 알려 주세요.<br><br>
    <b>말만해요 받은편지함</b><br>설정에서 받은편지함 파일을 한 번 고르면, 말만해요가 보낸 쪽지가 앱을 열 때 카드로 나타나요. 기록에 넣기를 누르면 기록이 되고 쪽지는 처리 완료로 표시됩니다.<br><br>
+   <b>홈 화면에 설치</b><br>설정의 ‘홈 화면에 추가’에서 방법을 볼 수 있어요. 설치하면 앱처럼 바로 열려요.<br><br>
    <b>다음에 더해질 기능</b><br>사진 붙이기, 여행 묶음 편집, 지도 보기, 영화·장소 정보 자동 채우기.</div>
    <div class="acts"><button class="btn" data-act="close">닫기</button></div>`);
 }
@@ -936,6 +938,7 @@ document.addEventListener("click",e=>{
   else if(a==="inboxOff"){if(confirm("받은편지함 연결을 끊을까요? 이미 넣은 기록은 그대로예요.")){db.settings.inboxFile=null;inbox=[];inboxMsg="";save();render();openInbox()}}
   else if(a==="inboxYes")inboxAccept();
   else if(a==="inboxLater"){inboxHide=true;render()}
+  else if(a==="install")doInstall();
   else if(a==="help")openHelp();
   else if(a==="logout")logout();
 });
@@ -956,6 +959,18 @@ document.addEventListener("input",e=>{
   else if(id==="fto"){S.to=e.target.value;updateResults()}
 });
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#modal").firstChild)closeSheet()});
+/* ---------- 앱 설치(홈 화면에 추가) ---------- */
+let installEv=null;
+const isStandalone=()=>{try{return window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true}catch(e){return false}};
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installEv=e;if(db&&view==="set"&&!$("#modal").firstChild)render()});
+window.addEventListener("appinstalled",()=>{installEv=null;if(db&&view==="set"&&!$("#modal").firstChild)render()});
+async function doInstall(){
+  if(installEv){try{installEv.prompt();await installEv.userChoice}catch(e){}installEv=null;render();return}
+  openSheet(`<h3>홈 화면에 추가</h3><div class="sub" style="line-height:1.7;margin-top:8px">
+   <b>안드로이드(크롬)</b><br>오른쪽 위 ⋮ 메뉴 → ‘앱 설치’ 또는 ‘홈 화면에 추가’<br><br>
+   <b>아이폰(사파리)</b><br>아래 공유 버튼 → ‘홈 화면에 추가’</div>
+   <div class="acts"><button class="btn" data-act="close">닫기</button></div>`);
+}
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 boot();
 </script>
