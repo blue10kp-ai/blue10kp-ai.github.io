@@ -7,6 +7,7 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#111418" media="(prefers-color-scheme: dark)">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -59,16 +60,23 @@ main{padding:10px 12px 240px;user-select:none;-webkit-user-select:none}
 pre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--ln);border-radius:10px;padding:10px;font-size:14px;max-height:50vh;overflow:auto}
 .view-edit,.view-home,.view-login{display:none}
 body.login .view-login{display:block}
-.login{max-width:360px;margin:16vh auto 0;padding:0 24px;text-align:center}
-.login h1{font-size:28px;font-weight:700;margin:0 0 4px}
-.login p{margin:0 0 24px;color:var(--tx2);font-size:14px}
-.login button{width:100%;height:46px;font-size:15px;margin-top:8px}
-.login .lm{min-height:22px;margin:0 0 12px;font-size:13px;color:var(--tx2)}
-.login .lm.err{color:var(--dg)}
-.login .ht,.foot .ht{margin-top:20px;font-size:12px;color:var(--tx2);line-height:1.5}
+body.login{background:#F4F5F7}
+@media (prefers-color-scheme:dark){body.login{background:#0F1217}}
+.lgn{--surface:#FFFFFF;--raised:#F0F2F5;--line:rgba(20,30,50,.10);--t1:#151A22;--t2:#4B5361;--t3:#6B7382;--accent:#1F4E8C;--bad:#C0392B;--font:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;
+  max-width:360px;margin:16vh auto 0;padding:0 24px;text-align:center;font-family:var(--font);font-size:15px;line-height:1.5;color:var(--t1)}
+@media (prefers-color-scheme:dark){.lgn{--surface:#171B22;--raised:#1E232B;--line:rgba(255,255,255,.09);--t1:#E8EBF0;--t2:#A5ADBA;--t3:#747C8A;--accent:#7FAEF0;--bad:#EF7A6C}}
+.lgn h1{font-size:28px;font-weight:700;margin:0 0 4px;letter-spacing:-.5px;line-height:1.5}
+.lgn p{margin:0 0 24px;color:var(--t2);font-size:14px}
+.lgn .btn{display:inline-flex;align-items:center;justify-content:center;width:100%;height:44px;padding:0 14px;margin-top:8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--t2);font-family:var(--font);font-size:15px;font-weight:600;line-height:1;white-space:nowrap;min-height:0}
+.lgn .btn:active{background:var(--raised)}
+.lgn .btn.pri{border-color:var(--accent);color:var(--accent)}
+.lgn .btn[hidden]{display:none}
+.lgn .lm{min-height:22px;margin:0 0 12px;font-size:13px;color:var(--t3)}
+.lgn .lm.err{color:var(--bad)}
+.lgn .hint{margin-top:20px;font-size:12px;color:var(--t3)}
 .foot{margin-top:18px;padding-bottom:30px;text-align:center}
 .foot .row2{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-.foot .ht{margin-top:12px}
+.foot .ht{margin-top:12px;font-size:12px;color:var(--tx2);line-height:1.5}
 .tabs{display:flex;gap:6px;overflow-x:auto;margin-top:8px;padding-bottom:2px}
 .chip{flex:none;border-radius:20px;padding:6px 14px;min-height:38px;font-size:15px}
 .chip.on{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:600}
@@ -83,13 +91,13 @@ body.edit .dock{display:grid}body.home .back{flex:none;font-size:15px;padding:8p
 </style>
 </head>
 <body>
-<section class="login view-login">
+<section class="lgn view-login">
   <h1>메뉴메이커</h1>
   <p>앱 메뉴 설계 도구</p>
   <div class="lm" id="lmsg">확인 중…</div>
-  <button class="pri" id="loginBtn" hidden>Google 계정으로 로그인</button>
-  <button id="loginOtherBtn" hidden>다른 계정으로 로그인</button>
-  <div class="ht">로그인한 뒤에만 프로젝트가 보입니다. 기록은 내 Google Drive에 저장됩니다.<br>이 앱의 계정 확인은 화면 보호일 뿐이며, 실제 자료는 Google Drive의 접근 권한이 지킵니다.</div>
+  <button class="btn pri" id="loginBtn" hidden>Google 계정으로 로그인</button>
+  <button class="btn" id="loginOtherBtn" hidden>다른 계정으로 로그인</button>
+  <div class="hint">로그인한 뒤에만 프로젝트가 보입니다. 기록은 내 Google Drive에 저장됩니다.<br>계정 확인은 화면 보호일 뿐이며, 실제 자료는 Google Drive의 접근 권한이 지킵니다.</div>
 </section>
 <header class="view-home">
   <div class="top"><b style="flex:1;font-size:19px;padding:6px">메뉴메이커</b><small class="sy"></small><button id="pAdd" class="pri">＋ 새 프로젝트</button></div>
