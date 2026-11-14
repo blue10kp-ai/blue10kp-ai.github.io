@@ -291,7 +291,7 @@ const labelOf=(app,kind)=>{const a=adapter(app),k=kindOf(app,kind);return a?a.na
 /* ===== 앱 화면으로 바로 이동 (규칙: app\_공통\말만해요_플로팅.md) =====
    "김현성 고객 검색해줘" → 신한FC 고객 검색 / "맛집 검색해줘" → 항상일상 찾기. 규칙으로만 읽음(고객 이름은 AI로 보내지 않음).
    말만해요는 고객 데이터를 읽지 않음: 각 앱이 자기 화면에서 검색한다. */
-const APPDIR={shinhanfc:"/shlife/",goodday:"/goodday/",chachacha:"/cars/"};
+const APPDIR={shinhanfc:"/shlife/m/",goodday:"/goodday/",chachacha:"/cars/"};
 function goUrl(n){const p=new URLSearchParams({go:n.go});if(n.q)p.set("q",n.q);if(n.kind)p.set("kind",n.kind);return APPDIR[n.app]+"?"+p.toString()}
 const NAV_KIND=[["맛집",/맛집|식당|카페/],["영상",/영화|드라마|영상|음악|노래|예능/],["여행",/여행|숙소/],["일상",/일상|일기/]];
 const NAV_STOP=/^(고객님?|님|검색(해줘|해|해주세요|해봐|해봐줘)?|찾아(줘|줄래|봐|주세요|봐줘)?|찾기|보여(줘|주세요)?|조회(해줘)?|알려(줘|주세요)?|열어(줘)?|정보(좀|를|도)?|보기|해줘|좀|줘|본|간|먹은|갔던|기록|내역|목록|리스트|전체|은|는|정보는|정보은|누구|어때|뭐야|뭐지|얼마야|확인|확인해줘|좀|번호)$/;
@@ -328,6 +328,11 @@ function navIntent(t){
       const rest=t.replace(/맛집|식당|영화|드라마|영상|음악|노래|예능|여행|숙소|일상|일기/g," ");
       return{app:"goodday",go:"search",q:toks(rest).join(" ").slice(0,30),kind:k,label:k+" 찾기"};
     }
+  }
+  // "최수진 검색", "김OO 찾아줘"처럼 이름만 있는 검색 → 고객 검색 (이름 꼴이 아니면 되묻기로 넘김)
+  if(/검색|찾아|찾기/.test(t)){
+    const nm=toks(t.replace(new RegExp(SENS.source,"g")," "));
+    if(nm.length===1&&/^[가-힣A-Za-z]{2,4}$/.test(nm[0]))return{app:"shinhanfc",go:"customers",q:nm[0],kind:"",label:"고객 검색"};
   }
   return null;
 }
@@ -370,12 +375,12 @@ function deliverModule(n,dir,req){
     const f=document.createElement("iframe");f.title=adapter(n.app).name;f.setAttribute("allow","microphone");
     m=MODS[n.app]={frame:f,ready:false,where:{app:n.app,...req},stack:[],restoring:null};
     f.addEventListener("load",()=>{m.ready=true});
-    f.src=dir+"?embed=1#"+modHash(req);
+    f.src=dir+"?embed=1&t="+Date.now()+"#"+modHash(req);
     $("#modbody").appendChild(f);
   }else{
     m.where={app:n.app,...req};
     if(m.ready){try{m.frame.contentWindow.postMessage({type:"blue10kp-go",...req},location.origin)}catch(e){}}
-    else m.frame.src=dir+"?embed=1#"+modHash(req); // 아직 읽는 중이면 새 주소로
+    else m.frame.src=dir+"?embed=1&t="+Date.now()+"#"+modHash(req); // 아직 읽는 중이면 새 주소로
   }
   if(m.stack.length){ // 이미 화면 기록이 있으면: 요청한 화면이 도착할 때까지 중간 화면은 건너뜀(1.5초 안전장치)
     m.expect=expKey;
