@@ -149,7 +149,7 @@ header small.fail{color:var(--bad)}
 .login .hint{margin-top:20px;font-size:12px;color:var(--t3)}
 /* 말만해요 안에 모듈로 뜰 때(?embed=1): 위·아래 메뉴 없이 내용만 */
 .embed header,.embed nav,.embed .ai,.embed .scrim{display:none!important}
-.embed body{padding-top:56px;padding-bottom:24px}
+.embed body{padding-top:56px;padding-bottom:96px} /* 위: 말만해요 플로팅 버튼 자리, 아래: 말만해요 버튼(오른쪽 아래)에 마지막 내용이 가리지 않게 */
 .embed [data-act="logout"]{display:none}
 .embed .login{margin-top:22vh}
 </style>
@@ -507,6 +507,23 @@ function notifyWhere(){ // 말만해요(부모)에게 지금 위치 알림 (embe
   if(!EMBED||window.parent===window)return;
   try{const c=db&&db.cars.find(x=>x.id===db.sel);
     window.parent.postMessage({type:"blue10kp-where",app:"cars",go:VIEW_GO[view]||"home",month:view==="summary"?sumYm:undefined,car:c?c.nick:undefined,id:c?c.id:undefined,canBack:canBack()},location.origin)}catch(e){}
+}
+if(EMBED&&window.parent!==window){ // 아래쪽 떠 있는 버튼(입력 창의 취소·저장 등)의 맨 위 끝이 화면 바닥에서 몇 px인지 부모에게 알림 → 말만해요 버튼이 그만큼 올라감
+  let lastLift=-1,raf=0;
+  const calcLift=()=>{
+    raf=0;const m=$("#modal");let lift=0;
+    if(m&&m.innerHTML.trim()){
+      // 입력 창은 화면 바닥에 붙어 올라오므로, 창 바닥에서 버튼 윗끝까지의 거리 = 화면 바닥에서 버튼 윗끝까지의 높이 (올라오는 애니메이션 중에도 같은 값)
+      let d=0;
+      m.querySelectorAll("button").forEach(b=>{const sh=b.closest(".sheet")||m,sb=sh.getBoundingClientRect().bottom,r=b.getBoundingClientRect();if(r.height>0&&r.top<sb&&r.bottom>sb-160)d=Math.max(d,sb-r.top)});
+      lift=Math.round(d);
+    }
+    if(lift!==lastLift){lastLift=lift;try{window.parent.postMessage({type:"blue10kp-fab",lift},location.origin)}catch(e){}}
+  };
+  const sched=()=>{if(!raf)raf=setTimeout(calcLift,30);setTimeout(calcLift,300)}; // rAF는 숨은 화면에서 멈추므로 타이머 사용, 올라오는 애니메이션이 끝난 뒤에도 한 번 더 잼
+  $("#modal").addEventListener("animationend",sched,true);
+  new MutationObserver(sched).observe($("#modal"),{childList:true,subtree:true,attributes:true,characterData:true});
+  document.addEventListener("scroll",sched,true);window.addEventListener("resize",sched);
 }
 window.addEventListener("message",e=>{
   if(e.origin!==location.origin||!e.data||typeof e.data!=="object")return;
