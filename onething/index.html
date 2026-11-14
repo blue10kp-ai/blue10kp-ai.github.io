@@ -36,6 +36,7 @@
   --accent:#7FAEF0;--accent-ink:#0F1217;--accent-weak:rgba(127,174,240,.12);
   --ok:#4CC282;--warn:#E0A04A;--bad:#EF7A6C}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scrollbar-gutter:stable} /* 스크롤바 자리를 늘 비워 둬서, 스크롤바가 생기고 사라져도 고정 버튼이 밀리지 않음 */
 html,body{font-family:var(--font);font-size:15px;line-height:1.5;background:var(--bg);color:var(--t1)}
 body{margin:0;padding-bottom:calc(var(--navh) + 96px + env(safe-area-inset-bottom))} /* 아래 96px: 오른쪽 아래 말만해요 버튼에 취소·저장·보내기 버튼이 가리지 않게 */
 button,input,select,textarea{font-family:var(--font)}
@@ -118,7 +119,8 @@ html.modopen,html.modopen body{overflow:hidden} /* 모듈이 떠 있을 땐 뒤 
 #sheet .modbar{border-radius:16px 16px 0 0;padding-top:4px}
 #sheetBody{flex:1;min-height:0;overflow:auto;padding:4px 16px 16px}
 #sheetBody.hascard{padding-bottom:128px} /* 카드가 있을 땐 아래를 비워 마이크 버튼에 안 가리게 */
-#sheetBody .acts{padding-right:72px;margin-top:8px} /* 보내기 줄은 마이크 버튼 왼쪽에 */
+#sheetBody .acts{margin-top:8px;justify-content:center}
+#sheetBody .acts .btn{flex:0 1 220px} /* 보내기 버튼은 가운데 */
 #sheetBody .card{background:transparent;border:0;padding:8px 0;margin-bottom:0}
 #sheetBody textarea{min-height:68px;height:68px}
 #sheetBody .ast{margin:0 0 4px}
@@ -445,7 +447,7 @@ function resetMods(){ // 로그아웃·계정 거부·로그인 화면: 띄워 �
 }
 function openSheet(keep){
   if(sheetOpen||!db)return;
-  sheetOpen=true;$("#main").innerHTML="";
+  sheetOpen=true; // 뒤 화면은 지우지 않음(지우면 페이지가 짧아져 스크롤바가 사라지고 마이크 버튼이 밀림)
   if(keep!==true&&pending&&["done","answer","name"].includes(pending.stage))pending=null;
   $("#sheet").classList.add("open");$("#scrim").classList.add("open");document.documentElement.classList.add("sheetopen");
   sheetPushed=pushLayer();updateFab();render();
