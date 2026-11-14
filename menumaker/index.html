@@ -14,54 +14,79 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="메뉴메이커">
-<style>
-:root{--bg:#f4f5f7;--card:#fff;--tx:#1b1f24;--tx2:#5b6570;--ln:#dde1e6;--ac:#1f6feb;--acbg:#e6f0ff;--dg:#d1242f;
---d0:#1f6feb;--d1:#1a9d6b;--d2:#c27b00;--d3:#a23fc9;--d4:#d1242f}
-@media (prefers-color-scheme:dark){:root{--bg:#111418;--card:#1b2026;--tx:#e8ebef;--tx2:#98a2ad;--ln:#2d343c;--ac:#5a9bff;--acbg:#1d2e4a;--dg:#ff7b72}}
+<style>:root{--bg:#fafafa;--card:#fff;--raised:#f4f4f5;--ln:rgba(23,23,23,.08);--tx:#171717;--tx2:#525252;--tx3:#737373;
+--ac:#1F4E8C;--acw:rgba(31,78,140,.08);--acink:#fff;--dg:#dc2626;--font:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;
+--mono:ui-monospace,"SF Mono","Cascadia Mono",Consolas,monospace;--ease:cubic-bezier(.22,1,.36,1)}
+@media (prefers-color-scheme:dark){:root{--bg:#141415;--card:#19191b;--raised:#232325;--ln:rgba(237,237,237,.08);--tx:#ededed;--tx2:#a1a1a6;--tx3:#85858b;--ac:#7FAEF0;--acw:rgba(127,174,240,.12);--acink:#0f1217;--dg:#ef7a6c}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,"Malgun Gothic",sans-serif}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:15px/20px var(--font)}
+svg.i{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--ln);padding:calc(8px + env(safe-area-inset-top)) 12px 8px}
 .top{display:flex;gap:8px;align-items:center}
-.top input{flex:1;min-width:0;font:600 17px inherit;font-family:inherit;border:1px solid transparent;background:transparent;color:var(--tx);padding:6px;border-radius:8px}
-.top input:focus{border-color:var(--ln);outline:0}
-button{font:inherit;font-size:14px;border:1px solid var(--ln);background:var(--card);color:var(--tx);border-radius:10px;padding:8px 12px;min-height:40px}
-button.pri{background:var(--ac);border-color:var(--ac);color:#fff}
+.top input{flex:1;min-width:0;font:500 17px/24px var(--font);border:1px solid transparent;background:transparent;color:var(--tx);padding:6px 8px;border-radius:8px}
+.top input:focus{border-color:var(--ln);outline:0;background:var(--raised)}
+button{font:500 14px/20px var(--font);display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--ln);background:var(--card);color:var(--tx);border-radius:8px;padding:0 12px;min-height:36px;transition:background-color 150ms var(--ease),color 150ms var(--ease),transform 150ms var(--ease)}
+button:active{background:var(--raised);transform:scale(.98)}
+button:focus-visible,.top input:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+button.pri{background:var(--ac);border-color:var(--ac);color:var(--acink)}
+button.pri:active{background:var(--ac);opacity:.9}
 button.dg{color:var(--dg)}
 button:disabled{opacity:.35}
-.tools{display:flex;gap:6px;margin-top:8px;overflow-x:auto;padding-bottom:2px}
+.tools{display:flex;gap:8px;margin-top:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.tools::-webkit-scrollbar{display:none}
 .tools button{flex:none}
-main{padding:10px 12px 240px;user-select:none;-webkit-user-select:none}
-.hint{color:var(--tx2);font-size:13px;margin:2px 2px 10px}
-.row{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--ln);border-radius:12px;margin:0 0 6px;min-height:56px;padding:4px 6px 4px 4px;position:relative}
-.row.sel{border-color:var(--ac);background:var(--acbg)}
-.row.drag{opacity:.5}
-.bar{width:5px;align-self:stretch;border-radius:3px;flex:none;margin:2px 2px 2px 0}
-.grip{flex:none;width:48px;height:52px;display:grid;place-items:center;color:var(--tx2);font-size:20px;touch-action:none;cursor:grab}
-.fold{flex:none;width:30px;height:36px;padding:0;border:0;background:transparent;color:var(--tx2);font-size:15px}
-.nm{flex:1;min-width:0;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.nm small{display:block;color:var(--tx2);font-size:12px;overflow:hidden;text-overflow:ellipsis}
-.badge{flex:none;font-size:11px;color:var(--tx2);border:1px solid var(--ln);border-radius:8px;padding:1px 6px}
-.ind{position:absolute;left:0;right:0;height:0;border-top:3px solid var(--ac);pointer-events:none;z-index:4}
-.ind::before{content:"";position:absolute;left:var(--x,0);top:-7px;width:10px;height:10px;border-radius:50%;background:var(--ac)}
-.ghost{position:fixed;left:12px;right:12px;z-index:30;pointer-events:none;background:var(--ac);color:#fff;border-radius:12px;padding:10px 14px;font-size:16px;box-shadow:0 6px 18px rgba(0,0,0,.3);opacity:.92;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.empty{text-align:center;color:var(--tx2);padding:40px 10px}
-.dock{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--card);border-top:1px solid var(--ln);padding:8px 10px calc(8px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.dock button{padding:8px 2px;font-size:13px;white-space:nowrap;min-height:44px}
-.dock .sel{grid-column:1/-1;font-size:13px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sheet{position:fixed;inset:0;z-index:10;background:rgba(0,0,0,.45);display:flex;align-items:flex-end}
+.tabs{display:flex;gap:4px;overflow-x:auto;margin-top:8px;padding-bottom:4px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.chip{flex:none;min-height:36px;padding:0 12px;color:var(--tx2);border-color:transparent;background:transparent}
+.chip.on{background:var(--raised);color:var(--tx);border-color:var(--ln);box-shadow:inset 0 -2px 0 var(--ac)}
+.back{flex:none;padding:0 12px}
+.sy{font:12px/16px var(--mono);color:var(--tx3);white-space:nowrap}.sy.fail{color:var(--dg)}
+main{padding:12px 12px 208px;user-select:none;-webkit-user-select:none}
+.hint{color:var(--tx3);font-size:13px;line-height:20px;margin:0 0 12px}
+.row{display:flex;align-items:center;background:var(--card);border:1px solid var(--ln);border-radius:10px;margin:0 0 4px;min-height:48px;padding:0 12px 0 0;position:relative;transition:background-color 150ms var(--ease),border-color 150ms var(--ease)}
+.row.sel{border-color:var(--ac);background:var(--acw)}
+.row.drag{opacity:.45}
+.grip{flex:none;width:36px;height:48px;display:grid;place-items:center;color:var(--tx3);touch-action:none;cursor:grab}
+.grip svg.i{width:18px;height:18px}
+.fold{flex:none;width:28px;min-height:48px;height:48px;padding:0;border:0;background:transparent;color:var(--tx3);border-radius:0}
+.fold:active{background:transparent;transform:none}
+.no{flex:none;font:12px/16px var(--mono);color:var(--tx3);margin-right:8px;font-variant-numeric:tabular-nums}
+.nm{flex:1;min-width:0;font-size:15px;line-height:20px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:8px 0}
+.nm small{display:block;color:var(--tx3);font-size:13px;line-height:16px;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.badge{flex:none;font-size:12px;line-height:16px;color:var(--tx3);margin-left:8px}
+.ind{position:absolute;left:0;right:0;height:0;border-top:2px solid var(--ac);pointer-events:none;z-index:4}
+.ind::before{content:"";position:absolute;left:var(--x,0);top:-6px;width:10px;height:10px;border-radius:50%;background:var(--ac)}
+.ghost{position:fixed;left:12px;right:12px;z-index:30;pointer-events:none;background:var(--ac);color:var(--acink);border-radius:10px;padding:12px 16px;font-size:15px;line-height:20px;box-shadow:0 8px 24px rgba(0,0,0,.18);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.empty{text-align:center;color:var(--tx3);padding:48px 16px}
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--card);border-top:1px solid var(--ln);padding:8px 12px calc(8px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.dock .sel{grid-column:1/-1;font-size:13px;line-height:20px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dock button{flex-direction:column;gap:4px;height:52px;padding:0 4px;font-size:12px;line-height:16px;white-space:nowrap}
+.sheet{position:fixed;inset:0;z-index:10;background:rgba(0,0,0,.4);display:flex;align-items:flex-end}
 .sheet[hidden]{display:none!important}
-.sheet .box{background:var(--card);width:100%;border-radius:18px 18px 0 0;padding:16px 14px calc(16px + env(safe-area-inset-bottom));max-height:88vh;overflow:auto}
-.box label{display:block;font-size:13px;color:var(--tx2);margin:10px 0 4px}
-.box input,.box textarea,.box select{width:100%;font:inherit;font-size:16px;padding:10px;border:1px solid var(--ln);border-radius:10px;background:var(--bg);color:var(--tx)}
-.box textarea{min-height:90px;resize:vertical}
-.box .bt{display:flex;gap:8px;margin-top:14px}.box .bt button{flex:1}
-.toast{position:fixed;left:50%;bottom:150px;transform:translateX(-50%);background:#222;color:#fff;padding:8px 14px;border-radius:20px;font-size:14px;z-index:20;opacity:0;transition:opacity .2s;pointer-events:none}
+.sheet .box{background:var(--card);width:100%;border-radius:16px 16px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom));max-height:88vh;overflow:auto}
+.sheet .box>b{font-weight:500;font-size:17px;line-height:24px}
+.box label{display:block;font-size:13px;line-height:16px;color:var(--tx2);margin:16px 0 8px}
+.box input,.box textarea,.box select{width:100%;font:16px/24px var(--font);padding:8px 12px;border:1px solid var(--ln);border-radius:8px;background:var(--raised);color:var(--tx)}
+.box textarea{min-height:96px;resize:vertical}
+.box .bt{display:flex;gap:8px;margin-top:20px}.box .bt button{flex:1;min-height:44px}
+.toast{position:fixed;left:50%;bottom:176px;transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:8px 16px;border-radius:10px;font-size:14px;z-index:20;opacity:0;transition:opacity 200ms var(--ease);pointer-events:none}
 .toast.on{opacity:.95}
-pre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--ln);border-radius:10px;padding:10px;font-size:14px;max-height:50vh;overflow:auto}
+pre{white-space:pre-wrap;background:var(--raised);border:1px solid var(--ln);border-radius:8px;padding:12px;font:13px/20px var(--mono);max-height:50vh;overflow:auto;margin:12px 0 0}
 .view-edit,.view-home,.view-login{display:none}
 body.login .view-login{display:block}
-body.login{background:#F4F5F7}
-@media (prefers-color-scheme:dark){body.login{background:#0F1217}}
+body.edit .view-edit{display:block}body.home .view-home{display:block}
+body.edit .dock{display:grid}body.home .dock{display:none}
+.dock{display:none}
+.pcard{background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:16px;margin:0 0 12px}
+.pcard .pn{font-size:17px;line-height:24px;font-weight:500;word-break:break-all}
+.pcard .pm{font:12px/16px var(--mono);color:var(--tx3);margin:4px 0 16px}
+.pcard .pb{display:flex;gap:8px}.pcard .pb button{flex:1;padding:0 4px;font-size:13px;white-space:nowrap}
+.pcard .go{width:100%;margin-bottom:8px;min-height:44px;font-size:15px}
+.foot{margin-top:24px;padding-bottom:32px;text-align:center}
+.foot .row2{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.foot .ht{margin-top:16px;font-size:12px;line-height:16px;color:var(--tx3)}
+html:has(body.login),body.login{background:#F4F5F7}
+@media (prefers-color-scheme:dark){html:has(body.login),body.login{background:#0F1217}}
 .lgn{--surface:#FFFFFF;--raised:#F0F2F5;--line:rgba(20,30,50,.10);--t1:#151A22;--t2:#4B5361;--t3:#6B7382;--accent:#1F4E8C;--bad:#C0392B;--font:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;
   max-width:360px;margin:16vh auto 0;padding:0 24px;text-align:center;font-family:var(--font);font-size:15px;line-height:1.5;color:var(--t1)}
 @media (prefers-color-scheme:dark){.lgn{--surface:#171B22;--raised:#1E232B;--line:rgba(255,255,255,.09);--t1:#E8EBF0;--t2:#A5ADBA;--t3:#747C8A;--accent:#7FAEF0;--bad:#EF7A6C}}
@@ -74,20 +99,6 @@ body.login{background:#F4F5F7}
 .lgn .lm{min-height:22px;margin:0 0 12px;font-size:13px;color:var(--t3)}
 .lgn .lm.err{color:var(--bad)}
 .lgn .hint{margin-top:20px;font-size:12px;color:var(--t3)}
-.foot{margin-top:18px;padding-bottom:30px;text-align:center}
-.foot .row2{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-.foot .ht{margin-top:12px;font-size:12px;color:var(--tx2);line-height:1.5}
-.tabs{display:flex;gap:6px;overflow-x:auto;margin-top:8px;padding-bottom:2px}
-.chip{flex:none;border-radius:20px;padding:6px 14px;min-height:38px;font-size:15px}
-.chip.on{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:600}
-.sy{font-size:12px;color:var(--tx2);white-space:nowrap}.sy.fail{color:var(--dg)}
-body.edit .view-edit{display:block}body.home .view-home{display:block}
-body.edit .dock{display:grid}body.home .back{flex:none;font-size:15px;padding:8px 10px}
-.pcard{background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:12px;margin:0 0 10px}
-.pcard .pn{font-size:18px;font-weight:600;word-break:break-all}
-.pcard .pm{font-size:13px;color:var(--tx2);margin:2px 0 10px}
-.pcard .pb{display:flex;gap:6px}.pcard .pb button{flex:1;padding:8px 2px;font-size:13px;min-height:40px;white-space:nowrap}
-.pcard .go{width:100%;margin-bottom:8px;min-height:46px;font-size:16px}
 </style>
 </head>
 <body>
@@ -97,20 +108,20 @@ body.edit .dock{display:grid}body.home .back{flex:none;font-size:15px;padding:8p
   <div class="lm" id="lmsg">확인 중…</div>
   <button class="btn pri" id="loginBtn" hidden>Google 계정으로 로그인</button>
   <button class="btn" id="loginOtherBtn" hidden>다른 계정으로 로그인</button>
-  <div class="hint">로그인한 뒤에만 프로젝트가 보입니다. 기록은 내 Google Drive에 저장됩니다.<br>계정 확인은 화면 보호일 뿐이며, 실제 자료는 Google Drive의 접근 권한이 지킵니다.</div>
+  <div class="hint">로그인한 뒤에만 프로젝트가 보입니다. 기록은 내 Google Drive에 저장됩니다.<br>계정 확인은 화면 보호일 뿐이며, 실제 자료는 Google Drive의 접근 권한이 지킵니다.<br>한 번 로그인하면 같은 브라우저의 다른 앱도 함께 열립니다. 로그아웃하면 모든 앱에서 로그아웃됩니다.</div>
 </section>
 <header class="view-home">
-  <div class="top"><b style="flex:1;font-size:19px;padding:6px">메뉴메이커</b><small class="sy"></small><button id="pAdd" class="pri">＋ 새 프로젝트</button></div>
+  <div class="top"><b style="flex:1;font-size:19px;padding:6px">메뉴메이커</b><small class="sy"></small><button id="pAdd" class="pri"><i data-i="plus"></i>새 프로젝트</button></div>
   <div class="tools"><button id="pLoad">파일 열기</button></div>
 </header>
-<main class="view-home"><div class="hint">앱마다 프로젝트를 따로 만들어 메뉴를 설계합니다. 프로젝트를 누르면 그 앱의 메뉴 편집 화면이 열립니다.</div><div id="plist"></div>
+<main class="view-home"><div class="hint">앱마다 프로젝트를 따로 두고 메뉴를 설계합니다</div><div id="plist"></div>
 <div class="foot"><div class="row2"><button id="logoutBtn">로그아웃</button><button id="clearLegacy" hidden>이 기기의 옛 기록 지우기</button></div>
-<div class="ht">계정 확인은 화면 보호일 뿐이며, 실제 자료는 Google Drive의 접근 권한이 지킵니다.<br>저장 위치: 내 드라이브 Claude/app/메뉴메이커/설정/메뉴메이커_기록.json</div></div></main>
+<div class="ht">한 번 로그인하면 같은 브라우저의 다른 앱도 함께 열립니다. 로그아웃은 모든 앱에서 됩니다.<br>계정 확인은 화면 보호일 뿐이며, 실제 자료는 Google Drive의 접근 권한이 지킵니다.<br>저장 위치: 내 드라이브 Claude/app/메뉴메이커/설정/메뉴메이커_기록.json</div></div></main>
 <header class="view-edit">
-  <div class="top"><button id="back" class="back">⚙ 관리</button><input id="title" value="" aria-label="프로젝트 이름"><small class="sy"></small><button id="undo" disabled>↶ 취소</button></div>
+  <div class="top"><button id="back" class="back"><i data-i="folder"></i>관리</button><input id="title" value="" aria-label="프로젝트 이름"><small class="sy"></small><button id="undo" disabled><i data-i="undo"></i>취소</button></div>
   <div class="tabs" id="ptabs"></div>
   <div class="tools">
-    <button id="addTop" class="pri">＋ 메뉴</button>
+    <button id="addTop" class="pri"><i data-i="plus"></i>메뉴</button>
     <button id="expAll">모두 펼치기</button>
     <button id="colAll">모두 접기</button>
     <button id="viewTxt">목록 보기</button>
@@ -120,13 +131,13 @@ body.edit .dock{display:grid}body.home .back{flex:none;font-size:15px;padding:8p
   </div>
 </header>
 <main class="view-edit">
-  <div class="hint">⋮⋮ 손잡이를 잡고 끌면 순서가 바뀝니다. 끌면서 오른쪽으로 밀면 아래 단계, 왼쪽이면 위 단계. 화면 끝으로 가면 저절로 스크롤됩니다.</div>
+  <div class="hint">손잡이를 끌어 순서를 바꿉니다. 오른쪽으로 밀면 아래 단계, 왼쪽으로 밀면 위 단계가 됩니다.</div>
   <div id="list"></div>
 </main>
 <div class="dock view-edit" id="dock">
   <div class="sel" id="selName">메뉴를 눌러 고르세요</div>
-  <button id="bChild">＋ 하위</button><button id="bSib">＋ 같은 단계</button><button id="bEdit">✎ 수정</button><button id="bDel" class="dg">삭제</button>
-  <button id="bOut">◀ 위 단계</button><button id="bIn">▶ 아래 단계</button><button id="bUp">▲ 위로</button><button id="bDown">▼ 아래로</button>
+  <button id="bChild"><i data-i="plus"></i>하위</button><button id="bSib"><i data-i="plus"></i>같은 단계</button><button id="bEdit"><i data-i="pencil"></i>수정</button><button id="bDel" class="dg"><i data-i="trash"></i>삭제</button>
+  <button id="bOut"><i data-i="left"></i>위 단계</button><button id="bIn"><i data-i="right"></i>아래 단계</button><button id="bUp"><i data-i="up"></i>위로</button><button id="bDown"><i data-i="down"></i>아래로</button>
 </div>
 
 <div class="sheet" id="edSheet" hidden><div class="box">
@@ -157,6 +168,13 @@ var KEY="menumaker.v2", OLD="menudesign.v1", STEP=28, MAXD=4;
 var COL=["var(--d0)","var(--d1)","var(--d2)","var(--d3)","var(--d4)"];
 var DB=null, P=null, S={title:"",items:[],sel:null}, hist=[];
 var $=function(i){return document.getElementById(i)};
+var IC={plus:'<path d="M5 12h14M12 5v14"/>',pencil:'<path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',trash:'<path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>',
+ up:'<path d="m5 12 7-7 7 7M12 19V5"/>',down:'<path d="M12 5v14m7-7-7 7-7-7"/>',left:'<path d="M19 12H5m7 7-7-7 7-7"/>',right:'<path d="M5 12h14m-7-7 7 7-7 7"/>',
+ undo:'<path d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',folder:'<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/>',
+ grip:'<circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/>',
+ cr:'<path d="m9 18 6-6-6-6"/>',cd:'<path d="m6 9 6 6 6-6"/>'};
+function ic(n){return '<svg class="i" viewBox="0 0 24 24" aria-hidden="true">'+IC[n]+'</svg>'}
+function inflate(){[].forEach.call(document.querySelectorAll("[data-i]"),function(e){e.outerHTML=ic(e.dataset.i)})}
 function uid(){return "m"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 // 간단 작성용: [이름, 종류, 메모, [하위...]] -> 평평한 목록
 function build(spec,d,out){out=out||[];spec.forEach(function(x){out.push({id:uid(),name:x[0],depth:d,type:x[1]||"",note:x[2]||"",fold:false});if(x[3])build(x[3],d+1,out)});return out}
@@ -209,12 +227,13 @@ function visible(){var out=[],hide=-1;for(var i=0;i<S.items.length;i++){var it=S
   if(hide>=0&&it.depth>hide)continue;hide=-1;out.push(i);if(it.fold&&hasKids(i))hide=it.depth}return out}
 function render(){
   var L=$("list");L.innerHTML="";var vis=visible();
-  if(!S.items.length){L.innerHTML='<div class="empty">메뉴가 없습니다.<br>위의 ＋ 메뉴를 눌러 시작하세요.</div>'}
+  if(!S.items.length){L.innerHTML='<div class="empty">메뉴가 없습니다.<br>위쪽 메뉴 버튼을 눌러 시작하세요</div>'}
+  var cnt=[0,0,0,0,0],nos=[];S.items.forEach(function(it,i){cnt[it.depth]++;for(var k=it.depth+1;k<5;k++)cnt[k]=0;nos[i]=cnt.slice(0,it.depth+1).join(".")});
   vis.forEach(function(i){var it=S.items[i],kids=hasKids(i);
     var r=document.createElement("div");r.className="row"+(it.id===S.sel?" sel":"");r.dataset.id=it.id;
     r.style.marginLeft=(it.depth*STEP)+"px";
-    var h='<div class="bar" style="background:'+COL[Math.min(it.depth,4)]+'"></div><div class="grip" data-grip>⋮⋮</div>';
-    h+='<button class="fold" data-fold>'+(kids?(it.fold?"▸":"▾"):"")+'</button>';
+    var h='<div class="grip" data-grip>'+ic("grip")+'</div>';
+    h+='<button class="fold" data-fold aria-label="접기·펼치기">'+(kids?ic(it.fold?"cr":"cd"):"")+'</button><span class="no">'+nos[i]+'</span>';
     h+='<div class="nm">'+esc(it.name)+(it.note?'<small>'+esc(it.note)+'</small>':"")+'</div>';
     if(it.type)h+='<span class="badge">'+esc(it.type)+'</span>';
     r.innerHTML=h;L.appendChild(r)});
@@ -228,7 +247,7 @@ function render(){
     $("bUp").disabled=!sibIdx(s,-1)&&sibIdx(s,-1)!==0;
     $("bDown").disabled=sibIdx(s,1)===null}
   $("title").value=P?P.name:"";tabs()}
-function tabs(){if(!DB)return;$("ptabs").innerHTML=DB.projects.map(function(p){return '<button class="chip'+(P&&p.id===P.id?" on":"")+'" data-id="'+p.id+'">'+esc(p.name||"이름 없음")+"</button>"}).join("")+'<button class="chip" data-add="1">＋</button>'}
+function tabs(){if(!DB)return;$("ptabs").innerHTML=DB.projects.map(function(p){return '<button class="chip'+(P&&p.id===P.id?" on":"")+'" data-id="'+p.id+'">'+esc(p.name||"이름 없음")+"</button>"}).join("")+'<button class="chip" data-add="1" aria-label="새 프로젝트">'+ic("plus")+'</button>'}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function maxDepthIn(i){var e=subEnd(i),m=0;for(var j=i;j<e;j++)m=Math.max(m,S.items[j].depth-S.items[i].depth);return m}
 function canIn(s){if(s<=0)return false;var it=S.items[s];if(S.items[s-1].depth<it.depth)return false;
@@ -343,7 +362,7 @@ window.addEventListener("pointercancel",function(e){endDrag(e,true)});
 function ago(t){var d=new Date(t);return (d.getMonth()+1)+"/"+d.getDate()+" "+("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2)}
 function pidx(id){for(var i=0;i<DB.projects.length;i++)if(DB.projects[i].id===id)return i;return -1}
 function home(){if(P){P.items=S.items;P.sel=S.sel}P=null;document.body.className="home";var L=$("plist");L.innerHTML="";
-  if(!DB.projects.length)L.innerHTML='<div class="empty">프로젝트가 없습니다.<br>＋ 새 프로젝트를 눌러 시작하세요.</div>';
+  if(!DB.projects.length)L.innerHTML='<div class="empty">프로젝트가 없습니다.<br>새 프로젝트 버튼을 눌러 시작하세요</div>';
   DB.projects.forEach(function(p){var c=document.createElement("div");c.className="pcard";c.dataset.id=p.id;
     c.innerHTML='<div class="pn">'+esc(p.name||"이름 없음")+'</div><div class="pm">메뉴 '+p.items.length+'개 · 수정 '+ago(p.t)+'</div>'+
     '<button class="pri go" data-a="open">열기</button><div class="pb"><button data-a="ren">이름</button><button data-a="dup">복제</button><button data-a="json">JSON</button><button data-a="del" class="dg">삭제</button></div>';
@@ -367,21 +386,35 @@ $("ptabs").addEventListener("click",function(e){var b=e.target.closest("button")
 
 // ===== 구글 로그인·드라이브 저장 (차차차와 같은 방식) =====
 var GTK="menumaker.gtoken",GAC="menumaker.gaccount",FID_KEY="menumaker.fid",gTok=null;
-function storedTok(){try{var t=JSON.parse(localStorage.getItem(GTK)||"null");return t&&t.exp>Date.now()+60000?t.token:null}catch(e){return null}}
-function clearTok(){try{localStorage.removeItem(GTK)}catch(e){}gTok=null}
+var GAUTH="blue10kp.gauth",GNEED=["https://www.googleapis.com/auth/drive"];
+function scopeOk(have,need){have=have||[];if(have.indexOf(need)>=0)return true;
+  if(need.indexOf("/auth/drive")>0&&have.indexOf("https://www.googleapis.com/auth/drive")>=0)return true;return false}
+function readGauth(){try{var g=JSON.parse(localStorage.getItem(GAUTH)||"null");
+  if(g&&g.v===1&&typeof g.token==="string"&&g.exp>Date.now()+120000)return g}catch(e){}return null}
+function writeGauth(o){try{localStorage.setItem(GAUTH,JSON.stringify({v:1,token:o.token,exp:o.exp,scopes:o.scopes||[],email:o.email||""}))}catch(e){}}
+function migrateOld(){ // 예전 전용 토큰을 한 번 공통 키로 옮김
+  try{var t=JSON.parse(localStorage.getItem(GTK)||"null");
+    if(t&&t.token&&t.exp>Date.now()+120000&&!readGauth()&&gAcct())writeGauth({token:t.token,exp:t.exp,scopes:["openid","email"].concat(GNEED),email:gAcct()});
+    localStorage.removeItem(GTK)}catch(e){}}
+function gauthState(){var g=readGauth();if(!g)return{st:"none"};
+  if(!g.email||!okAcct(String(g.email).toLowerCase()))return{st:"acct",g:g};
+  var miss=GNEED.some(function(n){return !scopeOk(g.scopes,n)});
+  return miss?{st:"scope",g:g}:{st:"ok",g:g}}
+function storedTok(){var g=readGauth();return g?g.token:null}
+function clearTok(){try{var g=readGauth();if(g&&g.token===gTok)localStorage.removeItem(GAUTH)}catch(e){}gTok=null}
 function gAcct(){try{return localStorage.getItem(GAC)||""}catch(e){return""}}
 function okAcct(em){return ALLOWED.map(function(x){return x.toLowerCase()}).indexOf(em)>=0}
 function requestTok(prompt,noHint){return new Promise(function(res,rej){
   var g=window.google&&google.accounts&&google.accounts.oauth2;
   if(!g)return rej(new Error("구글 로그인 모듈을 불러오지 못했습니다. 잠시 후 다시 시도하세요."));
-  var c=g.initTokenClient({client_id:GCLIENT,scope:GSCOPE,hint:noHint?undefined:(gAcct()||undefined),
+  var c=g.initTokenClient({client_id:GCLIENT,scope:GSCOPE,include_granted_scopes:true,hint:noHint?undefined:(gAcct()||undefined),
     callback:function(r){if(r.error)return rej(new Error("구글 연결 실패: "+r.error));
       if(!g.hasGrantedAllScopes(r,"https://www.googleapis.com/auth/drive"))return rej(new Error("Google Drive 권한을 허용해야 합니다. 다시 로그인하면서 모든 항목에 체크해 주세요."));
-      try{localStorage.setItem(GTK,JSON.stringify({token:r.access_token,exp:Date.now()+(r.expires_in||3600)*1000}))}catch(e){}
+      writeGauth({token:r.access_token,exp:Date.now()+(r.expires_in||3600)*1000,scopes:String(r.scope||"").split(" ").filter(Boolean),email:""});
       gTok=r.access_token;res(r.access_token)},
     error_callback:function(e){rej(new Error(e&&e.type==="popup_closed"?"구글 로그인 창이 닫혔습니다.":"구글 로그인 창을 열 수 없습니다. 팝업 차단을 확인하세요."))}});
   c.requestAccessToken({prompt:prompt==null?"":prompt})})}
-async function gfetch(url,opt,asText){var t=storedTok()||gTok;if(!t)throw new Error("GOOGLE_AUTH");
+async function gfetch(url,opt,asText){var t=storedTok()||gTok;if(!t)throw new Error("GOOGLE_AUTH");gTok=t;
   var o=opt||{},h=Object.assign({Authorization:"Bearer "+t},o.headers||{}),r=await fetch(url,Object.assign({},o,{headers:h,cache:"no-store"}));
   if(r.status===401){clearTok();throw new Error("GOOGLE_AUTH")}
   if(!r.ok)throw new Error("Drive "+r.status+": "+(await r.text()).slice(0,160));
@@ -442,8 +475,7 @@ function showLogin(msg,isErr){ // 로그인 전·만료: 화면에서 프로젝�
   var m=$("lmsg");m.textContent=msg||"";m.className="lm"+(msg&&isErr!==false&&/권한|실패|만료|못|않|닫혔|허용/.test(msg)?" err":"");
   $("loginBtn").hidden=false;$("loginOtherBtn").hidden=false}
 async function denyAccount(){
-  try{var t=storedTok()||gTok;if(t&&window.google&&google.accounts.oauth2.revoke)google.accounts.oauth2.revoke(t,function(){})}catch(e){}
-  clearTok();try{localStorage.removeItem(GAC);localStorage.removeItem(FID_KEY)}catch(e){}
+  gTok=null;try{localStorage.removeItem(GAC);localStorage.removeItem(FID_KEY)}catch(e){}
   DB=null;dirty=false;fileId=null;folderId=null;lastMod=null;
   showLogin("권한이 없습니다. 이 앱은 허용된 계정만 쓸 수 있어요. 허용된 계정으로 다시 로그인해 주세요.")}
 async function checkAccount(){var u=await gfetch("https://www.googleapis.com/oauth2/v3/userinfo"),em=String(u.email||"").toLowerCase();
@@ -451,6 +483,7 @@ async function checkAccount(){var u=await gfetch("https://www.googleapis.com/oau
   return{em:em,ok:okAcct(em)&&u.email_verified!==false}}
 async function afterToken(){var pre=loadDrive().then(function(d){return{d:d}},function(e){return{e:e}});
   var a=await checkAccount();if(!a.ok){await denyAccount();return}
+  var g0=readGauth();if(g0){g0.email=a.em;writeGauth(g0)}
   var changed=gAcct()&&gAcct()!==a.em;try{localStorage.setItem(GAC,a.em)}catch(e){}
   if(changed){DB=null;dirty=false;fileId=null;folderId=null;lastMod=null}
   await startApp(changed?null:await pre)}
@@ -464,21 +497,36 @@ async function startApp(pre){
   P=null;var cp=DB.projects.filter(function(p){return p.id===DB.cur})[0]||DB.projects[0];if(cp)openP(cp.id);else home();setSync("ok");
   $("clearLegacy").hidden=!(legacyRaw(KEY)||legacyRaw(OLD))}
 async function doLogin(other){$("lmsg").className="lm";$("lmsg").textContent="로그인 중…";
-  try{await requestTok(other?"select_account":undefined,other);await afterToken()}
+  try{if(other){try{localStorage.removeItem(GAUTH)}catch(e){}gTok=null}
+    await requestTok(other?"select_account":undefined,other);await afterToken()}
   catch(e){showLogin(e.message==="GOOGLE_AUTH"?"로그인이 만료되었습니다. 다시 로그인해 주세요.":e.message)}}
 $("loginBtn").onclick=function(){doLogin(false)};
 $("loginOtherBtn").onclick=function(){doLogin(true)};
 async function logout(){await driveSave();
   if(dirty&&!confirm("저장되지 않은 기록이 있습니다. 그래도 로그아웃할까요?"))return;
-  try{var t=storedTok()||gTok;if(t&&window.google&&google.accounts.oauth2.revoke)google.accounts.oauth2.revoke(t,function(){})}catch(e){}
-  clearTok();DB=null;dirty=false;fileId=null;folderId=null;lastMod=null;showLogin("로그아웃했습니다.",false)}
+  if(!confirm("모든 앱에서 로그아웃됩니다. 로그아웃할까요?"))return;
+  try{localStorage.removeItem(GAUTH)}catch(e){}gTok=null;DB=null;dirty=false;fileId=null;folderId=null;lastMod=null;showLogin("로그아웃했습니다.",false)}
 $("logoutBtn").onclick=logout;
 $("clearLegacy").onclick=function(){if(confirm("이 기기(브라우저)에 남아 있는 옛 기록을 지울까요? 드라이브에 저장된 기록은 그대로 남아요.")){try{localStorage.removeItem(KEY);localStorage.removeItem(OLD)}catch(e){}$("clearLegacy").hidden=true;toast("지웠습니다")}};
-async function boot(){document.body.className="login";
-  if(storedTok()&&gAcct()&&okAcct(gAcct())){
-    try{checkAccount().then(function(a){if(!a.ok)denyAccount()},function(){});await startApp();return}
-    catch(e){showLogin(e.message==="GOOGLE_AUTH"?"":"기록을 불러오지 못했어요. 인터넷을 확인하고 다시 시도해 주세요. ("+e.message.slice(0,60)+")");return}}
-  showLogin("")}
+function loginHint(){var st=gauthState();
+  $("loginBtn").textContent=st.st==="scope"?"구글 연결 (권한 추가)":"Google 계정으로 로그인"}
+async function boot(){document.body.className="login";migrateOld();
+  var st=gauthState();
+  if(st.st==="ok"){gTok=st.g.token;
+    try{try{localStorage.setItem(GAC,st.g.email.toLowerCase())}catch(e){}
+      checkAccount().then(function(a){if(!a.ok)denyAccount()},function(){});await startApp();return}
+    catch(e){showLogin(e.message==="GOOGLE_AUTH"?"":"기록을 불러오지 못했어요. 인터넷을 확인하고 다시 시도해 주세요. ("+e.message.slice(0,60)+")");loginHint();return}}
+  showLogin("");loginHint()}
+// 다른 앱에서 로그인했거나 화면이 다시 보일 때 공통 출입증을 다시 읽음
+var rechk=false;
+function recheck(){if(rechk)return;var st=gauthState();
+  if(document.body.className==="login"){ if(st.st==="ok"&&$("loginBtn").hidden===false){rechk=true;boot().then(function(){rechk=false},function(){rechk=false})}return}
+  if(st.st==="ok")gTok=st.g.token;
+  else if(st.st==="none"&&gTok&&!DB){gTok=null}}
+document.addEventListener("visibilitychange",function(){if(!document.hidden)recheck()});
+window.addEventListener("focus",recheck);
+window.addEventListener("storage",function(e){if(e.key===GAUTH)recheck()});
+inflate();
 boot();
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(function(){}); // 홈 화면 앱 설치용(없어도 앱은 동작)
 })();
