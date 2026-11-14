@@ -325,19 +325,32 @@ function carsIntent(t){ // 차차차 모듈: 읽는 말만(기록·남겨·적�
   if(/주행|충전|주유/.test(t))return mk("records","차차차 기록");
   return mk("home","차차차");
 }
-function salesIntent(t){ // 신한FC 영업 화면: "이달이관 보여줘", "따행 보여줘", "지난달 이관 고객" (q=이관|따행 탭, id=YYYY-MM 달)
-  if(/기록해|남겨|적어|저장|입력|추가|일정|약속/.test(t))return null;
-  if(!/이달\s?이관|이번\s?달\s?이관|지난\s?달\s?이관|이관\s?(고객|리스트|목록|현황|보여|확인|알려)|따행/.test(t))return null;
-  if(!/보여|알려|열어|조회|확인|보기|목록|리스트|현황|[?？]|어때|있어/.test(t)&&!/^\s*(이달\s?이관|따행)\s*$/.test(t))return null;
+function scopeIntent(t){ // "이관 보여줘", "가망 고객 보여줘", "DB 보여줘" → 신한FC 고객 검색에서 그 분류만 (kind=transfer|plan|db). 이름이 같이 있으면 q로
+  if(/기록해|남겨|적어|저장|입력|추가|일정|약속|상담기록|메모/.test(t))return null;
+  const SC=[["transfer","이관",/이관/],["plan","가망",/가망/],["db","DB",/(^|[^A-Za-z])DB($|[^A-Za-z])|디비/i]];
+  const hit=SC.find(s=>s[2].test(t));if(!hit)return null;
+  if(!/보여|알려|열어|조회|확인|보기|목록|리스트|현황|검색|찾|[?？]|어때|있어|뭐/.test(t)&&!/^\s*((지난|저번|이번|이)\s?달|금월|당월|전달|\d{1,2}\s?월)?\s*(이관|가망|DB)\s*(고객|목록|리스트)?\s*$/i.test(t))return null;
+  const q=t.replace(/[?？]/g," ").replace(/이관|가망|DB|디비|분류|고객님?|목록|리스트|현황|자|이달|이번\s?달|금월|당월|지난\s?달|저번\s?달|전달|\d{1,2}\s?월/gi," ").split(/\s+/).filter(x=>x&&x.length>1&&!NAV_STOP.test(x)).join(" ").slice(0,30);
+  return{app:"shinhanfc",go:"customers",q,kind:hit[0],label:hit[1]+" 고객"};
+}
+function salesIntent(t){ // 신한FC 영업 화면: "이달이관 보여줘", "이번달이관", "지난달 이관 고객", "따행 보여줘" (q=이관|따행 탭, id=YYYY-MM 달)
+  if(/기록해|남겨|적어|저장|입력|추가|일정|약속|상담기록|메모/.test(t))return null;
+  const tt=t.replace(/\s+/g,""); // 띄어쓰기가 달라도(이번달이관/이번 달 이관) 같게 봄
+  const MON="(이달|이번달|금월|당월|지난달|저번달|전달|\d{1,2}월)";
+  if(!/이관|따행/.test(tt))return null;
+  if(!/따행/.test(tt)&&!/이달|이번달|금월|당월/.test(tt))return null; // 이달이관은 "이번 달"을 가리킬 때만. 그 밖의 "이관 보여줘"·"지난달 이관"은 고객 검색의 분류(scopeIntent)
+  const bare=new RegExp("^"+MON+"?(의)?(이관|따행)(고객|리스트|목록|현황|자|대상)?(보여줘|알려줘|보기|좀|은|는|이|가)?[?？]?$").test(tt);
+  if(!bare&&!/보여|알려|열어|조회|확인|보기|목록|리스트|현황|[?？]|어때|있어|뭐/.test(tt))return null;
   const now=new Date();let ym="";
-  if(/지난\s?달|저번\s?달/.test(t)){const d=new Date(now.getFullYear(),now.getMonth()-1,1);ym=iso(d).slice(0,7)}
-  else if(/이번\s?달|이달/.test(t))ym=iso(now).slice(0,7);
-  else{const m=t.match(/(\d{1,2})\s?월/);if(m)ym=now.getFullYear()+"-"+String(+m[1]).padStart(2,"0")}
-  const dda=/따행/.test(t);
+  if(/지난달|저번달|전달/.test(tt)){const d=new Date(now.getFullYear(),now.getMonth()-1,1);ym=iso(d).slice(0,7)}
+  else if(/이번달|이달|금월|당월/.test(tt))ym=iso(now).slice(0,7);
+  else{const m=tt.match(/(\d{1,2})월/);if(m)ym=now.getFullYear()+"-"+String(+m[1]).padStart(2,"0")}
+  const dda=/따행/.test(tt);
   return{app:"shinhanfc",go:"sales",q:dda?"dda":"transfer",kind:"",id:ym,label:dda?"따행":"이달이관"};
 }
 function navIntent(t){
   {const s=salesIntent(t);if(s)return s}
+  {const s=scopeIntent(t);if(s)return s}
   if(/일정|약속|미팅|예약|따행|이관|상담기록|엑셀|보장분석/.test(t))return null;
   const toks=s=>s.replace(/[?？]/g," ").replace(/고객님?/g," ").split(/\s+/).filter(x=>x&&x.length>1&&!NAV_STOP.test(x));
   if(!/고객/.test(t)){const c=carsIntent(t);if(c)return c}
@@ -510,7 +523,7 @@ async function navFlow(nv,rec){
     pending={rec,stage:"done",canUndo:false,note:"‘"+a.name+"’은(는) 내가 쓸 수 있는 앱이 아니에요. 설정에서 꺼져 있는지 확인하거나 관리자에게 열어 달라고 하세요."};
     render();return;
   }
-  if(nv.app==="shinhanfc"&&!nv.q){pending={rec,stage:"name",nav:nv};render();return}
+  if(nv.app==="shinhanfc"&&nv.go==="customers"&&!nv.q&&!nv.kind){pending={rec,stage:"name",nav:nv};render();return}
   finishNav(nv,rec);
 }
 
@@ -848,7 +861,7 @@ function setHtml(){
     <b>일정 질문</b>: “오늘 일정은?”, “내일 약속 있어?”, “이번 주 일정 알려줘”, “다음 일정은 언제야?” — 답이 바로 카드로 나오고, 카드에서 [수정]·[삭제]를 누를 수 있어요. 일정 내용은 AI로 보내지 않고 앱 안에서만 정리해요.<br>
     수정·삭제·등록은 항상 확인 카드를 보여 주고, 끝난 뒤 되돌릴 수 있어요. 맛집·여행·차계부처럼 앱 안의 기록은 받은편지함에 담아 그 앱을 열 때 반영돼요.<br>
     <b>찾기·보기는 바로</b>: “김OO 고객 검색해줘”라고 하면 말만해요 안에 신한FC m의 고객 목록이 열리고, “맛집 검색해줘”, “강남 맛집 찾아줘”, “본 영화 찾아줘”, “여행 기록 보여줘”라고 하면 항상일상 찾기 결과가 열려요. “김OO 주민번호·연락처·계좌 알려줘”처럼 민감정보를 묻는 말도 막지 않고 신한FC 고객 화면으로 열어 줘요. 보여 줄지는 신한FC가 내 권한으로 정하고, 말만해요는 고객 데이터를 읽지 않아요. 고객 이름은 말만해요 기록에 남기지 않고 AI로도 보내지 않아요. 열린 화면에는 그 페이지만 보이고, 왼쪽 위 뒤로 버튼은 앱 안에서 한 단계 뒤로 가다가 더 갈 곳이 없으면 닫고 말만해요로 돌아와요(폰 뒤로 동작도 같아요). 오른쪽 위 [앱으로 열기]를 누르면 지금 보던 화면 그대로 그 앱이 열려요. 화면이 열려 있는 동안 오른쪽 아래 말만해요 버튼을 누르면 아래에서 묻는 창이 떠올라요. 내게 열리지 않은 앱은 열 수 없다고 알려 줘요.<br>
-    <b>이달이관·따행</b>: “이달이관 보여줘”, “지난달 이관 고객 보여줘”, “따행 보여줘”라고 하면 신한FC 영업 화면의 해당 탭이 열려요.<br>
+    <b>이관·가망·DB</b>: “이관 보여줘”, “가망 고객 보여줘”, “DB 보여줘”는 신한FC 고객 검색에서 그 분류만 보여 줘요(“김OO 이관 보여줘”처럼 이름을 붙이면 그 이름만). <b>이달이관·따행</b>: “이달이관 보여줘”, “지난달 이관 보여줘”, “따행 보여줘”는 신한FC 영업 화면의 해당 탭이 열려요.<br>
     <b>차차차</b>: “이번 달 주행 얼마야”, “차 요약 보여줘”, “지난달 충전비 알려줘”는 요약, “주행 기록 보여줘”는 기록, “정비 기록 보여줘”·“충전 비용 알려줘”는 정비·비용 화면이 열려요. “빨강이 …”처럼 차 이름을 말하면 그 차로 열려요.<br>
     <b>묻는 창과 말만해요 버튼</b>: 앱을 열면 묻는 창이 열린 채로 시작해요. 답 카드도 이 창 안에 나와요. X로 닫으면 뒤의 최근 기록이 보이고, 오른쪽 아래 말만해요 버튼은 어느 화면에서나 떠 있어서 누르면 창이 다시 열려요.<br>
     <b>새로 적는 것은 편지로</b>: “오늘 본 영화 기록해줘”, “충전 40kWh 기록해줘”처럼 다른 앱에 기록을 새로 남기는 말은 그 앱의 받은편지함에 남기고, 카드의 [앱으로 열기]로 그 앱을 열 수 있어요(앱을 열면 반영돼요). 신한FC 상담 메모는 신한FC 고객 화면을 열어 직접 적어요. 읽기인지 쓰기인지 애매하면 어디로 보낼지 물어봐요.<br>
