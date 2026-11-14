@@ -344,7 +344,13 @@ function updateFab(){
   if(m&&m.fabLift>0)r.setProperty("--fabl","min(50vh,"+Math.max(16,m.fabLift+12)+"px)");else r.removeProperty("--fabl");
 } // 앱을 연 뒤에는 늘 오른쪽 아래에 떠 있음
 function pushLayer(){try{history.pushState({ot:1},"");return true}catch(e){return false}}
-function popLayer(){ignorePop=true;try{history.back()}catch(e){ignorePop=false}}
+let popCb=null,popT=null;
+// 우리가 쌓은 history 칸을 걷는다. 끝난(popstate) 뒤에 cb를 부름: 그 전에 앱 iframe에 메시지를 보내면 앱의 history.back()이 이 칸을 대신 걷어 버려 검색이 안 먹음
+function popLayer(cb){
+  ignorePop=true;popCb=cb||null;
+  clearTimeout(popT);popT=setTimeout(()=>{if(popCb){const c=popCb;popCb=null;ignorePop=false;c()}},400); // popstate가 안 오는 경우의 안전장치
+  try{history.back()}catch(e){ignorePop=false;const c=popCb;popCb=null;c&&c()}
+}
 function showMod(app){
   modApp=app;
   Object.keys(MODS).forEach(k=>{MODS[k].frame.hidden=k!==app;MODS[k].fabHide=false;MODS[k].fabLift=0}); // 다른 모듈로 바뀌면 버튼 원래 자리
@@ -353,7 +359,12 @@ function showMod(app){
 }
 function openModule(n){
   const dir=APPDIR[n.app];if(!dir)return false;
-  const req={go:n.go,q:n.q||"",kind:n.kind||"",month:n.month||"",car:n.car||""};let m=MODS[n.app];
+  const req={go:n.go,q:n.q||"",kind:n.kind||"",month:n.month||"",car:n.car||""};
+  if(sheetOpen){closeSheet(false,()=>deliverModule(n,dir,req));return true} // 묻는 창이 쌓은 history 칸을 먼저 걷은 뒤에 앱에 전달
+  deliverModule(n,dir,req);return true;
+}
+function deliverModule(n,dir,req){
+  let m=MODS[n.app];
   if(!m){
     const f=document.createElement("iframe");f.title=adapter(n.app).name;f.setAttribute("allow","microphone");
     m=MODS[n.app]={frame:f,ready:false,where:{app:n.app,...req}};
@@ -366,8 +377,6 @@ function openModule(n){
     else m.frame.src=dir+"?embed=1#"+modHash(req); // 아직 읽는 중이면 새 주소로
   }
   showMod(n.app);
-  if(sheetOpen)closeSheet(true);
-  return true;
 }
 function modBack(){ // 앱 안에서 한 단계 뒤로, 더 갈 곳이 없으면 모듈을 닫고 말만해요 첫 화면
   const m=modApp&&MODS[modApp];if(!m)return;
@@ -393,13 +402,13 @@ function openSheet(keep){
   sheetPushed=pushLayer();updateFab();render();
   setTimeout(()=>{const t=$("#txt");if(t&&!t.disabled&&!matchMedia("(pointer:coarse)").matches)t.focus()},260); // 폰은 키보드를 자동으로 띄우지 않음
 }
-function closeSheet(skipHist){
+function closeSheet(skipHist,cb){
   if(!sheetOpen)return;
   sheetOpen=false;$("#sheet").classList.remove("open");$("#scrim").classList.remove("open");$("#sheetBody").innerHTML="";
   const p=sheetPushed;sheetPushed=false;
-  if(p&&!skipHist)popLayer();
   if(pending&&["done","answer","name"].includes(pending.stage))pending=null; // 끝난 카드는 닫으면 치움
   updateFab();suppressOpen=true;render();suppressOpen=false;
+  if(p&&!skipHist)popLayer(cb);else if(cb)cb();
 }
 function openAppAsIs(){ // [앱으로 열기]: 모듈에서 보던 바로 그 화면으로 그 앱을 같은 창에서 연다
   if(!modApp)return;const w=MODS[modApp].where||{},h=modHash(w);
@@ -412,7 +421,7 @@ $("#modback").addEventListener("click",modBack);
 $("#modopen").addEventListener("click",openAppAsIs);
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&sheetOpen)closeSheet()});
 window.addEventListener("popstate",()=>{
-  if(ignorePop){ignorePop=false;return}
+  if(ignorePop){ignorePop=false;clearTimeout(popT);const c=popCb;popCb=null;c&&c();return}
   if(sheetOpen){sheetPushed=false;closeSheet(true)}
   else if(modApp){
     const m=MODS[modApp];
