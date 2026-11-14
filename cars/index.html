@@ -668,7 +668,7 @@ function vHome(c){
   h+=`</div>`+insCard();
   h+=fc?`<div class="card"><h3>지금까지 아낀 연료비 (${esc(c.fuel.comp)} 대비)</h3><div class="big save">${won(fc.save)}</div></div>`:`<div class="card"><h3>아낀 연료비</h3><div class="sub">주행거리를 입력하면 계산돼요</div></div>`;
   h+=`<div class="card"><h3>차량 정보${c.plate?" · "+esc(c.plate):""}</h3>${c.notes?`<div class="sub">${esc(c.notes)}</div>`:""}<div class="acts" style="margin-top:8px"><button class="btn" data-act="editCar">정보 수정</button><button class="btn" data-act="photo">내 사진 올리기</button>${c.photo?`<button class="btn" data-act="photoReset">기본 사진으로</button>`:""}</div><div class="acts"><button class="btn dng" data-act="delCar">이 차 삭제</button></div><input type="file" accept="image/*" id="photoIn" hidden></div>`;
-  h+=`<div class="card"><h3>기록 파일 (JSON)</h3><div class="sub">이 앱의 기록은 JSON 파일로 저장해 두었다가 언제든 다시 불러올 수 있어요. 두 대 이상 모든 차 기록이 한 파일에 들어갑니다.</div><div class="acts"><button class="btn pri" data-act="export">기록 저장</button><button class="btn" data-act="import">기록 불러오기</button></div><input type="file" accept="application/json" id="impIn" hidden><div class="note">기록은 내 Google Drive(Claude/app/차차차/설정)에 자동으로 저장돼요. 파일로 따로 보관하려면 기록 저장을 누르세요.</div><div class="note">한 번 로그인하면 같은 브라우저에서 다른 앱도 함께 열려요. 로그아웃은 모든 앱에서 됩니다.</div><div class="acts"><button class="btn" data-act="logout">로그아웃</button>${legacyRaw()?`<button class="btn dng" data-act="clearLegacy">이 기기에 남은 옛 기록 지우기</button>`:""}</div></div>`;
+  h+=`<div class="card"><h3>기록 파일 (JSON)</h3><div class="sub">이 앱의 기록은 JSON 파일로 저장해 두었다가 언제든 다시 불러올 수 있어요. 두 대 이상 모든 차 기록이 한 파일에 들어갑니다.</div><div class="acts"><button class="btn pri" data-act="export">기록 저장</button><button class="btn" data-act="import">기록 불러오기</button></div><input type="file" accept="application/json" id="impIn" hidden><div class="note">기록은 내 Google Drive(Claude/app/차차차/설정)에 자동으로 저장돼요. 파일로 따로 보관하려면 기록 저장을 누르세요.</div><div class="note">AI 도우미는 정해진 말은 앱이 바로 알아듣고, 못 알아들을 때만 Gemini(말만해요 설정의 키)에게 물어봐요. 이때 보내는 것은 개인정보를 가린 말 한 문장뿐이고 차 기록은 보내지 않아요. 저장하기 전에 항상 확인 카드가 나와요.</div><div class="note">한 번 로그인하면 같은 브라우저에서 다른 앱도 함께 열려요. 로그아웃은 모든 앱에서 됩니다.</div><div class="acts"><button class="btn" data-act="logout">로그아웃</button>${legacyRaw()?`<button class="btn dng" data-act="clearLegacy">이 기기에 남은 옛 기록 지우기</button>`:""}</div></div>`;
   return h;
 }
 function vTrip(c){
@@ -870,7 +870,77 @@ function aiRun(raw){
     return;
   }
   const a=answer(p);
-  out.innerHTML=`<div class="msg">${esc(a||'잘 못 알아들었어요. 이렇게 말해 보세요.\n· "'+chipList()[0]+'"\n· "'+chipList()[1]+'"\n· "이번 달 몇 km 탔어?"')}</div>`;
+  if(a){out.innerHTML=`<div class="msg">${esc(a)}</div>`;return}
+  askGemini(raw,p,out); // 규칙으로 못 알아들은 말만 Gemini에게 의도를 물음
+}
+/* ---------- Gemini 연결 (규칙으로 안 될 때만) ----------
+   키는 말만해요 설정 파일(Drive Claude/app/onething/설정/말만해요_설정.json 의 geminiKey·model)을 읽어 메모리에만 둠.
+   보내는 것: 민감정보를 가린 말 한 문장 + 오늘 날짜 + 차 별명 목록. 차 기록은 보내지 않음. 받는 것: 의도·빈칸 JSON → 확인 카드 → 저장 */
+let gem=undefined,gemT=0,gemSeq=0;
+const NOKEY_MSG="말만해요 설정에서 Gemini 키를 넣으면 더 많은 말을 알아들어요.";
+async function loadGem(){ // {key,model} 또는 null (못 읽으면 규칙만)
+  if(gem!==undefined&&(gem||Date.now()-gemT<300000))return gem;
+  gemT=Date.now();gem=null;
+  try{
+    let id="root";
+    for(const n of ["Claude","app","onething","설정"]){const f=await dFind(id,n,true);if(!f)return gem;id=f.id}
+    const f=await dFind(id,"말만해요_설정.json",false);if(!f)return gem;
+    const d=parseDoc(await gfetch(DAPI+"/files/"+f.id+"?alt=media",null,true));
+    if(d&&typeof d.geminiKey==="string"&&d.geminiKey.trim())gem={key:d.geminiKey.trim(),model:String(d.model||"gemini-2.5-flash")};
+  }catch(e){}
+  return gem;
+}
+function maskSensitive(t){ // 보내기 전 민감정보 가림
+  return String(t)
+    .replace(/[\w.+-]+@[\w-]+(\.[\w-]+)+/g,"[이메일]")
+    .replace(/\d{6}\s*-\s*[1-4]\d{6}/g,"[번호]")
+    .replace(/0\d{1,2}\s*-?\s*\d{3,4}\s*-?\s*\d{4}/g,"[전화]")
+    .replace(/\d{2,3}\s*[가-힣]\s*\d{4}/g,"[차량번호]")
+    .replace(/\d[\d\s-]{11,}\d/g,"[번호]");
+}
+async function geminiIntent(raw,g){
+  const text=maskSensitive(raw).slice(0,300);
+  const prompt="차 기록장 앱의 말을 해석해 JSON 하나만 답해. 오늘은 "+today()+". 차 별명: "+db.cars.map(c=>c.nick).join(", ")+".\n"+
+    '형식: {"action":"주행|충전|정비|모름","date":"YYYY-MM-DD 또는 null","car":"차 별명 또는 null","km":누적 또는 주행 km 숫자 또는 null,"amount":원 숫자 또는 null,"kwh":숫자 또는 null,"item":"항목 이름 또는 null"}\n'+
+    "충전·주유·정비·수리·관리 비용은 충전 또는 정비, 누적 주행거리는 주행. 알 수 없으면 action을 모름으로.\n말: "+text;
+  const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),12000);
+  try{
+    const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(g.model)+":generateContent",{method:"POST",signal:ctl.signal,
+      headers:{"Content-Type":"application/json","x-goog-api-key":g.key},
+      body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:"application/json",temperature:0}})});
+    if(!r.ok)throw new Error("gemini "+r.status);
+    const j=await r.json(),t=(((j.candidates||[])[0]||{}).content||{}).parts;
+    return JSON.parse(String((t&&t[0]&&t[0].text)||"").replace(/^```json|```$/g,"").trim());
+  }finally{clearTimeout(tm)}
+}
+function intentToPending(o,p){ // Gemini 답 → 확인할 기록 (이상하면 null)
+  if(!o||typeof o!=="object")return null;
+  const n0=v=>{const n=+v;return isFinite(n)&&n>=0&&n<1e9?n:null};
+  const date=/^\d{4}-\d{2}-\d{2}$/.test(o.date||"")?o.date:p.date;
+  const car0=o.car&&db.cars.find(c=>c.nick===o.car),c=car0||p.car,guessed=!car0&&p.guessed;
+  const km=n0(o.km),amount=n0(o.amount),kwh=n0(o.kwh);
+  if(o.action==="주행"){if(!km)return null;return{pe:{type:"odo",car:c,date,km},guessed}}
+  if(o.action==="충전"||o.action==="정비"){
+    const item=String(o.item||"").slice(0,40).trim()||(o.action==="충전"?"충전"+(kwh?" "+kwh+"kWh":""):"정비");
+    if(!amount&&!km&&!kwh&&!o.item)return null;
+    return{pe:{type:"maint",car:c,date,item,amount:amount||0,km:km||null},guessed};
+  }
+  return null;
+}
+async function askGemini(raw,p,out){
+  const my=++gemSeq;
+  const fail=extra=>{if(my===gemSeq)out.innerHTML=`<div class="msg">${esc('잘 못 알아들었어요. 이렇게 말해 보세요.\n· "'+chipList()[0]+'"\n· "'+chipList()[1]+'"\n· "이번 달 몇 km 탔어?"'+(extra?"\n\n"+extra:""))}</div>`};
+  out.innerHTML=`<div class="msg">알아듣는 중…</div>`;
+  const g=await loadGem();
+  if(!g){fail(NOKEY_MSG);return}
+  let r=null;
+  try{r=intentToPending(await geminiIntent(raw,g),p)}catch(e){r=null}
+  if(my!==gemSeq)return;
+  if(!r){fail("");return}
+  pending=r.pe;const pe=r.pe;
+  out.innerHTML=`<div class="pend"><div class="k">${esc(pe.car.nick)}${r.guessed?" (차를 말하지 않아 선택된 차)":""} · ${pe.type==="odo"?"주행거리":"정비·충전 기록"} · AI가 해석</div>`+
+    (pe.type==="odo"?`<div class="big">${num(pe.km)} km</div><div class="sub">${esc(pe.date)}</div>`:`<div class="t" style="font-size:15px;font-weight:600">${esc(pe.item)} · ${pe.amount?won(pe.amount):"금액 없음"}</div><div class="sub">${esc(pe.date)}${pe.km?" · "+num(pe.km)+"km":""}</div>`)+
+    `<div class="acts"><button class="btn" data-act="acancel">취소</button><button class="btn pri" data-act="asave">저장</button></div></div>`;
 }
 function aiSave(){
   if(!pending)return;const p=pending;
