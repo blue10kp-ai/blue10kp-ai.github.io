@@ -545,12 +545,49 @@ async function driveSave(force){
       meta=await gfetch(DUP+"/files?uploadType=multipart&fields=id,modifiedTime",{method:"POST",headers:{"Content-Type":"multipart/related; boundary="+bd},body:mp});
       fileId=meta.id;cacheFid();
     }
-    lastMod=meta.modifiedTime;dirty=false;setSync("ok");
+    lastMod=meta.modifiedTime;dirty=false;setSync("ok");idxSync();
   }catch(e){
     setSync("fail");
     if(e.message==="GOOGLE_AUTH")showLogin("로그인이 만료되었습니다. 다시 로그인하면 저장되지 않은 기록이 자동으로 저장됩니다.");
     else retryT=setTimeout(()=>driveSave(),15000);
   }finally{saving=false;if(again){again=false;driveSave()}}
+}
+/* ---------- 말만해요 해석용 색인 (goodday/설정/말만해요_색인.json) ----------
+   말만해요가 말을 알아듣는 데만 쓰는 목록. 본문 메모·사진·주소·가격·지도 링크는 넣지 않음.
+   기록이 저장될 때 다시 만들고, 내용이 그대로면 다시 쓰지 않음. 실패해도 기록 저장에는 영향 없음. */
+const IDX_FILE="말만해요_색인.json",IDX_DIR="설정",IDX_KEY="goodday.idx";
+let idxBusy=false,idxAgain=false;
+function buildIndex(){
+  const items=db.records.filter(r=>!r.del).map(r=>{
+    const k=kindOf(r.kind),x=r.x||{},o={id:r.id,kind:r.kind,kindName:k?k.name:"",title:String(r.title||""),date:r.date||""};
+    const place=r.kind==="place"?o.title:r.kind==="trip"?String(x.region||""):r.kind==="video"?String(x.where||""):"";
+    if(place)o.place=place;
+    if(r.kind==="video"&&x.type)o.type=String(x.type);
+    if(r.tags&&r.tags.length)o.tags=r.tags.slice(0,10).map(String);
+    return o;
+  }).sort((a,b)=>a.id<b.id?-1:a.id>b.id?1:0);
+  return{v:1,app:"goodday",items};
+}
+async function idxSync(){
+  if(DEMO||!db)return;
+  if(idxBusy){idxAgain=true;return}
+  idxBusy=true;
+  try{
+    const idx=buildIndex(),sig=JSON.stringify(idx),c=(()=>{try{return JSON.parse(lsGet(IDX_KEY)||"null")}catch(e){return null}})();
+    if(c&&c.acct===gAcct()&&c.sig===sig&&c.id)return; // 같으면 다시 쓰지 않음
+    const body=JSON.stringify({...idx,updated:new Date().toISOString()});
+    const fo=await dFolder(true);let dir=await dFind(fo,IDX_DIR,true);
+    if(!dir)dir=await gfetch(DAPI+"/files?fields=id",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:IDX_DIR,mimeType:"application/vnd.google-apps.folder",parents:[fo]})});
+    let id=c&&c.acct===gAcct()?c.id:null;
+    if(!id){const f=await dFind(dir.id,IDX_FILE,false);if(f)id=f.id}
+    if(id){await gfetch(DUP+"/files/"+id+"?uploadType=media&fields=id",{method:"PATCH",headers:{"Content-Type":"application/json"},body})}
+    else{
+      const bd="gi"+uid(),mp="--"+bd+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+JSON.stringify({name:IDX_FILE,parents:[dir.id],mimeType:"application/json"})+"\r\n--"+bd+"\r\nContent-Type: application/json\r\n\r\n"+body+"\r\n--"+bd+"--";
+      const m=await gfetch(DUP+"/files?uploadType=multipart&fields=id",{method:"POST",headers:{"Content-Type":"multipart/related; boundary="+bd},body:mp});id=m.id;
+    }
+    lsSet(IDX_KEY,JSON.stringify({acct:gAcct(),id,sig}));
+  }catch(e){/* 색인은 덤: 실패하면 다음 저장 때 다시 */}
+  finally{idxBusy=false;if(idxAgain){idxAgain=false;idxSync()}}
 }
 window.addEventListener("online",()=>{if(dirty&&db)driveSave()});
 window.addEventListener("beforeunload",e=>{if(dirty){e.preventDefault();e.returnValue=""}});
@@ -599,6 +636,7 @@ async function startApp(){
   me=me||gAcct();
   applyTheme();setShell(true);setSync("ok");view="home";render();scrollTo(0,0);
   runPendingGo();
+  idxSync();
   inboxCheck().then(()=>{if(db&&view==="home"&&!$("#modal").firstChild)render()});
 }
 async function doLogin(other){
@@ -865,6 +903,7 @@ function openHelp(){
    <b>지우기</b><br>지운 기록은 설정의 휴지통에서 30일 동안 되살릴 수 있어요.<br><br>
    <b>내 기록은 어디에?</b><br>내 Google Drive의 goodday 폴더에 저장되며, 다른 사람은 볼 수 없어요. 이 앱은 앱이 만든 파일만 열 수 있는 권한만 씁니다.<br><br>
    <b>말만해요에서 바로 찾기</b><br>말만해요에서 "맛집 검색해줘"처럼 말하면 말만해요 화면 안에 항상일상의 찾기 결과가 끼워져 나와요. 말만해요 안에서는 그 화면만 보이고, 뒤로가기는 왼쪽 위 버튼으로 해요. 말만해요의 [앱으로 열기]를 누르면 보던 화면 그대로 항상일상이 열립니다.<br><br>
+   <b>말만해요가 알아듣게 돕는 목록</b><br>기록을 저장할 때 내 드라이브 goodday/설정 폴더에 기록 제목·종류·날짜·장소 이름·태그만 적은 목록(말만해요_색인.json)을 함께 만들어요. 말만해요가 말을 알아듣는 데만 쓰고, 한 줄 메모·사진·주소·가격은 들어가지 않아요.<br><br>
    <b>한 번 로그인하면 다른 앱도 함께</b><br>같은 브라우저에서 내 다른 앱(신한FC, 차차차 등)에 로그인했다면 항상일상도 로그인 화면 없이 바로 열려요. 로그아웃하면 모든 앱에서 함께 로그아웃됩니다. 로그인은 한 시간마다 다시 필요할 수 있어요. 아이폰 홈 화면 앱은 앱마다 따로라 서로 나눠 쓰지 못해요.<br><br>
    <b>함께 쓰려면</b><br>허용된 계정만 로그인할 수 있어요. 쓸 사람을 추가하려면 앱을 관리하는 사람에게 구글 계정(이메일)을 알려 주세요.<br><br>
    <b>말만해요 받은편지함</b><br>설정에서 받은편지함 파일을 한 번 고르면, 말만해요가 보낸 쪽지가 앱을 열 때 카드로 나타나요. 기록에 넣기를 누르면 기록이 되고 쪽지는 처리 완료로 표시됩니다.<br><br>
