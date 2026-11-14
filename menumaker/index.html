@@ -26,6 +26,7 @@ header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px 
 .top input{flex:1;min-width:0;font:500 17px/24px var(--font);border:1px solid transparent;background:transparent;color:var(--tx);padding:6px 8px;border-radius:8px}
 .top input:focus{border-color:var(--ln);outline:0;background:var(--raised)}
 button{font:500 14px/20px var(--font);display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--ln);background:var(--card);color:var(--tx);border-radius:8px;padding:0 12px;min-height:36px;transition:background-color 150ms var(--ease),color 150ms var(--ease),transform 150ms var(--ease)}
+button[hidden]{display:none}
 button:active{background:var(--raised);transform:scale(.98)}
 button:focus-visible,.top input:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
 button.pri{background:var(--ac);border-color:var(--ac);color:var(--acink)}
@@ -114,8 +115,8 @@ html:has(body.login),body.login{background:#F4F5F7}
   <div class="tools"><button id="pLoad">파일 열기</button></div>
 </header>
 <main class="view-home"><div class="hint">앱마다 프로젝트를 따로 두고 메뉴를 설계합니다</div><div id="plist"></div>
-<div class="foot"><div class="row2"><button id="logoutBtn">로그아웃</button><button id="clearLegacy" hidden>이 기기의 옛 기록 지우기</button></div>
-<div class="ht">한 번 로그인하면 같은 브라우저의 다른 앱도 함께 열립니다. 로그아웃은 모든 앱에서 됩니다.<br>계정 확인은 화면 보호일 뿐이며, 실제 자료는 Google Drive의 접근 권한이 지킵니다.<br>저장 위치: 내 드라이브 Claude/app/메뉴메이커/설정/메뉴메이커_기록.json</div></div></main>
+<div class="foot"><div class="row2"><button id="installBtn" hidden>앱 설치</button><button id="logoutBtn">로그아웃</button><button id="clearLegacy" hidden>이 기기의 옛 기록 지우기</button></div>
+<div class="ht">홈 화면에 추가: 안드로이드 크롬은 메뉴의 '앱 설치', 아이폰 사파리는 공유 → '홈 화면에 추가'<br>한 번 로그인하면 같은 브라우저의 다른 앱도 함께 열립니다. 로그아웃은 모든 앱에서 됩니다.<br>계정 확인은 화면 보호일 뿐이며, 실제 자료는 Google Drive의 접근 권한이 지킵니다.<br>저장 위치: 내 드라이브 Claude/app/메뉴메이커/설정/메뉴메이커_기록.json</div></div></main>
 <header class="view-edit">
   <div class="top"><button id="back" class="back"><i data-i="folder"></i>관리</button><input id="title" value="" aria-label="프로젝트 이름"><small class="sy"></small><button id="undo" disabled><i data-i="undo"></i>취소</button></div>
   <div class="tabs" id="ptabs"></div>
@@ -527,6 +528,10 @@ window.addEventListener("focus",recheck);
 window.addEventListener("storage",function(e){if(e.key===GAUTH)recheck()});
 inflate();
 boot();
+var instEv=null;
+window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();instEv=e;$("installBtn").hidden=false});
+window.addEventListener("appinstalled",function(){instEv=null;$("installBtn").hidden=true});
+$("installBtn").onclick=function(){if(!instEv)return;instEv.prompt();instEv.userChoice.then(function(){instEv=null;$("installBtn").hidden=true},function(){})};
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(function(){}); // 홈 화면 앱 설치용(없어도 앱은 동작)
 })();
 </script>
