@@ -87,6 +87,28 @@ nav button.on::before{content:"";position:absolute;top:-1px;left:28%;right:28%;h
 .login .lm{min-height:22px;margin:0 0 12px;font-size:13px;color:var(--t3)}
 .login .lm.err{color:var(--bad)}
 .login .hint{margin-top:20px;font-size:12px;color:var(--t3)}
+/* 모듈 틀: 아래 앱 화면을 말만해요 안에 끼워 보여 줌 + 말만해요 버튼 + 묻는 창 */
+.hint a{color:var(--accent)}
+#mod{position:fixed;inset:0;z-index:20;background:var(--surface);display:flex;flex-direction:column}
+.modbar{flex:none;display:flex;align-items:center;gap:8px;min-height:48px;padding:calc(4px + env(safe-area-inset-top)) 8px 4px 16px;border-bottom:1px solid var(--line);background:var(--surface)}
+.modbar .nm{font-size:15px;font-weight:600;margin-right:auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.xbtn{width:40px;height:40px;border:0;border-radius:var(--r-ctl);background:none;color:var(--t3);display:flex;align-items:center;justify-content:center}
+.xbtn:active{background:var(--raised)}
+.xbtn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round}
+#modbody{flex:1;min-height:0;position:relative}
+#modbody iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:var(--surface)}
+#fab{position:fixed;right:16px;bottom:calc(var(--fabb,72px) + env(safe-area-inset-bottom));z-index:30;width:56px;height:56px;border-radius:50%;border:0;padding:0;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.2);transition:transform var(--t-fast) var(--ease)}
+#fab:active{transform:scale(.96)}
+#fab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+#scrim{position:fixed;inset:0;z-index:40;background:rgba(10,14,20,.4);opacity:0;visibility:hidden;transition:opacity 200ms,visibility 0s linear 200ms}
+#scrim.open{opacity:1;visibility:visible;transition-delay:0s}
+#sheet{position:fixed;left:0;right:0;bottom:0;margin:0 auto;max-width:640px;height:70vh;height:70dvh;z-index:41;background:var(--surface);border:1px solid var(--line);border-bottom:0;border-radius:16px 16px 0 0;display:flex;flex-direction:column;transform:translateY(100%);visibility:hidden;transition:transform 240ms var(--ease),visibility 0s linear 240ms}
+#sheet.open{transform:none;visibility:visible;transition-delay:0s}
+#sheet .modbar{border-radius:16px 16px 0 0;padding-top:4px}
+#sheetBody{flex:1;min-height:0;overflow:auto;padding:8px 16px 16px}
+#sheetBody .card{background:transparent;border:0;padding:8px 0;margin-bottom:0}
+#sheetBody textarea{min-height:64px}
+@media (prefers-reduced-motion:reduce){#sheet,#scrim,#fab{transition:none}}
 </style>
 </head>
 <body>
@@ -101,6 +123,10 @@ nav button.on::before{content:"";position:absolute;top:-1px;left:28%;right:28%;h
 <header id="title" hidden><span>말만해요</span><small id="sync"></small></header>
 <div class="wrap" id="main" hidden></div>
 <nav id="nav" hidden></nav>
+<div id="mod" hidden><div class="modbar"><span class="nm" id="modname"></span><button class="btn sm" id="modopen">앱으로 열기</button><button class="xbtn" id="modclose" aria-label="닫기"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div id="modbody"></div></div>
+<button id="fab" hidden aria-label="말만해요 열기"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+<div id="scrim"></div>
+<section id="sheet" role="dialog" aria-label="말만해요"><div class="modbar"><span class="nm">말만해요</span><button class="xbtn" id="sheetclose" aria-label="닫기"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div id="sheetBody"></div></section>
 
 <script>
 "use strict";
@@ -253,7 +279,127 @@ function decide(res,allowed){
   return{mode:"ask",options:opts.slice(0,3)};
 }
 const kindOf=(app,kind)=>{const a=adapter(app);return a&&a.kinds.find(k=>k.id===kind)};
-const labelOf=(app,kind)=>{const a=adapter(app),k=kindOf(app,kind);return a?a.name+" · "+(k?k.label:kind):"보관만"};
+const labelOf=(app,kind)=>{const a=adapter(app),k=kindOf(app,kind);return a?a.name+" · "+(k?k.label:kind==="nav"?"화면 열기":kind):"보관만"};
+
+/* ===== 앱 화면으로 바로 이동 (규칙: app\_공통\말만해요_플로팅.md) =====
+   "김현성 고객 검색해줘" → 신한FC 고객 검색 / "맛집 검색해줘" → 항상일상 찾기. 규칙으로만 읽음(고객 이름은 AI로 보내지 않음).
+   말만해요는 고객 데이터를 읽지 않음: 각 앱이 자기 화면에서 검색한다. */
+const APPDIR={shinhanfc:"/shlife/",goodday:"/goodday/",chachacha:"/cars/"};
+function goUrl(n){const p=new URLSearchParams({go:n.go});if(n.q)p.set("q",n.q);if(n.kind)p.set("kind",n.kind);return APPDIR[n.app]+"?"+p.toString()}
+const NAV_KIND=[["맛집",/맛집|식당|카페/],["영상",/영화|드라마|영상|음악|노래|예능/],["여행",/여행|숙소/],["일상",/일상|일기/]];
+const NAV_STOP=/^(고객님?|님|검색(해줘|해|해주세요|해봐|해봐줘)?|찾아(줘|줄래|봐|주세요|봐줘)?|찾기|보여(줘|주세요)?|조회(해줘)?|알려(줘|주세요)?|열어(줘)?|정보(좀|를|도)?|보기|해줘|좀|줘|본|간|먹은|갔던|기록|내역|목록|리스트|전체|은|는|정보는|정보은|누구|어때)$/;
+function navIntent(t){
+  if(/일정|약속|미팅|예약|따행|이관|상담기록|엑셀|보장분석/.test(t))return null;
+  if(!/검색|찾아|찾기|찾고|보여|조회|알려|열어|정보|보기|[은는]\s?\?|어때|누구/.test(t))return null;
+  const toks=s=>s.replace(/[?？]/g," ").replace(/고객님?/g," ").split(/\s+/).filter(x=>x&&x.length>1&&!NAV_STOP.test(x));
+  if(/고객/.test(t))return{app:"shinhanfc",go:"customers",q:toks(t).join(" ").slice(0,30),kind:"",label:"고객 검색"};
+  for(const[k,re]of NAV_KIND){
+    if(re.test(t)){
+      const rest=t.replace(/맛집|식당|영화|드라마|영상|음악|노래|예능|여행|숙소|일상|일기/g," ");
+      return{app:"goodday",go:"search",q:toks(rest).join(" ").slice(0,30),kind:k,label:k+" 찾기"};
+    }
+  }
+  return null;
+}
+/* ===== 모듈 틀 =====
+   아래 앱(신한FC·항상일상)의 지금 화면을 말만해요 안에 화면 전체 iframe으로 띄움(같은 주소라 공통 로그인으로 바로 열림).
+   한 번 띄운 iframe은 숨겨 두고 다시 씀. 새 요청은 postMessage. 검색어·고객 키는 # 뒤에 둠(서버로 안 나감). */
+const MODS={}; // 앱 번호 → {frame, ready, where}
+let modApp=null,sheetOpen=false,modPushed=false,sheetPushed=false,ignorePop=false;
+const modHash=o=>{const p=new URLSearchParams();["go","q","kind","id"].forEach(k=>{if(o[k])p.set(k,o[k])});return p.toString()};
+function updateFab(){$("#fab").hidden=!(modApp&&!sheetOpen)}
+function pushLayer(){try{history.pushState({ot:1},"");return true}catch(e){return false}}
+function popLayer(){ignorePop=true;try{history.back()}catch(e){ignorePop=false}}
+function showMod(app){
+  modApp=app;
+  Object.keys(MODS).forEach(k=>{MODS[k].frame.hidden=k!==app});
+  $("#modname").textContent=adapter(app).name;
+  if(!modPushed)modPushed=pushLayer();
+  $("#mod").hidden=false;updateFab();
+}
+function openModule(n){
+  const dir=APPDIR[n.app];if(!dir)return false;
+  const req={go:n.go,q:n.q||"",kind:n.kind||""};let m=MODS[n.app];
+  if(!m){
+    const f=document.createElement("iframe");f.title=adapter(n.app).name;f.setAttribute("allow","microphone");
+    m=MODS[n.app]={frame:f,ready:false,where:{app:n.app,...req}};
+    f.addEventListener("load",()=>{m.ready=true});
+    f.src=dir+"?embed=1#"+modHash(req);
+    $("#modbody").appendChild(f);
+  }else{
+    m.where={app:n.app,...req};
+    if(m.ready){try{m.frame.contentWindow.postMessage({type:"blue10kp-go",...req},location.origin)}catch(e){}}
+    else m.frame.src=dir+"?embed=1#"+modHash(req); // 아직 읽는 중이면 새 주소로
+  }
+  if(sheetOpen)closeSheet(true);
+  showMod(n.app);return true;
+}
+function closeMod(skipHist){
+  modApp=null;$("#mod").hidden=true;updateFab();
+  const p=modPushed;modPushed=false;
+  if(p&&!skipHist)popLayer();
+  if(db)go("talk");
+}
+function resetMods(){ // 로그아웃·계정 거부·로그인 화면: 띄워 둔 앱과 창을 모두 걷음
+  Object.keys(MODS).forEach(k=>{try{MODS[k].frame.remove()}catch(e){}delete MODS[k]});
+  modApp=null;modPushed=false;sheetOpen=false;sheetPushed=false;
+  $("#mod").hidden=true;$("#fab").hidden=true;$("#sheet").classList.remove("open");$("#scrim").classList.remove("open");
+}
+function openSheet(){
+  if(sheetOpen||!db)return;
+  sheetOpen=true;$("#main").innerHTML="";
+  if(pending&&["done","answer","name"].includes(pending.stage))pending=null;
+  $("#sheet").classList.add("open");$("#scrim").classList.add("open");
+  sheetPushed=pushLayer();updateFab();render();
+  setTimeout(()=>{const t=$("#txt");if(t&&!t.disabled)t.focus()},260);
+}
+function closeSheet(skipHist){
+  if(!sheetOpen)return;
+  sheetOpen=false;$("#sheet").classList.remove("open");$("#scrim").classList.remove("open");$("#sheetBody").innerHTML="";
+  const p=sheetPushed;sheetPushed=false;
+  if(p&&!skipHist)popLayer();
+  updateFab();render();
+}
+function openAppAsIs(){ // [앱으로 열기]: 모듈에서 보던 바로 그 화면으로 그 앱을 같은 창에서 연다
+  if(!modApp)return;const w=MODS[modApp].where||{},h=modHash(w);
+  location.href=APPDIR[modApp]+(h?"#"+h:"");
+}
+$("#fab").addEventListener("click",openSheet);
+$("#scrim").addEventListener("click",()=>closeSheet());
+$("#sheetclose").addEventListener("click",()=>closeSheet());
+$("#modclose").addEventListener("click",()=>closeMod());
+$("#modopen").addEventListener("click",openAppAsIs);
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&sheetOpen)closeSheet()});
+window.addEventListener("popstate",()=>{
+  if(ignorePop){ignorePop=false;return}
+  if(sheetOpen){sheetPushed=false;closeSheet(true)}else if(modApp){modPushed=false;closeMod(true)}
+});
+// 모듈 앱이 화면이 바뀔 때마다 지금 위치를 알려 줌 → [앱으로 열기]가 그 위치로 열림
+window.addEventListener("message",e=>{
+  if(e.origin!==location.origin)return;
+  const app=Object.keys(MODS).find(k=>MODS[k].frame.contentWindow===e.source);if(!app)return;
+  const d=e.data||{};if(d.type!=="blue10kp-where")return;
+  const s=v=>String(v==null?"":v).slice(0,120);
+  MODS[app].where={app,go:s(d.go),q:s(d.q),kind:s(d.kind),id:s(d.id)};
+  if(app===modApp&&typeof d.fabBottom==="number")document.documentElement.style.setProperty("--fabb",Math.max(0,Math.min(200,d.fabBottom))+"px"); // 앱 하단 메뉴 높이를 알리면 그 위에 버튼을 놓음
+});
+function finishNav(nv,rec){
+  const a=adapter(nv.app);
+  rec.status="done";rec.target={app:nv.app,kind:"nav"};save();
+  openModule(nv);
+  pending={rec,stage:"done",canUndo:false,note:"‘"+a.name+"’ 화면을 열었어요 ("+nv.label+(nv.q?": "+nv.q:"")+")."};
+  render();
+}
+async function navFlow(nv,rec){
+  const a=adapter(nv.app);
+  if(!activeApps().some(x=>x.id===nv.app)){
+    rec.status="kept";save();
+    pending={rec,stage:"done",canUndo:false,note:"‘"+a.name+"’은(는) 내가 쓸 수 있는 앱이 아니에요. 설정에서 꺼져 있는지 확인하거나 관리자에게 열어 달라고 하세요."};
+    render();return;
+  }
+  if(nv.app==="shinhanfc"&&!nv.q){pending={rec,stage:"name",nav:nv};render();return}
+  finishNav(nv,rec);
+}
 
 /* ================= 4. 저장소 (구글 드라이브 / 시험용 메모리) ================= */
 const DAPI="https://www.googleapis.com/drive/v3",DUP="https://www.googleapis.com/upload/drive/v3";
@@ -401,7 +547,7 @@ async function inboxCancel(appId,id){
 /* ================= 5. 로그인 화면 · 허용 계정 ================= */
 function setShell(on){["title","main","nav"].forEach(i=>{$("#"+i).hidden=!on});$("#login").hidden=on}
 function showLogin(msg,isErr){
-  $("#main").innerHTML="";$("#nav").innerHTML="";
+  $("#main").innerHTML="";$("#nav").innerHTML="";resetMods();
   setShell(false);
   const m=$("#lmsg");m.textContent=msg||"";m.className="lm"+(msg&&isErr!==false&&/권한|실패|만료|못|않|닫혔|허용/.test(msg)?" err":"");
   $("#loginBtn").hidden=false;$("#loginOtherBtn").hidden=false;$("#loginBtn").textContent="Google 계정으로 로그인";
@@ -511,8 +657,8 @@ function go(v){
 }
 function render(){
   if(!db)return;
-  const m=$("#main");
-  if(view==="talk")m.innerHTML=talkHtml();
+  const m=sheetOpen?$("#sheetBody"):$("#main");
+  if(sheetOpen||view==="talk")m.innerHTML=talkHtml();
   else if(view==="log")m.innerHTML=logHtml();
   else m.innerHTML=setHtml();
   bind();
@@ -523,7 +669,7 @@ function talkHtml(){
   return `<div class="card">
     <button class="mic${listening?" rec":""}" id="mic" aria-label="말로 입력"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
     <p class="ast" id="ast">${listening?"듣고 있어요… 다시 누르면 멈춰요":"눌러서 말하거나, 아래에 써 주세요"}</p>
-    <textarea id="txt" placeholder="예) 내일 3시 김OO 고객 상담 / 어제 성수동 파스타집 맛있었어 / 오늘 주유 7만원" ${pending?"disabled":""}></textarea>
+    <textarea id="txt" placeholder="예) 김OO 고객 검색해줘 / 강남 맛집 찾아줘 / 내일 3시 김OO 상담 / 오늘 주유 7만원" ${pending?"disabled":""}></textarea>
     <div class="acts"><button class="btn pri" id="send" ${pending||!apps.length?"disabled":""}>보내기</button></div>
     <p class="k" style="margin:10px 0 0">연결된 앱: ${esc(names)}</p>
     ${apps.length?"":`<div class="warn">열린 앱이 없어요. 설정에서 앱을 켜거나 관리자에게 열어 달라고 하세요.</div>`}
@@ -536,6 +682,10 @@ function pendingHtml(){
       <div class="msg">${esc(r.text)}</div>
       <div class="choice">${p.options.map((o,i)=>`<button class="btn" data-pick="${i}"><b>${i+1}</b>${esc(labelOf(o.app,o.kind))}${o.why.length?` <span class="k">(‘${esc(o.why.slice(0,2).join("’, ‘"))}’ 때문에)</span>`:""}</button>`).join("")}
         <button class="btn" data-pick="keep">기록만 해 두기 (어디에도 안 보냄)</button></div></div>`;
+  }
+  if(p.stage==="name"){
+    return `<div class="card"><h3>어느 고객을 찾을까요?</h3><input id="navq" type="text" placeholder="고객 이름" autocomplete="off">
+      <div class="acts"><button class="btn" id="next">그만</button><button class="btn pri" id="navgo">찾기</button></div></div>`;
   }
   if(p.stage==="confirm"){
     const c=p.cal;
@@ -556,14 +706,14 @@ function pendingHtml(){
       <button class="btn" id="calno">아니요, 그만</button></div></div>`;
   }
   return `<div class="card"><h3>${p.stage==="done"?"처리했어요":"처리 중"}</h3><div class="msg">${esc(p.note||"")}</div>
-    <div class="acts">${p.reauth?`<button class="btn pri" id="reauth">일정 권한 연결(다시 로그인)</button>`:""}${p.canUndo?`<button class="btn dng" id="undo">${p.undoFn?"되돌리기":"취소"}</button>`:""}<button class="btn pri" id="next">다음 말하기</button></div></div>`;
+    <div class="acts">${p.pickApp&&APPDIR[p.pickApp]?`<button class="btn" id="openapp" data-dir="${esc(APPDIR[p.pickApp])}">앱으로 열기</button>`:""}${p.reauth?`<button class="btn pri" id="reauth">일정 권한 연결(다시 로그인)</button>`:""}${p.canUndo?`<button class="btn dng" id="undo">${p.undoFn?"되돌리기":"취소"}</button>`:""}<button class="btn pri" id="next">다음 말하기</button></div></div>`;
 }
 function logHtml(){
   const rs=db.records.slice().reverse();
   if(!rs.length)return `<div class="card"><div class="empty">아직 기록이 없어요.<br>‘말하기’에서 말해 보세요.</div></div>`;
   return `<div class="card">`+rs.map(r=>{
     const direct=r.target&&adapter(r.target.app)&&adapter(r.target.app).direct;
-    const st=r.status==="done"?["ok",direct?"바로 처리함":"받은편지함에 담음"]:r.status==="ask"?["ask","되묻는 중"]:r.status==="cancelled"?["bad","취소함"]:r.status==="kept"?["","기록만 함"]:["bad","실패"];
+    const st=r.status==="done"?["ok",direct?"바로 처리함":(r.target&&r.target.kind==="nav")?"화면 열기":"받은편지함에 담음"]:r.status==="ask"?["ask","되묻는 중"]:r.status==="cancelled"?["bad","취소함"]:r.status==="kept"?["","기록만 함"]:["bad","실패"];
     return `<div class="row"><div style="min-width:0"><div class="t">${esc(r.text)}</div>
       <div class="k">${esc(new Date(r.at).toLocaleString("ko-KR",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"}))}${r.target?" · "+esc(labelOf(r.target.app,r.target.kind)):""}${r.masked.length?" · 가림: "+esc(r.masked.join(", ")):""}</div></div>
       <div style="text-align:right"><span class="badge ${st[0]}">${st[1]}</span>${r.status==="ask"?`<br><button class="btn sm" data-resume="${r.id}" style="margin-top:6px">고르기</button>`:""}</div></div>`}).join("")+`</div>`;
@@ -582,6 +732,8 @@ function setHtml(){
     <b>일정 삭제</b>: “내일 김OO 상담 일정 삭제해줘” — 여러 개가 걸리면 고르게 해요.<br>
     <b>일정 질문</b>: “오늘 일정은?”, “내일 약속 있어?”, “이번 주 일정 알려줘”, “다음 일정은 언제야?” — 답이 바로 카드로 나오고, 카드에서 [수정]·[삭제]를 누를 수 있어요. 일정 내용은 AI로 보내지 않고 앱 안에서만 정리해요.<br>
     수정·삭제·등록은 항상 확인 카드를 보여 주고, 끝난 뒤 되돌릴 수 있어요. 맛집·여행·차계부처럼 앱 안의 기록은 받은편지함에 담아 그 앱을 열 때 반영돼요.<br>
+    <b>찾기·보기는 바로</b>: “김OO 고객 검색해줘”라고 하면 말만해요 안에 신한FC m의 고객 목록이 열리고, “맛집 검색해줘”, “강남 맛집 찾아줘”, “본 영화 찾아줘”, “여행 기록 보여줘”라고 하면 항상일상 찾기 결과가 열려요. 고객 이름은 말만해요 기록에 남기지 않고 AI로도 보내지 않아요. 열린 화면 위 띠의 [앱으로 열기]를 누르면 지금 보던 화면 그대로 그 앱이 열리고, 닫기를 누르면 말만해요로 돌아와요. 화면이 열려 있는 동안 오른쪽 아래 말만해요 버튼을 누르면 아래에서 묻는 창이 떠올라요. 내게 열리지 않은 앱은 열 수 없다고 알려 줘요.<br>
+    <b>새로 적는 것은 편지로</b>: “오늘 본 영화 기록해줘”, “충전 40kWh 기록해줘”처럼 다른 앱에 기록을 새로 남기는 말은 그 앱의 받은편지함에 남기고, 카드의 [앱으로 열기]로 그 앱을 열 수 있어요(앱을 열면 반영돼요). 신한FC 상담 메모는 신한FC 고객 화면을 열어 직접 적어요. 읽기인지 쓰기인지 애매하면 어디로 보낼지 물어봐요.<br>
     <b>로그인</b>: 한 번 로그인하면 같은 브라우저에서 다른 앱(신한FC·차차차·항상일상 등)도 로그인 없이 열려요. 로그아웃하면 <b>모든 앱에서 로그아웃</b>돼요. 로그인은 1시간 정도 유지되고, 끝나면 아무 앱에서나 다시 연결하면 돼요. (아이폰은 홈 화면에 추가한 앱끼리는 나눠 쓰지 못해요.)</p></details></div>
   <div class="card"><h3>AI 해석 (Gemini)</h3><div class="t">${cfg.geminiKey?"Gemini 연결됨 (애매한 말만 물어봐요)":"규칙 기반만 사용 중 (키 없음)"}</div>
     <label for="gkey">Gemini API 키 (Google AI Studio에서 직접 발급)</label>
@@ -592,7 +744,7 @@ function setHtml(){
     <div class="warn">무료 사용분은 구글이 서비스 개선에 쓸 수 있어요. 그래서 주민번호·카드·계좌번호·비밀번호·인증번호·API 키는 보내기 전에 앱에서 먼저 가려요. 그 밖의 말은 가리지 않고 보내요.</div></div>`;
 }
 function bind(){
-  if(view==="set")fillCalSettings();
+  if(view==="set"&&!sheetOpen)fillCalSettings();
   const mic=$("#mic");if(mic)mic.onclick=toggleMic;
   const send=$("#send");if(send)send.onclick=()=>submit($("#txt").value);
   const tx=$("#txt");if(tx)tx.addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.ctrlKey||e.metaKey)){e.preventDefault();submit(tx.value)}});
@@ -600,6 +752,9 @@ function bind(){
   const nx=$("#next");if(nx)nx.onclick=()=>{pending=null;render()};
   const un=$("#undo");if(un)un.onclick=undo;
   const cg=$("#calgo");if(cg)cg.onclick=calRun;
+  const oa=$("#openapp");if(oa)oa.onclick=()=>{location.href=oa.dataset.dir}; // 편지를 남긴 앱을 같은 창에서 열기
+  const ng=$("#navgo"),nq=$("#navq");
+  if(ng&&nq){const run=()=>{const q=nq.value.trim().slice(0,30);if(q&&pending&&pending.nav)finishNav({...pending.nav,q},pending.rec)};ng.onclick=run;nq.addEventListener("keydown",e=>{if(e.key==="Enter")run()});setTimeout(()=>nq.focus(),50)}
   const cn=$("#calno");if(cn)cn.onclick=()=>{if(pending){pending.rec.status="cancelled";save()}pending=null;render()};
   const ra=$("#reauth");if(ra)ra.onclick=()=>doLogin(false);
   document.querySelectorAll("[data-evpick]").forEach(b=>b.onclick=()=>calPick(+b.dataset.evpick));
@@ -631,12 +786,14 @@ async function submit(raw){
   raw=String(raw||"").trim();if(!raw||pending)return;
   const apps=activeApps();if(!apps.length)return;
   const s=Sens.mask(raw);
-  const rec={id:uid(),at:new Date().toISOString(),text:s.text,masked:s.hit,status:"new",target:null,fields:{}};
+  const nv=navIntent(s.text);
+  const rec={id:uid(),at:new Date().toISOString(),text:nv&&nv.app==="shinhanfc"?"고객 검색 (이름은 기록 안 함)":s.text,masked:s.hit,status:"new",target:null,fields:{}};
   db.records.push(rec);save();
+  if(nv){await navFlow(nv,rec);return}
   const res=await Providers[providerId].classify(s.text,apps);
   rec.fields={title:s.text.length>60?s.text.slice(0,60)+"…":s.text,...res.fields}; // 받는 앱이 필수로 쓰는 제목 칸(항상일상 등)
   const d=decide(res,apps);
-  if(d.mode==="ask"&&cfg.geminiKey){ // 애매한 것만 Gemini에게 (가린 글만 보냄)
+  if(d.mode==="ask"&&cfg.geminiKey&&!/고객/.test(s.text)){ // 애매한 것만 Gemini에게 (가린 글만 보냄). 고객 이야기가 든 말은 AI로 보내지 않음
     try{
       const g=await geminiClassify(s.text,apps,cfg);
       if(g){
@@ -659,6 +816,12 @@ async function choose(i){
 async function apply(pick,how){
   const rec=pending.rec,a=adapter(pick.app),k=kindOf(pick.app,pick.kind);
   if(a.direct==="calendar"){pending.stage="work";pending.note="확인하는 중…";render();await calFlow(pick.kind,rec);return} // 앱을 거치지 않고 바로 처리
+  if(pick.app==="shinhanfc"){ // 신한FC는 아직 받은편지함을 안 읽음 → 고객 화면을 띄워 직접 쓰게 안내
+    rec.status="done";rec.target={app:"shinhanfc",kind:"nav"};save();
+    openModule({app:"shinhanfc",go:"customers",q:"",kind:""});
+    pending={rec,stage:"done",canUndo:false,note:"고객 상담 메모는 신한FC 고객 화면에서 직접 남겨요. 신한FC 화면을 열었어요. 고객을 찾아 메모를 적어 주세요."};
+    render();return;
+  }
   pending.stage="work";pending.note="보내는 중…";render();
   const item={id:rec.id,at:rec.at,from:"onething",kind:pick.kind,text:rec.text,fields:rec.fields,status:"new"};
   try{
