@@ -181,6 +181,7 @@ function norm(d){ // 옛 파일·새 파일 모두 같은 모양으로 맞춤
     tiresMigrated=true;
   }
   d.mounts??=[];d.cars.forEach(c=>{delete c.tires;delete c.mounts});
+  d.events.forEach(e=>{if(e.id==="ev-charge"&&e.yearCost==null){e.yearCost=1200000;tiresMigrated=true}});
   d.events.forEach(e=>{if(e.name==="BMW 차징카드 구입"){e.name="BMW 차징카드";tiresMigrated=true}}); // 이름에서 "구입" 제외 (한 번만, 고친 뒤 자동 저장)
   d.tires.forEach(t=>{t.newDepth??=0;t.treads??=[];t.baseKm??=0;t.lifeKm??=0;t.price??="";t.note??="";t.size??="";t.bought??=""});
   d.sel??=d.cars[0]&&d.cars[0].id;return d;
@@ -629,10 +630,19 @@ function totalCard(){
   if(fcs.length)h+=`<div class="grid2" style="margin-top:10px">`+fcs.map(r=>`<div><div class="k">아낀 연료비 · ${esc(r.x.nick)}</div><div class="v save">${won(r.f.save)}</div></div>`).join("")+`</div>`+(fcs.length>1?`<div class="sub" style="margin-top:6px">합계 ${won(fcs.reduce((t,r)=>t+r.f.save,0))}</div>`:"");
   return h+`</div>`;
 }
-function fuelCard(c){ // 대시보드·주행 화면 공용 '아낀 연료비' 카드
+function cardSaving(c){ // 정액(1년 비용)이 있는 이벤트: 기존 전기세로 충전했다면 vs 정액 비용(이 차 몫)
+  const f=c.fuel;if(!f)return"";
+  return evSorted().filter(ev=>+ev.yearCost>0).map(ev=>{
+    const t=eventStats(ev),me=t.cars.find(x=>x.c.id===c.id);
+    if(!me||me.since==null||!t.sinceTot)return"";
+    const used=Math.min(t.days,365),cost=Math.round(ev.yearCost*used/365),share=Math.round(cost*me.since/t.sinceTot),
+      kwh=me.since/f.kmkWh,elec=Math.round(kwh*f.kwh),save=elec-share;
+    return`<div style="border-top:1px solid var(--line);margin-top:12px;padding-top:12px"><div class="k">${esc(ev.name)} 효과 (${esc(ev.date)}부터 ${t.days}일)</div><div class="big ${save>=0?"save":""}" style="font-size:22px">${save>=0?"":"−"}${won(Math.abs(save))} ${save>=0?"절약":"더 듦"}</div><div class="sub">기존 전기세로 충전했다면 ${won(elec)} (${num(me.since)}km ÷ 평균 ${f.kmkWh}km/kWh = ${num(kwh)}kWh × ${num(f.kwh)}원)</div><div class="sub">${esc(ev.name)} 비용 ${won(share)} (연 ${won(ev.yearCost)} × ${used}/365일 = ${won(cost)}, 두 차 주행거리 비율로 나눈 이 차 몫)</div></div>`}).join("");
+}
+function fuelCard(c){ // 대시보드 '아낀 연료비' 카드
   const fc=fuelCalc(c);
   const f=c.fuel;
-  return fc?`<div class="card"><h3>아낀 연료비 · ${esc(c.nick)} (${esc(f.comp)} 대비)</h3><div class="big save">${won(fc.save)}</div><div class="sub">계산 시작 후 ${num(fc.km)} km · km당 ${num(fc.perKm)}원 절약</div><div class="grid2" style="margin-top:10px"><div><div class="k">휘발유 환산</div><div class="v">${won(fc.gas)}</div><div class="k">${f.kmL}km/L · ${num(f.price)}원/L</div></div><div><div class="k">전기료 환산</div><div class="v">${won(fc.ev)}</div><div class="k">${f.kmkWh}km/kWh · ${num(f.kwh)}원/kWh</div></div></div></div>`:`<div class="card"><h3>아낀 연료비 · ${esc(c.nick)}</h3><div class="sub">주행거리를 입력하면 계산돼요</div></div>`;
+  return fc?`<div class="card"><h3>아낀 연료비 · ${esc(c.nick)} (${esc(f.comp)} 대비)</h3><div class="big save">${won(fc.save)}</div><div class="sub">계산 시작 후 ${num(fc.km)} km · km당 ${num(fc.perKm)}원 절약</div><div class="grid2" style="margin-top:10px"><div><div class="k">휘발유 환산</div><div class="v">${won(fc.gas)}</div><div class="k">${f.kmL}km/L · ${num(f.price)}원/L</div></div><div><div class="k">전기료 환산</div><div class="v">${won(fc.ev)}</div><div class="k">${f.kmkWh}km/kWh · ${num(f.kwh)}원/kWh</div></div></div>${cardSaving(c)}</div>`:`<div class="card"><h3>아낀 연료비 · ${esc(c.nick)}</h3><div class="sub">주행거리를 입력하면 계산돼요</div></div>`;
 }
 function nextCard(c,btn){ // 보험 페이지의 '다음 갱신' 카드 (대시보드에도 같은 내용)
   const n=nextRenew(c);
@@ -869,8 +879,9 @@ document.addEventListener("click",e=>{
   else if(a==="editMount"){const m=db.mounts.find(x=>x.id===id);form("장착 이력 수정",[{k:"date",l:"장착 날짜",t:"date",v:m.date},{k:"km",l:"장착 시 누적 km",t:"number",v:m.km??""}],o=>{m.date=o.date;m.km=o.km===""?null:+o.km;save()})}
   else if(a==="delMount"){if(confirm("이 장착 이력을 삭제할까요?")){db.mounts=db.mounts.filter(x=>x.id!==id);save();render()}}
   else if(a==="addEvent"||a==="editEvent"){const ev=a==="editEvent"?db.events.find(x=>x.id===id):{name:"",date:today(),memo:""};
-    form(a==="addEvent"?"이벤트 추가":"이벤트 수정",[{k:"name",l:"이벤트 이름",v:ev.name,p:"예: 차징카드 구입"},{k:"date",l:"날짜",t:"date",v:ev.date},{k:"memo",l:"메모",t:"area",v:ev.memo}],o=>{
+    form(a==="addEvent"?"이벤트 추가":"이벤트 수정",[{k:"name",l:"이벤트 이름",v:ev.name,p:"예: 차징카드 구입"},{k:"date",l:"날짜",t:"date",v:ev.date},{k:"yearCost",l:"1년 정액 비용(원, 선택 · 차징카드처럼 정액이면 절약액 계산에 씀)",t:"number",v:ev.yearCost||""},{k:"memo",l:"메모",t:"area",v:ev.memo}],o=>{
       if(!o.name||!o.date){alert("이름과 날짜를 입력해 주세요.");return false}
+      o.yearCost=+o.yearCost||0;
       if(a==="addEvent")db.events.push({id:uid(),...o});else Object.assign(ev,o);save()},
       `<div class="sub">그날부터 모든 차가 얼마나 탔는지 계산해요. 그날 기록이 없으면 앞뒤 기록으로 나눠 추정해요.</div>`)}
   else if(a==="delEvent"){if(confirm("이 이벤트를 삭제할까요? (주행 기록은 그대로 남아요)")){db.events=db.events.filter(x=>x.id!==id);save();render()}}
