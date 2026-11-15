@@ -739,6 +739,13 @@ function vMaint(c){
   return h+`</div>`;
 }
 const treadAvg=x=>x.avg??Math.round((x.front+x.rear)/2*100)/100;
+function treadEst(t){ // 트레드 측정 기반: 교체 권장 깊이까지 예상 남은 거리 (km), 못 구하면 null
+  const tr=[...(t.treads||[])].sort((a,b)=>b.date.localeCompare(a.date));
+  if(!tr.length)return null;
+  const l=tr[0],avg=treadAvg(l),nd=+t.newDepth||(t.type==="윈터"?8.5:8.0),wear=nd-avg,lim=t.type==="윈터"?4:3;
+  if(!(wear>0.3&&l.dist>0))return null;
+  return Math.max(avg-lim,0)*(l.dist/wear);
+}
 function treadHtml(t){ // 트레드 깊이 측정 기록(앞·뒤 평균) + 남은 거리 추정
   const tr=[...(t.treads||[])].sort((a,b)=>b.date.localeCompare(a.date));
   if(!tr.length)return"";
@@ -753,7 +760,7 @@ function vTire(c){
   let h=hero(c)+`<div class="card"><div class="acts" style="margin:0"><button class="btn pri" data-act="addTire">＋ 타이어 세트 추가</button></div><div class="note">타이어를 갈아 끼울 때 "장착"을 누르고 날짜와 그때 누적 km를 넣으면, 세트별 누적 주행거리가 자동 계산됩니다.</div></div>`;
   const tireCard=t=>{const s=tireStats(t.id),here=s.on.includes(c.id),other=s.on.filter(i=>i!==c.id).map(i=>(db.cars.find(x=>x.id===i)||{}).nick).filter(Boolean);
     return`<div class="card"><div style="display:flex;justify-content:space-between;gap:8px"><div><div class="t" style="font-weight:600">${esc(t.brand)}</div><div class="sub">${esc(t.type)}${t.size?" · "+esc(t.size):" · 규격 확인 필요"}</div></div><span class="badge ${s.mounted?"on":""}">${here?"장착 중":other.length?esc(other.join("·"))+" 장착 중":"보관"}</span></div>
-    <div class="grid2" style="margin-top:10px"><div><div class="k">구입 후</div><div class="v">${ageText(t.bought)}</div><div class="k">${esc(t.bought||"구입일 미입력")}</div></div><div><div class="k">누적 주행</div><div class="v">${!s.count&&!(+t.baseKm)?"장착 이력 없음":s.unknown?"주행거리 입력 필요":num(s.dist)+" km"}</div>${+t.baseKm?`<div class="k">이전 ${num(t.baseKm)}km 포함</div>`:""}${s.unknown&&s.count?'<div class="k" style="color:var(--warn)">장착 시 km 또는 현재 km 필요</div>':""}</div></div>
+    <div class="grid2" style="margin-top:10px;grid-template-columns:1fr 1fr 1fr;gap:10px"><div><div class="k">구입 후</div><div class="v">${ageText(t.bought)}</div><div class="k">${esc(t.bought||"구입일 미입력")}</div></div><div><div class="k">누적 주행</div><div class="v">${!s.count&&!(+t.baseKm)?"장착 이력 없음":s.unknown?"주행거리 입력 필요":num(s.dist)+" km"}</div>${+t.baseKm?`<div class="k">이전 ${num(t.baseKm)}km 포함</div>`:""}${s.unknown&&s.count?'<div class="k" style="color:var(--warn)">장착 시 km 또는 현재 km 필요</div>':""}</div><div style="text-align:right"><div class="k">남은 주행</div><div class="v">${+t.lifeKm&&!s.unknown?num(Math.max(t.lifeKm-s.dist,0))+" km":"–"}</div>${(()=>{const e=treadEst(t);return`<div class="k" style="margin-top:6px">예상 남은 거리</div><div class="v">${e==null?"–":"약 "+num(e)+" km"}</div>`})()}</div></div>
     ${+t.lifeKm&&!s.unknown?`<div class="bar"><i style="width:${Math.min(100,s.dist/t.lifeKm*100)}%"></i></div><div class="k">예상 수명 ${num(t.lifeKm)}km 중 ${Math.round(s.dist/t.lifeKm*100)}% · 남은 약 ${num(Math.max(t.lifeKm-s.dist,0))}km</div>`:""}
     ${treadHtml(t)}
     ${t.price?`<div class="sub" style="margin-top:6px">구입가 ${esc(t.price)}</div>`:""}${t.note?`<div class="sub">${esc(t.note)}</div>`:""}
