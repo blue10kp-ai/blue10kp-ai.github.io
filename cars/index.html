@@ -776,6 +776,11 @@ function tireHist(t){ // 타이어 한 세트의 이력: 구입 → 장착(어�
   return ev.map(e=>`<div style="display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:13px"><div class="k" style="flex:none;width:80px">${esc(e.d)}</div><div style="flex:1;min-width:0">${e.h}</div></div>`).join("");
 }
 function vTire(c){
+  const ms=carMounts(c).reverse();
+  let mh=`<div class="card"><h3>장착 이력</h3>`;
+  if(!ms.length)mh+=`<div class="empty">이력이 없습니다</div>`;
+  ms.forEach(m=>{const t=db.tires.find(x=>x.id===m.tireId);mh+=`<div class="row"><div><div class="t">${esc(t?t.brand:"(삭제된 타이어)")}</div><div class="sub">${esc(m.date)} · ${m.km==null?'<span style="color:var(--warn)">장착 시 km 입력 필요</span>':num(m.km)+" km"}</div></div><div class="r"><button class="btn sm" data-act="editMount" data-id="${m.id}">수정</button> <button class="btn sm dng" data-act="delMount" data-id="${m.id}">삭제</button></div></div>`});
+  mh+=`</div>`;
   let h=hero(c)+`<div class="card"><div class="acts" style="margin:0"><button class="btn pri" data-act="addTire">＋ 타이어 세트 추가</button></div><div class="note">타이어를 갈아 끼울 때 "장착"을 누르고 날짜와 그때 누적 km를 넣으면, 세트별 누적 주행거리가 자동 계산됩니다.</div></div>`;
   const tireCard=t=>{const s=tireStats(t.id),here=s.on.includes(c.id),other=s.on.filter(i=>i!==c.id).map(i=>(db.cars.find(x=>x.id===i)||{}).nick).filter(Boolean);
     const hist=tireHist(t);
@@ -784,16 +789,13 @@ function vTire(c){
     ${+t.lifeKm&&!s.unknown?`<div class="bar"><i style="width:${Math.min(100,s.dist/t.lifeKm*100)}%"></i></div><div class="k">예상 수명 ${num(t.lifeKm)}km 중 ${Math.round(s.dist/t.lifeKm*100)}% · 남은 약 ${num(Math.max(t.lifeKm-s.dist,0))}km</div>`:""}
     ${treadHtml(t)}
     ${t.price?`<div class="sub" style="margin-top:6px">구입가 ${esc(t.price)}</div>`:""}${t.note?`<div class="sub">${esc(t.note)}</div>`:""}
-    <div class="acts">${here||other.length?"":`<button class="btn sm" data-act="mount" data-id="${t.id}">${esc(c.nick)}에 장착</button>`}<button class="btn sm" data-act="addTread" data-id="${t.id}">트레드 측정</button><button class="btn sm" data-act="editTire" data-id="${t.id}">수정</button><button class="btn sm dng" data-act="delTire" data-id="${t.id}">삭제</button></div></div>${hist?`<div class="card thist"><h3>이력 · ${esc(t.brand)}</h3>${hist}</div>`:""}</div>`};
+    <div class="acts">${here||other.length?"":`<button class="btn sm" data-act="mount" data-id="${t.id}">${esc(c.nick)}에 장착</button>`}<button class="btn sm" data-act="addTread" data-id="${t.id}">트레드 측정</button><button class="btn sm" data-act="editTire" data-id="${t.id}">수정</button><button class="btn sm dng" data-act="delTire" data-id="${t.id}">삭제</button></div></div>${hist?`<div class="card thist"><h3>이력</h3>${hist}</div>`:""}</div>`};
   const cur=mountedTire(c),rest=db.tires.filter(t=>tireStats(t.id).on.length===0),oth=db.tires.filter(t=>{const o=tireStats(t.id).on;return o.length&&!o.includes(c.id)});
   h+=`<div class="sec">장착 중</div>`+(cur?tireCard(cur):`<div class="card"><div class="empty">장착된 타이어가 없습니다. 아래 보관 중 타이어에서 [장착]을 눌러 주세요.</div></div>`);
+  h+=mh; // 장착 이력: 장착 중 바로 아래
   h+=`<div class="sec">보관 중 (${rest.length}) · 두 차 공용</div>`+(rest.length?rest.map(tireCard).join(""):`<div class="card"><div class="empty">보관 중인 타이어가 없습니다</div></div>`);
   if(oth.length)h+=`<div class="sec">다른 차에 장착 중 (${oth.length})</div>`+oth.map(tireCard).join("");
-  const ms=carMounts(c).reverse();
-  h+=`<div class="card"><h3>장착 이력 · ${esc(c.nick)}</h3>`;
-  if(!ms.length)h+=`<div class="empty">이력이 없습니다</div>`;
-  ms.forEach(m=>{const t=db.tires.find(x=>x.id===m.tireId);h+=`<div class="row"><div><div class="t">${esc(t?t.brand:"(삭제된 타이어)")}</div><div class="sub">${esc(m.date)} · ${m.km==null?'<span style="color:var(--warn)">장착 시 km 입력 필요</span>':num(m.km)+" km"}</div></div><div class="r"><button class="btn sm" data-act="editMount" data-id="${m.id}">수정</button> <button class="btn sm dng" data-act="delMount" data-id="${m.id}">삭제</button></div></div>`});
-  return h+`</div>`;
+  return h;
 }
 
 function eventStats(ev,only){ // 이벤트 날짜부터의 주행 (only를 주면 그 차 것만)
