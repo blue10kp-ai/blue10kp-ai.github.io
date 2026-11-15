@@ -624,10 +624,12 @@ function totalCard(){
   const rows=monthTable(),cur=rows[0],prev=rows[1];
   let h=`<div class="card"><h3>전체 합계 (${cs.length}대)</h3><div class="big">${num(totalKm())} km</div><div class="sub">${cs.map(c=>esc(c.nick)+" "+num(lastKm(c))).join(" + ")}</div>`;
   if(cur)h+=`<div class="grid2" style="margin-top:10px"><div><div class="k">${+cur.ym.slice(5)}월${cur.partial?" (진행 중)":""}</div><div class="v">${num(cur.tot)} km</div></div>`+(prev?`<div><div class="k">지난달 ${+prev.ym.slice(5)}월</div><div class="v">${num(prev.tot)} km${cur.diff!=null?" ("+sgn(cur.diff)+")":""}</div></div>`:"")+`</div>`;
+  const fcs=db.cars.map(x=>({x,f:fuelCalc(x)})).filter(r=>r.f);
+  if(fcs.length)h+=`<div class="grid2" style="margin-top:10px">`+fcs.map(r=>`<div><div class="k">아낀 연료비 · ${esc(r.x.nick)}</div><div class="v save">${won(r.f.save)}</div></div>`).join("")+`</div>`+(fcs.length>1?`<div class="sub" style="margin-top:6px">합계 ${won(fcs.reduce((t,r)=>t+r.f.save,0))}</div>`:"");
   return h+`</div>`;
 }
-function insCard(){
-  const rows=db.cars.map(c=>({c,n:nextRenew(c)})).filter(x=>x.n).sort((a,b)=>a.n.days-b.n.days);
+function insCard(c0){
+  const rows=[c0].map(c=>({c,n:nextRenew(c)})).filter(x=>x.n).sort((a,b)=>a.n.days-b.n.days);
   if(!rows.length)return"";
   return`<div class="card"><h3>보험 갱신</h3>`+rows.map(x=>`<div class="row"><div><div class="t">${esc(x.c.nick)}</div><div class="sub">${esc(x.n.last.insurer)} · 다음 갱신 ${x.n.date}</div></div><div class="r v" ${x.n.days<=30?'style="color:var(--warn)"':""}>${dtxt(x.n.days)}</div></div>`).join("")+`</div>`;
 }
@@ -672,14 +674,15 @@ function vHome(c){
   const k=lastKm(c),lo=lastOdo(c),fc=fuelCalc(c),ev=events(c).slice(0,6);
   const empty=db.cars.every(x=>!x.odo.length&&!x.maint.length);
   let h=empty?`<div class="card"><h3>기록 가져오기</h3><div class="sub">저장해 둔 기록 파일(JSON)이 있으면 아래 [기록 불러오기]로 가져오세요. 처음이면 주행거리부터 입력하면 됩니다.</div><div class="acts"><button class="btn pri" data-act="import">기록 불러오기</button></div></div>`:"";
-  h+=hero(c)+`<div class="card"><h3>현재 누적 주행거리</h3><div class="big">${k===null?"아직 입력 안 함":num(k)+" km"}</div><div class="sub">${lo?esc(lo.date)+" 기준":"아래 ＋주행거리로 입력해 주세요"}</div></div>`+totalCard()+evHome()+`
+  h+=hero(c);
+  h+=`<div class="card"><h3>차량 정보${c.plate?" · "+esc(c.plate):""}</h3>${c.notes?`<div class="sub">${esc(c.notes)}</div>`:""}<div class="acts" style="margin-top:8px"><button class="btn" data-act="editCar">정보 수정</button><button class="btn" data-act="photo">내 사진 올리기</button>${c.photo?`<button class="btn" data-act="photoReset">기본 사진으로</button>`:""}</div><div class="acts"><button class="btn dng" data-act="delCar">이 차 삭제</button></div><input type="file" accept="image/*" id="photoIn" hidden></div>`;
+  h+=`<div class="card"><h3>현재 누적 주행거리</h3><div class="big">${k===null?"아직 입력 안 함":num(k)+" km"}</div><div class="sub">${lo?esc(lo.date)+" 기준":"아래 ＋주행거리로 입력해 주세요"}</div></div>`+evHome(c)+`
   <div class="acts" style="margin:0 0 12px"><button class="btn pri" data-act="addOdoForm">＋ 주행거리</button><button class="btn" data-act="addMaint">＋ 정비</button></div>
   <div class="card"><h3>최근 기록</h3>`;
   if(!ev.length)h+=`<div class="empty">아직 기록이 없습니다</div>`;
   ev.forEach(e=>{h+=`<div class="row"><div class="l"><span class="ic">${e.ic}</span><div><div class="t">${esc(e.t)}</div><div class="sub">${esc(e.d)}</div></div></div>${e.r?`<div class="r">${e.r}</div>`:""}</div>`});
-  h+=`</div>`+insCard();
-  h+=fc?`<div class="card"><h3>지금까지 아낀 연료비 (${esc(c.fuel.comp)} 대비)</h3><div class="big save">${won(fc.save)}</div></div>`:`<div class="card"><h3>아낀 연료비</h3><div class="sub">주행거리를 입력하면 계산돼요</div></div>`;
-  h+=`<div class="card"><h3>차량 정보${c.plate?" · "+esc(c.plate):""}</h3>${c.notes?`<div class="sub">${esc(c.notes)}</div>`:""}<div class="acts" style="margin-top:8px"><button class="btn" data-act="editCar">정보 수정</button><button class="btn" data-act="photo">내 사진 올리기</button>${c.photo?`<button class="btn" data-act="photoReset">기본 사진으로</button>`:""}</div><div class="acts"><button class="btn dng" data-act="delCar">이 차 삭제</button></div><input type="file" accept="image/*" id="photoIn" hidden></div>`;
+  h+=`</div>`+insCard(c);
+  h+=fc?`<div class="card"><h3>아낀 연료비 · ${esc(c.nick)} (${esc(c.fuel.comp)} 대비)</h3><div class="big save">${won(fc.save)}</div></div>`:`<div class="card"><h3>아낀 연료비 · ${esc(c.nick)}</h3><div class="sub">주행거리를 입력하면 계산돼요</div></div>`;
   h+=`<div class="card"><h3>기록 파일 (JSON)</h3><div class="sub">이 앱의 기록은 JSON 파일로 저장해 두었다가 언제든 다시 불러올 수 있어요. 두 대 이상 모든 차 기록이 한 파일에 들어갑니다.</div><div class="acts"><button class="btn pri" data-act="export">기록 저장</button><button class="btn" data-act="import">기록 불러오기</button></div><input type="file" accept="application/json" id="impIn" hidden><div class="note">기록은 내 Google Drive(Claude/app/차차차/설정)에 자동으로 저장돼요. 파일로 따로 보관하려면 기록 저장을 누르세요.</div><div class="note">한 번 로그인하면 같은 브라우저에서 다른 앱도 함께 열려요. 로그아웃은 모든 앱에서 됩니다.</div>${installHtml()}<div class="acts"><button class="btn" data-act="logout">로그아웃</button>${legacyRaw()?`<button class="btn dng" data-act="clearLegacy">이 기기에 남은 옛 기록 지우기</button>`:""}</div></div>`;
   return h;
 }
@@ -687,10 +690,11 @@ function vTrip(c){
   const k=lastKm(c),fc=fuelCalc(c),f=c.fuel;
   const asc=[...c.odo].sort((a,b)=>a.date.localeCompare(b.date)||a.km-b.km),desc=[...asc].reverse();
   let h=hero(c)+`<div class="card"><h3>날짜와 현재 누적 km 입력</h3><div class="inl"><div><label>날짜</label><input type="date" id="odoDate" value="${today()}"></div><div><label>누적 km</label><input type="number" inputmode="numeric" id="odoKm" placeholder="예: 123456"></div></div><div class="acts"><button class="btn pri" data-act="addOdo">기록 추가</button></div></div>`;
-  h+=evCard();
+  h+=evCard(c);
+  h+=totalCard();
   h+=monthCard();
-  if(fc)h+=`<div class="card"><h3>아낀 연료비 (${esc(f.comp)} 대비)</h3><div class="big save">${won(fc.save)}</div><div class="sub">계산 시작 후 ${num(fc.km)} km · km당 ${num(fc.perKm)}원 절약</div><div class="grid2" style="margin-top:10px"><div><div class="k">휘발유 환산</div><div class="v">${won(fc.gas)}</div><div class="k">${f.kmL}km/L · ${num(f.price)}원/L</div></div><div><div class="k">전기료 환산</div><div class="v">${won(fc.ev)}</div><div class="k">${f.kmkWh}km/kWh · ${num(f.kwh)}원/kWh</div></div></div></div>`;
-  else h+=`<div class="card"><h3>아낀 연료비</h3><div class="sub">누적 km를 입력하면 계산돼요</div></div>`;
+  if(fc)h+=`<div class="card"><h3>아낀 연료비 · ${esc(c.nick)} (${esc(f.comp)} 대비)</h3><div class="big save">${won(fc.save)}</div><div class="sub">계산 시작 후 ${num(fc.km)} km · km당 ${num(fc.perKm)}원 절약</div><div class="grid2" style="margin-top:10px"><div><div class="k">휘발유 환산</div><div class="v">${won(fc.gas)}</div><div class="k">${f.kmL}km/L · ${num(f.price)}원/L</div></div><div><div class="k">전기료 환산</div><div class="v">${won(fc.ev)}</div><div class="k">${f.kmkWh}km/kWh · ${num(f.kwh)}원/kWh</div></div></div></div>`;
+  else h+=`<div class="card"><h3>아낀 연료비 · ${esc(c.nick)}</h3><div class="sub">누적 km를 입력하면 계산돼요</div></div>`;
   h+=`<div class="card"><h3>계산 기준 <button class="btn sm" style="float:right" data-act="editFuel">변경</button></h3><div class="sub">비교 차종: ${esc(f.comp)} (비교용일 뿐 내 차가 아님)<br>휘발유 ${f.kmL}km/L · ${num(f.price)}원/L · 전기 ${f.kmkWh}km/kWh · ${num(f.kwh)}원/kWh<br>계산 시작 km: ${num(c.startKm||0)}</div><div class="note">연비·단가는 추정값입니다. 실제에 맞게 바꿔 쓰세요.</div></div>`;
   h+=`<div class="card"><h3>주행 기록</h3>`;
   if(!desc.length)h+=`<div class="empty">기록이 없습니다</div>`;
@@ -739,28 +743,28 @@ function vTire(c){
   return h+`</div>`;
 }
 
-function eventStats(ev){ // 이벤트 날짜부터 차별·합산 주행
+function eventStats(ev,only){ // 이벤트 날짜부터의 주행 (only를 주면 그 차 것만)
   const days=Math.max(Math.round(day(today())-day(ev.date)),0);
-  const cars=db.cars.map(c=>{const a=kmAt(c,ev.date),now=lastKm(c),start=a==null?null:Math.round(a);return{c,start,now,since:start==null||now==null?null:Math.round(now-start)}});
+  const cars=(only?[only]:db.cars).map(c=>{const a=kmAt(c,ev.date),now=lastKm(c),start=a==null?null:Math.round(a);return{c,start,now,since:start==null||now==null?null:Math.round(now-start)}});
   const ok=cars.filter(x=>x.since!=null);
   return{days,cars,startTot:ok.reduce((t,x)=>t+x.start,0),sinceTot:ok.reduce((t,x)=>t+x.since,0),nowTot:ok.reduce((t,x)=>t+x.now,0),missing:cars.length-ok.length};
 }
 const evSorted=()=>[...db.events].sort((a,b)=>b.date.localeCompare(a.date));
-function evCard(){
+function evCard(c0){
   let h=`<div class="card"><h3>이벤트 (기준일부터) <button class="btn sm" style="float:right" data-act="addEvent">＋ 추가</button></h3>`;
   if(!db.events.length)h+=`<div class="empty">차징카드 구입 같은 기준일을 추가하면, 그날부터 얼마나 탔는지 보여 드려요</div>`;
-  evSorted().forEach(ev=>{const t=eventStats(ev),cell=(f,k)=>t.cars.map(x=>`<td>${x[k]==null?"–":num(x[k])}</td>`).join("");
+  evSorted().forEach(ev=>{const t=eventStats(ev,c0),one=t.cars.length===1,cell=(f,k)=>t.cars.map(x=>`<td>${x[k]==null?"–":num(x[k])}</td>`).join("");
     h+=`<div class="evb"><div style="display:flex;justify-content:space-between;gap:8px"><div><div class="t" style="font-weight:600">${esc(ev.name)}</div><div class="sub">${esc(ev.date)} · ${t.days}일째${ev.memo?" · "+esc(ev.memo):""}</div></div><div class="r"><button class="btn sm" data-act="editEvent" data-id="${ev.id}">수정</button> <button class="btn sm dng" data-act="delEvent" data-id="${ev.id}">삭제</button></div></div>
-    <div class="tw"><table class="tbl"><tr><th></th>${t.cars.map(x=>`<th>${esc(x.c.nick)}</th>`).join("")}<th>합계</th></tr>
-    <tr><td>그날 누적</td>${cell(0,"start")}<td>${num(t.startTot)}</td></tr>
-    <tr><td>이후 주행</td>${cell(0,"since")}<td><b>${num(t.sinceTot)}</b></td></tr>
-    <tr><td>현재 누적</td>${t.cars.map(x=>`<td>${x.since==null||x.now==null?"–":num(x.now)}</td>`).join("")}<td>${num(t.nowTot)}</td></tr></table></div>
-    ${t.days>0?`<div class="k">합계 하루 평균 ${num(t.sinceTot/t.days)} km</div>`:""}${t.missing?`<div class="k" style="color:var(--warn)">그날 주행 기록이 없는 차는 계산에서 뺐어요</div>`:""}</div>`});
+    <div class="tw"><table class="tbl"><tr><th></th>${t.cars.map(x=>`<th>${esc(x.c.nick)}</th>`).join("")}${one?"":"<th>합계</th>"}</tr>
+    <tr><td>그날 누적</td>${cell(0,"start")}${one?"":`<td>${num(t.startTot)}</td>`}</tr>
+    <tr><td>이후 주행</td>${cell(0,"since")}${one?"":`<td><b>${num(t.sinceTot)}</b></td>`}</tr>
+    <tr><td>현재 누적</td>${t.cars.map(x=>`<td>${x.since==null||x.now==null?"–":num(x.now)}</td>`).join("")}${one?"":`<td>${num(t.nowTot)}</td>`}</tr></table></div>
+    ${t.days>0&&t.sinceTot?`<div class="k">${one?"하루 평균":"합계 하루 평균"} ${num(t.sinceTot/t.days)} km</div>`:""}${t.missing?`<div class="k" style="color:var(--warn)">그날 주행 기록이 없는 차는 계산에서 뺐어요</div>`:""}</div>`});
   return h+`</div>`;
 }
-function evHome(){
+function evHome(c0){
   if(!db.events.length)return"";
-  return`<div class="card"><h3>이벤트 이후 주행</h3>`+evSorted().map(ev=>{const t=eventStats(ev);return`<div class="row"><div><div class="t">${esc(ev.name)}</div><div class="sub">${esc(ev.date)} · ${t.days}일째 · ${t.cars.filter(x=>x.since!=null).map(x=>esc(x.c.nick)+" "+num(x.since)).join(" + ")}</div></div><div class="r v">${num(t.sinceTot)} km</div></div>`}).join("")+`</div>`;
+  return`<div class="card"><h3>이벤트 이후 주행</h3>`+evSorted().map(ev=>{const t=eventStats(ev,c0);return`<div class="row"><div><div class="t">${esc(ev.name)}</div><div class="sub">${esc(ev.date)} · ${t.days}일째 · ${esc(c0.nick)} 기준${t.missing?" · 그날 기록 없음":""}</div></div><div class="r v">${t.missing?"–":num(t.sinceTot)+" km"}</div></div>`}).join("")+`</div>`;
 }
 function vIns(c){
   const n=nextRenew(c),list=[...c.ins].sort((a,b)=>b.date.localeCompare(a.date));
