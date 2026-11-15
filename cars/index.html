@@ -626,8 +626,6 @@ function totalCard(){
   const rows=monthTable(),cur=rows[0],prev=rows[1];
   let h=`<div class="card"><h3>전체 합계 (${cs.length}대)</h3><div class="big">${num(totalKm())} km</div><div class="sub">${cs.map(c=>esc(c.nick)+" "+num(lastKm(c))).join(" + ")}</div>`;
   if(cur)h+=`<div class="grid2" style="margin-top:10px"><div><div class="k">${+cur.ym.slice(5)}월${cur.partial?" (진행 중)":""}</div><div class="v">${num(cur.tot)} km</div></div>`+(prev?`<div><div class="k">지난달 ${+prev.ym.slice(5)}월</div><div class="v">${num(prev.tot)} km${cur.diff!=null?" ("+sgn(cur.diff)+")":""}</div></div>`:"")+`</div>`;
-  const fcs=db.cars.map(x=>({x,f:fuelCalc(x)})).filter(r=>r.f);
-  if(fcs.length)h+=`<div class="grid2" style="margin-top:10px">`+fcs.map(r=>`<div><div class="k">아낀 연료비 · ${esc(r.x.nick)}</div><div class="v save">${won(r.f.save)}</div></div>`).join("")+`</div>`+(fcs.length>1?`<div class="sub" style="margin-top:6px">합계 ${won(fcs.reduce((t,r)=>t+r.f.save,0))}</div>`:"");
   return h+`</div>`;
 }
 function cardSaving(c){ // 정액(1년 비용)이 있는 이벤트: 기존 전기세로 충전했다면 vs 정액 비용(이 차 몫)
@@ -638,6 +636,19 @@ function cardSaving(c){ // 정액(1년 비용)이 있는 이벤트: 기존 전�
     const used=Math.min(t.days,365),cost=Math.round(ev.yearCost*used/365),share=Math.round(cost*me.since/t.sinceTot),
       kwh=me.since/f.kmkWh,elec=Math.round(kwh*f.kwh),save=elec-share;
     return`<div style="border-top:1px solid var(--line);margin-top:12px;padding-top:12px"><div class="k">${esc(ev.name)} 효과 (${esc(ev.date)}부터 ${t.days}일)</div><div class="big ${save>=0?"save":""}" style="font-size:22px">${save>=0?"":"−"}${won(Math.abs(save))} ${save>=0?"절약":"더 듦"}</div><div class="sub">기존 전기세로 충전했다면 ${won(elec)} (${num(me.since)}km ÷ 평균 ${f.kmkWh}km/kWh = ${num(kwh)}kWh × ${num(f.kwh)}원)</div><div class="sub">${esc(ev.name)} 비용 ${won(share)} (연 ${won(ev.yearCost)} × ${used}/365일 = ${won(cost)}, 두 차 주행거리 비율로 나눈 이 차 몫)</div></div>`}).join("");
+}
+function fuelTotalCard(){ // 주행 화면: 두 차를 합친 '아낀 연료비'
+  const rs=db.cars.map(x=>({x,f:fuelCalc(x)})).filter(r=>r.f);
+  if(!rs.length)return"";
+  const sum=k=>rs.reduce((t,r)=>t+r.f[k],0),save=sum("save"),km=sum("km"),gas=sum("gas"),ev=sum("ev");
+  const comps=[...new Set(rs.map(r=>r.x.fuel.comp))].join(" · ");
+  let h=`<div class="card"><h3>아낀 연료비 · 두 차 합계 (${esc(comps)} 대비)</h3><div class="big save">${won(save)}</div><div class="sub">계산 시작 후 ${num(km)} km · km당 ${num(save/(km||1))}원 절약</div><div class="grid2" style="margin-top:10px"><div><div class="k">휘발유 환산</div><div class="v">${won(gas)}</div></div><div><div class="k">전기료 환산</div><div class="v">${won(ev)}</div></div></div><div class="sub" style="margin-top:8px">${rs.map(r=>esc(r.x.nick)+" "+won(r.f.save)).join(" + ")}</div>`;
+  evSorted().filter(e=>+e.yearCost>0).forEach(e=>{
+    const t=eventStats(e);if(!t.sinceTot)return;
+    const used=Math.min(t.days,365),cost=Math.round(e.yearCost*used/365);
+    const elec=Math.round(t.cars.reduce((a,x)=>a+(x.since==null?0:x.since/x.c.fuel.kmkWh*x.c.fuel.kwh),0)),sv=elec-cost;
+    h+=`<div style="border-top:1px solid var(--line);margin-top:12px;padding-top:12px"><div class="k">${esc(e.name)} 효과 (${esc(e.date)}부터 ${t.days}일, 두 차 합계)</div><div class="big ${sv>=0?"save":""}" style="font-size:22px">${sv>=0?"":"−"}${won(Math.abs(sv))} ${sv>=0?"절약":"더 듦"}</div><div class="sub">기존 전기세로 충전했다면 ${won(elec)} (${num(t.sinceTot)}km)</div><div class="sub">${esc(e.name)} 비용 ${won(cost)} (연 ${won(e.yearCost)} × ${used}/365일)</div></div>`});
+  return h+`</div>`;
 }
 function fuelCard(c){ // 대시보드 '아낀 연료비' 카드
   const fc=fuelCalc(c);
@@ -708,6 +719,7 @@ function vTrip(c){
   let h=hero(c)+`<div class="card"><h3>날짜와 현재 누적 km 입력</h3><div class="inl"><div><label>날짜</label><input type="date" id="odoDate" value="${today()}"></div><div><label>누적 km</label><input type="number" inputmode="numeric" id="odoKm" placeholder="예: 123456"></div></div><div class="acts"><button class="btn pri" data-act="addOdo">기록 추가</button></div></div>`;
   h+=evCard(c);
   h+=totalCard();
+  h+=fuelTotalCard();
   h+=monthCard();
   h+=`<div class="card"><h3>계산 기준 <button class="btn sm" style="float:right" data-act="editFuel">변경</button></h3><div class="sub">비교 차종: ${esc(f.comp)} (비교용일 뿐 내 차가 아님)<br>휘발유 ${f.kmL}km/L · ${num(f.price)}원/L · 전기 ${f.kmkWh}km/kWh · ${num(f.kwh)}원/kWh<br>계산 시작 km: ${num(c.startKm||0)}</div><div class="note">연비·단가는 추정값입니다. 실제에 맞게 바꿔 쓰세요.</div></div>`;
   h+=`<div class="card"><h3>주행 기록</h3>`;
