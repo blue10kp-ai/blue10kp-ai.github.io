@@ -705,7 +705,7 @@ function vHome(c){
   const mt=mountedTire(c);
   h+=`<div class="card" style="padding-left:24px;padding-right:24px"><div class="grid2" style="gap:24px"><div><h3>현재 누적 주행거리</h3><div class="big">${k===null?"아직 입력 안 함":num(k)+" km"}</div><div class="sub">${lo?esc(lo.date)+" 기준":"주행 메뉴에서 입력해 주세요"}</div>${evSorted().filter(e=>+e.yearCost>0).map(e=>{const x=eventStats(e,c).cars[0];return x&&x.since!=null?`<div class="k" style="margin-top:12px">${esc(e.name)} 이후</div><div class="v">${num(x.since)} km</div>`:""}).join("")}</div><div><div class="k">장착 중인 타이어</div><div class="v">${mt?esc(mt.brand):"없음"}</div>${mt?`<div class="k" style="margin-top:2px">${mt.size?esc(mt.size):"규격 확인 필요"}</div>`:""}<div class="k" style="margin-top:12px">인도일</div><div class="v">${esc(c.delivered||"–")}</div><div class="k">${ageText(c.delivered)} 됨</div></div></div></div>`;
   h+=fuelCard(c);
-  h+=nextCard(c)+evHome(c)+`
+  h+=nextCard(c)+`
   <div class="card"><h3>최근 기록</h3>`;
   if(!ev.length)h+=`<div class="empty">아직 기록이 없습니다</div>`;
   ev.forEach(e=>{h+=`<div class="row"><div class="l"><span class="ic">${e.ic}</span><div><div class="t">${esc(e.t)}</div><div class="sub">${esc(e.d)}</div></div></div>${e.r?`<div class="r">${e.r}</div>`:""}</div>`});
@@ -787,10 +787,6 @@ function evCard(c0){
     <tr><td>현재 누적</td>${t.cars.map(x=>`<td>${x.since==null||x.now==null?"–":num(x.now)}</td>`).join("")}${one?"":`<td>${num(t.nowTot)}</td>`}</tr></table></div>
     ${t.days>0&&t.sinceTot?`<div class="k">${one?"하루 평균":"합계 하루 평균"} ${num(t.sinceTot/t.days)} km</div>`:""}${t.missing?`<div class="k" style="color:var(--warn)">그날 주행 기록이 없는 차는 계산에서 뺐어요</div>`:""}</div>`});
   return h+`</div>`;
-}
-function evHome(c0){
-  if(!db.events.length)return"";
-  return`<div class="card"><h3>이벤트 이후 주행</h3>`+evSorted().map(ev=>{const t=eventStats(ev,c0);return`<div class="row"><div><div class="t">${esc(ev.name)}</div><div class="sub">${esc(ev.date)} · ${t.days}일째 · ${esc(c0.nick)} 기준${t.missing?" · 그날 기록 없음":""}</div></div><div class="r v">${t.missing?"–":num(t.sinceTot)+" km"}</div></div>`}).join("")+`</div>`;
 }
 function vIns(c){
   const n=nextRenew(c),list=[...c.ins].sort((a,b)=>b.date.localeCompare(a.date));
