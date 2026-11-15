@@ -102,6 +102,8 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
 .today .d{font-size:32px;line-height:1;font-weight:600;font-variant-numeric:tabular-nums}
 .today .m{font-size:13px;color:var(--t3)}
 .quick form{display:flex;gap:8px}.quick input{flex:1}
+.rec .pst{float:right;width:44px;height:64px;object-fit:cover;border-radius:6px;margin:0 0 4px 12px;background:var(--raised)}
+.sheet .pst.big{display:block;width:120px;height:auto;aspect-ratio:2/3;object-fit:cover;border-radius:8px;margin:0 0 12px;background:var(--raised)}
 .quick .btn{height:44px}
 .quick .today{margin-bottom:8px}.quick .today .d{font-size:24px}
 .qres{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}.qres .btn.sm{flex:none}
@@ -199,7 +201,8 @@ const BASE=[
  {id:"video",name:"영상·음악",noteLabel:"한 줄 감상",fields:[
   {k:"type",l:"구분",t:"sel",o:["영화","드라마","공연","음악","기타"]},
   {k:"where",l:"본 곳·들은 곳",t:"text",ph:"극장, 넷플릭스…"},
-  {k:"with",l:"함께한 사람",t:"text"}]},
+  {k:"with",l:"함께한 사람",t:"text"},
+  {k:"info",l:"작품 정보",t:"area"}]},
  {id:"place",name:"맛집·장소",noteLabel:"한 줄 메모",fields:[
   {k:"addr",l:"주소",t:"text"},
   {k:"map",l:"지도 링크",t:"url",ph:"지도 앱에서 공유한 링크를 붙여 넣기"},
@@ -639,6 +642,7 @@ async function startApp(){
   applyTheme();setShell(true);setSync("ok");view="home";render();scrollTo(0,0);
   runPendingGo();
   idxSync();
+  appCfgLoad().then(()=>{if(db&&view==="set"&&!$("#modal").firstChild)render()});
   inboxCheck().then(()=>{if(db&&view==="home"&&!$("#modal").firstChild)render()});
 }
 async function doLogin(other){
@@ -705,7 +709,8 @@ function fieldVal(f,v){
 }
 function recCard(r){
   const k=kindOf(r.kind),tg=r.tags.map(t=>"#"+esc(t)).join(" ");
-  return`<button class="rec${r.del?" trash":""}" data-act="open" data-id="${r.id}">
+  const pu=posterUrl(r,"w154");
+  return`<button class="rec${r.del?" trash":""}" data-act="open" data-id="${r.id}">${pu?`<img class="pst" src="${pu}" alt="" loading="lazy">`:""}
    <div class="top"><span class="kd"><i class="kdot ${esc(r.kind)}"></i>${esc(k.name)}</span><span class="st">${ratingTxt(r.rating)}</span></div>
    <div class="tt">${esc(r.title)}</div>${r.note?`<div class="nt">${esc(r.note)}</div>`:""}${tg?`<div class="tg">${tg}</div>`:""}</button>`;
 }
@@ -743,7 +748,7 @@ function render(){
 }
 function viewHome(){
   const all=sortRecs(live().slice()),part=all.slice(0,limit);
-  return inboxCard()+`<div class="card quick"><div class="today"><span class="d">${new Date().getDate()}</span><span class="m">${new Date().getMonth()+1}월 ${WD[new Date().getDay()]}요일 · 오늘 한 줄</span></div><form id="qf" data-form="quick"><input id="qt" placeholder="한 줄로 (예: 어제 오펜하이머 봤다)" autocomplete="off" maxlength="200"><button class="btn pri" type="submit">저장</button></form>${qLast&&db.records.some(r=>r.id===qLast.id&&!r.del)?`<div class="note qres"><span>${esc(qLast.msg)}</span> <button class="btn sm" data-act="open" data-id="${qLast.id}">고치기</button></div>`:""}</div>`+
+  return inboxCard()+`<div class="card quick"><div class="today"><span class="d">${new Date().getDate()}</span><span class="m">${new Date().getMonth()+1}월 ${WD[new Date().getDay()]}요일 · 오늘 한 줄</span></div><form id="qf" data-form="quick"><input id="qt" placeholder="한 줄로 (예: 어제 오펜하이머 봤다)" autocomplete="off" maxlength="200"><button class="btn pri" type="submit">저장</button></form>${qLast&&db.records.some(r=>r.id===qLast.id&&!r.del)?`<div class="note qres"><span>${esc(qLast.msg)}${qLast.info?`<br><b style="font-weight:600;color:var(--t2)">${esc(qLast.info)}</b>`:""}</span> <button class="btn sm" data-act="open" data-id="${qLast.id}">${qLast.info?"자세히":"고치기"}</button></div>`:""}</div>`+
    (all.length?`<div class="sec" style="margin-top:16px">최근 기록 ${all.length}개</div>`+groupList(part)+(all.length>limit?`<div class="acts"><button class="btn" data-act="more">더 보기</button></div>`:""):
    `<div class="empty">아직 기록이 없어요.<br>가운데 ＋ 를 눌러 첫 기록을 남겨 보세요.<br>제목만 적어도 저장돼요.</div>`);
 }
@@ -797,6 +802,7 @@ function viewSet(){
    <button class="rowbtn" data-act="exp" data-f="json"><span>내보내기 (JSON)</span><span class="r">백업용 ›</span></button>
    <button class="rowbtn" data-act="exp" data-f="csv"><span>내보내기 (엑셀용 표)</span><span class="r">엑셀에서 열기 ›</span></button>
    <button class="rowbtn" data-act="inboxOpen"><span>말만해요 받은편지함</span><span class="r">${s.inboxFile?(inbox.length?inbox.length+"통 대기":"연결됨"):"연결 안 됨"} ›</span></button>
+   <button class="rowbtn" data-act="tmdb"><span>영화 포스터 (TMDB 키)</span><span class="r">${hasTmdb()?"연결됨":"키 없음"} ›</span></button>
    <button class="rowbtn" data-act="trash"><span>휴지통</span><span class="r">${trash}개 ›</span></button></div>
   <div class="card"><h3>도움</h3>
    ${EMBED||isStandalone()?"":`<button class="rowbtn" data-act="install"><span>홈 화면에 추가</span><span class="r">${installEv?"앱 설치":"방법 보기"} ›</span></button>`}
@@ -861,6 +867,7 @@ function saveRec(){
   let r=F.id&&db.records.find(x=>x.id===F.id);
   if(!r){r={id:uid(),ts:now};db.records.push(r)}
   const x={};k.fields.forEach(f=>{const v=String(F.v.x[f.k]??"").trim();if(v)x[f.k]=v});
+  if(r.x&&r.x.poster&&F.kind==="video")x.poster=r.x.poster; // 포스터는 칸에 없으니 고칠 때도 남김
   Object.assign(r,{kind:F.kind,date:F.v.date||today(),title:t,note:F.v.note.trim(),rating:+F.v.rating||0,tags:parseTags(F.v.tags),x,upd:now});
   delete r.del;
   db.settings.lastKind=F.kind;
@@ -870,11 +877,12 @@ function openDetail(id){
   const r=db.records.find(x=>x.id===id);if(!r)return;
   const k=kindOf(r.kind);curRec=id;reportWhere();
   const kv=(a,b)=>b?`<div class="kv"><div class="a">${a}</div><div class="b">${b}</div></div>`:"";
-  openSheet(`<div class="k" style="display:flex;align-items:center;gap:8px"><i class="kdot ${esc(r.kind)}"></i>${esc(k.name)}${r.del?" · 휴지통":""}</div><h3>${esc(r.title)}</h3>
+  const pu=posterUrl(r,"w342");
+  openSheet(`${pu?`<img class="pst big" src="${pu}" alt="">`:""}<div class="k" style="display:flex;align-items:center;gap:8px"><i class="kdot ${esc(r.kind)}"></i>${esc(k.name)}${r.del?" · 휴지통":""}</div><h3>${esc(r.title)}</h3>
    <div class="sub">${esc(dlabel(r.date).replace("오늘 · ",""))} <span class="st">${ratingTxt(r.rating)}</span></div>
    <div style="margin-top:12px">${kv(esc(k.noteLabel),esc(r.note))}${k.fields.map(f=>kv(f.l,fieldVal(f,r.x[f.k]))).join("")}${kv("태그",r.tags.map(t=>"#"+esc(t)).join(" "))}${kv("출처",esc(r.src||""))}</div>
    <div class="acts">${r.del?`<button class="btn" data-act="close">닫기</button><button class="btn pri" data-act="restore" data-id="${r.id}">되살리기</button>`:
-   `<button class="btn dng" data-act="del" data-id="${r.id}">삭제</button><button class="btn" data-act="close">닫기</button><button class="btn pri" data-act="edit" data-id="${r.id}">고치기</button>`}</div>`);
+   `<button class="btn dng" data-act="del" data-id="${r.id}">삭제</button>${wantInfo(r)||wantPoster(r)?`<button class="btn" data-act="findinfo" data-id="${r.id}">작품 검색</button>`:""}<button class="btn" data-act="close">닫기</button><button class="btn pri" data-act="edit" data-id="${r.id}">고치기</button>`}</div>`);
 }
 function delRec(id){
   const r=db.records.find(x=>x.id===id);if(!r)return;
@@ -905,7 +913,7 @@ function openHelp(){
    <b>지우기</b><br>지운 기록은 설정의 휴지통에서 30일 동안 되살릴 수 있어요.<br><br>
    <b>내 기록은 어디에?</b><br>내 Google Drive의 goodday 폴더에 저장되며, 다른 사람은 볼 수 없어요. 이 앱은 앱이 만든 파일만 열 수 있는 권한만 씁니다.<br><br>
    <b>말만해요에서 바로 찾기</b><br>말만해요에서 "맛집 검색해줘"처럼 말하면 말만해요 화면 안에 항상일상의 찾기 결과가 끼워져 나와요. 말만해요 안에서는 그 화면만 보이고, 뒤로가기는 왼쪽 위 버튼으로 해요. 말만해요의 [앱으로 열기]를 누르면 보던 화면 그대로 항상일상이 열립니다.<br><br>
-   <b>한 줄로 적으면 알아서 분류</b><br>홈의 한 줄 칸에 "어제 오펜하이머 봤는데 좋았다", "성수 칼국수 또 가고 싶다"처럼 적으면 영화·맛집·여행·일상 중 알맞은 종류로 제목·날짜·느낌을 채워 저장해요. 말만해요 설정에 Gemini 키를 넣어 두었다면 Gemini가 해석하고(적은 한 줄과 종류 이름만 보내요. 이메일·긴 숫자는 가려요), 키가 없거나 안 될 때는 낱말로 짐작해요. 잘못 나뉘었으면 바로 아래 [고치기]나 [되돌리기]를 누르세요. 아래에는 지금까지 적은 기록이 최근순으로 이어져요.<br><br>
+   <b>한 줄로 적으면 알아서 분류</b><br>홈의 한 줄 칸에 "어제 오펜하이머 봤는데 좋았다", "성수 칼국수 또 가고 싶다"처럼 적으면 영화·맛집·여행·일상 중 알맞은 종류로 제목·날짜·느낌을 채워 저장해요. 말만해요 설정에 Gemini 키를 넣어 두었다면 Gemini가 해석하고(적은 한 줄과 종류 이름만 보내요. 이메일·긴 숫자는 가려요), 키가 없거나 안 될 때는 낱말로 짐작해요. 영화·드라마는 이름으로 검색해서 연도·감독·출연·줄거리를 '작품 정보'에 함께 넣어요(예: "트라이앵글 티빙에서 봤어"). 설정 › 영화 포스터에 TMDB 무료 키를 넣어 두면 포스터도 찾아서 목록과 기록 화면에 보여 줘요(그림은 TMDB에서 바로 불러 보이고 내 드라이브에는 복사하지 않아요). 기록을 누르면 그 내용이 나오고, 예전 기록은 열어서 [작품 검색]을 누르면 찾아 넣어요. 잘못 나뉘었으면 바로 아래 [고치기]나 [되돌리기]를 누르세요. 아래에는 지금까지 적은 기록이 최근순으로 이어져요.<br><br>
    <b>말만해요가 알아듣게 돕는 목록</b><br>기록을 저장할 때 내 드라이브 goodday/설정 폴더에 기록 제목·종류·날짜·장소 이름·태그만 적은 목록(말만해요_색인.json)을 함께 만들어요. 말만해요가 말을 알아듣는 데만 쓰고, 한 줄 메모·사진·주소·가격은 들어가지 않아요.<br><br>
    <b>한 번 로그인하면 다른 앱도 함께</b><br>같은 브라우저에서 내 다른 앱(신한FC, 차차차 등)에 로그인했다면 항상일상도 로그인 화면 없이 바로 열려요. 로그아웃하면 모든 앱에서 함께 로그아웃됩니다. 로그인은 한 시간마다 다시 필요할 수 있어요. 아이폰 홈 화면 앱은 앱마다 따로라 서로 나눠 쓰지 못해요.<br><br>
    <b>함께 쓰려면</b><br>허용된 계정만 로그인할 수 있어요. 쓸 사람을 추가하려면 앱을 관리하는 사람에게 구글 계정(이메일)을 알려 주세요.<br><br>
@@ -942,6 +950,7 @@ document.addEventListener("click",e=>{
   else if(a==="more"){limit+=30;render()}
   else if(a==="close")closeSheet();
   else if(a==="edit"){const r=db.records.find(x=>x.id===id);closeSheet();if(r)openForm(r)}
+  else if(a==="findinfo"){el.disabled=true;el.textContent="찾는 중…";fillInfo(id,"",false).then(async a=>[a,await fillPoster(id,true)]).then(([a,b])=>{if((a||b)&&curRec===id)openDetail(id);else if(!(a||b)&&el.isConnected){el.disabled=false;el.textContent="작품 검색"}})}
   else if(a==="del")delRec(id);
   else if(a==="restore"){const r=db.records.find(x=>x.id===id);if(r){delete r.del;save();toast("되살렸어요");if(el.dataset.keep)openTrash();else closeSheet();render()}}
   else if(a==="undo"){if(toastUndo)toastUndo();$("#toast").hidden=true;toastUndo=null}
@@ -975,6 +984,9 @@ document.addEventListener("click",e=>{
   else if(a==="purge"){if(confirm("이 기록을 완전히 지울까요? 되돌릴 수 없어요.")){db.records=db.records.filter(r=>r.id!==id);save();openTrash();render()}}
   else if(a==="purgeall"){const n=db.records.filter(r=>r.del).length;if(confirm("휴지통의 기록 "+n+"개를 모두 완전히 지울까요? 되돌릴 수 없어요.")){db.records=db.records.filter(r=>!r.del);save();openTrash();render()}}
   else if(a==="inboxOpen")openInbox();
+  else if(a==="tmdb")openTmdb();
+  else if(a==="tmdbSave")tmdbSave();
+  else if(a==="tmdbOff")tmdbOff();
   else if(a==="inboxPick")pickInbox();
   else if(a==="inboxRecheck"){inboxHide=false;inboxCheck().then(()=>{render();openInbox()})}
   else if(a==="inboxOff"){if(confirm("받은편지함 연결을 끊을까요? 이미 넣은 기록은 그대로예요.")){db.settings.inboxFile=null;inbox=[];inboxMsg="";save();render();openInbox()}}
@@ -1044,6 +1056,94 @@ function cleanParsed(o,text){ // Gemini 답을 믿지 않고 모양 검사
   const rating=Math.max(0,Math.min(10,Math.round(+o.rating||0)));
   return{kind:k.id,title:s(o.title,200)||text,note:s(o.note,300),date,rating,tags,x};
 }
+/* 영화·드라마는 이름으로 검색(Gemini + 구글 검색)해서 연도·감독·출연·줄거리를 '작품 정보' 칸에 넣음. 보내는 글: 작품 이름과 사용자가 적은 한 줄(가림 처리). */
+const wantInfo=r=>r&&r.kind==="video"&&!(r.x&&r.x.info)&&(!r.x||!r.x.type||r.x.type==="영화"||r.x.type==="드라마");
+async function aiInfo(r,text,cfg){
+  const kind=(r.x&&r.x.type)||"영화";
+  const prompt="웹 검색으로 아래 작품을 확인해 한국어로 정리해라.\n작품 이름: \""+maskText(r.title).replace(/"/g,"'")+"\" ("+kind+")\n사용자가 적은 말: \""+maskText(text).replace(/"/g,"'")+"\""+
+   "\n같은 이름의 작품이 여럿이면 말 속 단서(볼 곳·시기 등)로 고르고, 단서가 없으면 가장 알려진 작품을 고르되 첫 줄 끝에 (동명 작품이 있을 수 있어요)라고 덧붙여라."+
+   "\n형식(별표·# 같은 기호 없이 일반 글자로):\n첫 줄: 제목(원제) · 연도 · 장르 · 국가\n둘째 줄: 감독: … / 출연: …\n셋째 줄부터: 줄거리 2~3문장(결말 스포일러 금지).\n확실하지 않은 것은 쓰지 말고, 작품을 찾지 못했으면 '찾지 못했어요' 한 줄만 답해라.";
+  const res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(cfg.model||GEMINI_MODEL_DEFAULT)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":cfg.geminiKey},
+    body:JSON.stringify({contents:[{parts:[{text:prompt}]}],tools:[{google_search:{}}],generationConfig:{temperature:0}})});
+  if(!res.ok)throw new Error("Gemini "+res.status);
+  const j=await res.json(),raw=j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts.map(p=>p.text||"").join("");
+  const t=String(raw||"").replace(/[*#`]/g,"").replace(/\n{3,}/g,"\n\n").trim().slice(0,900);
+  return t.length<20||/^찾지 못했어요/.test(t)?"":t;
+}
+/* ---------- 내 설정(TMDB 키) — 내 드라이브 goodday/설정/goodday_설정.json, 메모리에만 들고 있음 ---------- */
+const CFG_FILE="goodday_설정.json";
+let appCfg={acct:"",tmdbKey:""},cfgId=null;
+const hasTmdb=()=>!!(appCfg.tmdbKey&&appCfg.acct===gAcct());
+async function cfgDir(){
+  const fo=await dFolder(true);let d=await dFind(fo,IDX_DIR,true);
+  if(!d)d=await gfetch(DAPI+"/files?fields=id",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:IDX_DIR,mimeType:"application/vnd.google-apps.folder",parents:[fo]})});
+  return d.id;
+}
+async function appCfgLoad(){
+  if(DEMO||!db)return;const acct=gAcct();if(appCfg.acct===acct)return;
+  appCfg={acct,tmdbKey:""};cfgId=null;
+  try{
+    const dir=await cfgDir(),f=await dFind(dir,CFG_FILE,false);
+    if(f){cfgId=f.id;const c=parseDoc(await gfetch(DAPI+"/files/"+f.id+"?alt=media",null,true));if(c&&typeof c.tmdbKey==="string")appCfg.tmdbKey=c.tmdbKey.trim()}
+  }catch(e){}
+}
+async function appCfgSave(){
+  const body=JSON.stringify({v:1,tmdbKey:appCfg.tmdbKey}),dir=await cfgDir();
+  if(!cfgId){const f=await dFind(dir,CFG_FILE,false);if(f)cfgId=f.id}
+  if(cfgId){await gfetch(DUP+"/files/"+cfgId+"?uploadType=media&fields=id",{method:"PATCH",headers:{"Content-Type":"application/json"},body});return}
+  const bd="gc"+uid(),mp="--"+bd+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+JSON.stringify({name:CFG_FILE,parents:[dir],mimeType:"application/json"})+"\r\n--"+bd+"\r\nContent-Type: application/json\r\n\r\n"+body+"\r\n--"+bd+"--";
+  const m=await gfetch(DUP+"/files?uploadType=multipart&fields=id",{method:"POST",headers:{"Content-Type":"multipart/related; boundary="+bd},body:mp});cfgId=m.id;
+}
+/* ---------- 영화 포스터 (TMDB). 포스터 그림 주소 끝부분만 기록에 적고, 그림은 TMDB에서 바로 불러 보임(내 드라이브에 복사 안 함) ---------- */
+const TMDB="https://api.themoviedb.org/3",TMDB_IMG="https://image.tmdb.org/t/p/";
+const tmdbGet=(path,key,params)=>{
+  const u=new URL(TMDB+path);Object.entries(params||{}).forEach(([k,v])=>u.searchParams.set(k,v));
+  const h={};if(/^eyJ/.test(key))h.Authorization="Bearer "+key;else u.searchParams.set("api_key",key);
+  return fetch(u.toString(),{headers:h}).then(r=>{if(!r.ok)throw new Error("TMDB "+r.status);return r.json()});
+};
+const wantPoster=r=>hasTmdb()&&r&&r.kind==="video"&&!(r.x&&r.x.poster)&&(!r.x||!r.x.type||r.x.type==="영화"||r.x.type==="드라마");
+async function findPoster(r){ // 반환: 포스터 경로("/abc.jpg") 또는 ""
+  const tv=r.x&&r.x.type==="드라마",yr=((String((r.x&&r.x.info)||"").split("\n")[0]||"").match(/\b(19|20)\d{2}\b/)||[])[0];
+  const d=await tmdbGet(tv?"/search/tv":"/search/movie",appCfg.tmdbKey,{query:r.title.slice(0,80),language:"ko-KR",include_adult:"false"});
+  const list=(d.results||[]).filter(x=>x.poster_path);
+  const pick=(yr&&list.find(x=>String(x.release_date||x.first_air_date||"").startsWith(yr)))||list[0];
+  return pick?pick.poster_path:"";
+}
+async function fillPoster(id,quiet){
+  const r=db&&db.records.find(x=>x.id===id);if(!r||!wantPoster(r))return false;
+  try{
+    const p=await findPoster(r);const r2=db&&db.records.find(x=>x.id===id);if(!r2)return false;
+    if(!p){if(!quiet)toast("포스터를 찾지 못했어요");return false}
+    r2.x=r2.x||{};r2.x.poster=p;r2.upd=Date.now();save();return true;
+  }catch(e){if(!quiet)toast("포스터를 못 불러왔어요");return false}
+}
+const posterUrl=(r,w)=>r.x&&/^\/[\w.-]+$/.test(r.x.poster||"")?TMDB_IMG+w+r.x.poster:"";
+function openTmdb(){
+  openSheet(`<h3>영화 포스터 (TMDB)</h3>
+   <div class="sub" style="margin-top:4px">영화·드라마를 적으면 포스터를 찾아 기록에 보여 줘요. TMDB 무료 키가 있어야 해요.</div>
+   <div class="kv" style="margin-top:16px"><div class="a">상태</div><div class="b">${hasTmdb()?"연결됨":"키 없음"}</div></div>
+   <label for="tmdbk">TMDB API 키 (직접 발급)</label><input id="tmdbk" type="password" autocomplete="off" placeholder="${hasTmdb()?"새 키로 바꾸려면 여기에 붙여 넣기":"키를 붙여 넣기"}">
+   <div class="note" id="tmdbm">발급: themoviedb.org 가입 → 설정 → API → 'API 키' 또는 'API 읽기 액세스 토큰'을 복사해 넣어요. 키는 내 드라이브 goodday/설정 폴더에만 저장돼요.</div>
+   <div class="acts"><button class="btn" data-act="close">닫기</button>${hasTmdb()?`<button class="btn dng" data-act="tmdbOff">키 지우기</button>`:""}<button class="btn pri" data-act="tmdbSave">저장</button></div>`);
+}
+async function tmdbSave(){
+  const k=($("#tmdbk").value||"").trim(),m=$("#tmdbm");if(!k){m.textContent="키를 붙여 넣어 주세요";return}
+  m.textContent="확인하는 중…";
+  try{await tmdbGet("/configuration",k)}catch(e){m.style.color="var(--bad)";m.textContent="이 키로는 TMDB에 연결되지 않아요. 키를 다시 확인해 주세요.";return}
+  try{appCfg={acct:gAcct(),tmdbKey:k};await appCfgSave();toast("포스터 연결을 저장했어요");closeSheet();if(view==="set")render()}
+  catch(e){m.style.color="var(--bad)";m.textContent="키는 맞지만 저장하지 못했어요. 다시 시도해 주세요."}
+}
+async function tmdbOff(){try{appCfg={acct:gAcct(),tmdbKey:""};await appCfgSave();toast("키를 지웠어요");closeSheet();if(view==="set")render()}catch(e){toast("지우지 못했어요")}}
+async function fillInfo(id,text,quiet){ // 기록 하나에 작품 정보 채우기. 반환: 넣었으면 true
+  const r=db&&db.records.find(x=>x.id===id);if(!r||!wantInfo(r))return false;
+  try{
+    const cfg=await loadGemini();if(!cfg||!cfg.geminiKey){if(!quiet)toast("말만해요 설정에 Gemini 키가 있어야 작품을 검색해요");return false}
+    const t=await aiInfo(r,text||r.title,cfg);
+    const r2=db&&db.records.find(x=>x.id===id);if(!r2)return false;
+    if(!t){if(!quiet)toast("작품 정보를 찾지 못했어요");return false}
+    r2.x=r2.x||{};r2.x.info=t;r2.upd=Date.now();save();return true;
+  }catch(e){if(!quiet)toast("작품 정보를 못 불러왔어요");return false}
+}
 async function quickSave(text){
   if(qBusy)return;qBusy=true;
   const btn=document.querySelector("#qf .btn");if(btn){btn.disabled=true;btn.textContent="해석 중…"}
@@ -1059,6 +1159,14 @@ async function quickSave(text){
   db.records.push(rec);save();
   qLast={id:rec.id,msg:kindOf(rec.kind).name+"으로 저장했어요"+(how==="ai"?"":" · "+why)};
   render();toast(kindOf(rec.kind).name+"으로 저장했어요",()=>{db.records=db.records.filter(r=>r.id!==rec.id);qLast=null;save();render()});
+  if(how==="ai"&&(wantInfo(rec)||wantPoster(rec))){ // 영화·드라마: 작품 검색해서 정보·포스터 채움
+    const q=qLast,base=q.msg;q.msg+=" · 작품 정보 찾는 중…";render();
+    const okI=await fillInfo(rec.id,text,true),okP=await fillPoster(rec.id,true); // 정보 먼저(연도로 같은 이름 작품 구분)
+    if(qLast===q){const r=db&&db.records.find(x=>x.id===rec.id);
+      if(okI&&r){q.msg=base;q.info=String(r.x.info).split("\n")[0]}else q.msg=base+(okP?"":" · 작품 정보는 찾지 못했어요");
+      if(okP&&!okI)q.msg=base+" · 포스터를 넣었어요";
+      if(view==="home"&&!$("#modal").firstChild)render()}
+  }
 }
 document.addEventListener("submit",e=>{
   if(e.target.dataset.form==="quick"){
