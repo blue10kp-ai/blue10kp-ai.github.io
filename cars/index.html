@@ -657,14 +657,14 @@ function fuelCard(c){ // 대시보드 '아낀 연료비' 카드
 }
 function nextCard(c,btn){ // 보험 페이지의 '다음 갱신' 카드 (대시보드에도 같은 내용)
   const n=nextRenew(c);
-  return`<div class="card"><h3>다음 갱신</h3>`+(n?`<div class="big"${n.days<=30?' style="color:var(--warn)"':""}>${dtxt(n.days)}</div><div class="grid2" style="margin-top:12px"><div><div class="k">갱신일</div><div class="v" style="font-size:19px;margin-top:2px">${esc(n.date)}</div></div><div><div class="k">지난 보험료</div><div class="v" style="font-size:19px;margin-top:2px">${won(n.last.premium)}</div></div></div><div class="sub" style="margin-top:8px">${esc(n.last.insurer)}</div>`:`<div class="sub">보험 기록을 추가하면 갱신일을 알려 드려요</div>`)+(btn?`<div class="acts"><button class="btn pri" data-act="addIns">＋ 보험 기록 추가</button></div>`:"")+`</div>`;
+  return`<div class="card"><h3>다음 갱신</h3>`+(n?`<div class="big"${n.days<=30?' style="color:var(--warn)"':""}>${dtxt(n.days)}</div><div class="grid2" style="margin-top:12px"><div><div class="k">갱신일</div><div class="v" style="font-size:19px;margin-top:2px">${esc(n.date)}</div></div><div><div class="k">지난 보험료</div><div class="v" style="font-size:19px;margin-top:2px">${won(n.last.premium)}</div></div></div><div class="sub" style="margin-top:8px">${esc(n.last.insurer)}</div>`:`<div class="sub">보험 기록을 추가하면 갱신일을 알려 드려요</div>`)+(btn?`<div class="acts"><button class="btn pri" data-act="addIns">＋ 보험 기록 추가</button></div>`:`<div class="acts"><button class="btn sm" data-act="view" data-id="ins">보험 내역 · 기록 추가</button></div>`)+`</div>`;
 }
 
 /* ---------- 화면 ---------- */
 function render(){
   if(!db)return;
   $("#cars").innerHTML=db.cars.map(c=>`<button class="chip ${c.id===db.sel?"on":""}" data-act="sel" data-id="${c.id}">${esc(c.nick)}</button>`).join("")+`<button class="chip" data-act="addCar">＋</button>`;
-  const T=[["home","대시보드"],["trip","주행"],["maint","정비"],["tire","타이어"],["ins","보험"]];
+  const T=[["home","대시보드"],["trip","주행"],["maint","정비"],["tire","타이어"]];
   const IC={home:'<rect x="3" y="3" width="7.5" height="9" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="5.5" rx="1.5"/><rect x="13.5" y="12" width="7.5" height="9" rx="1.5"/><rect x="3" y="15.5" width="7.5" height="5.5" rx="1.5"/>',trip:'<path d="M3.3 17a9 9 0 1 1 17.4 0"/><path d="M12 14l4-5"/><circle cx="12" cy="14" r="1"/>',maint:'<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>',tire:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v6M12 15v6M3 12h6M15 12h6"/>',ins:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>'};
   $("#nav").innerHTML=T.map(([k,l])=>`<button class="${view===k?"on":""}" data-act="view" data-id="${k}"><span class="ni"><svg viewBox="0 0 24 24" aria-hidden="true">${IC[k]}</svg></span>${l}</button>`).join("");
   const c=car();
