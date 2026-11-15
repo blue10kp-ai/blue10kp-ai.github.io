@@ -23,6 +23,7 @@
 <style>
 /* 신한FC m과 같은 디자인 기준(tokens.css·design.css)을 이 파일 안에 옮겨 둔 것. 신한FC 파일은 링크하지 않음 */
 :root{
+  color-scheme:light dark;
   --bg:#F4F5F7;--surface:#FFFFFF;--raised:#F0F2F5;--line:rgba(20,30,50,.10);
   --t1:#151A22;--t2:#4B5361;--t3:#6B7382;
   --accent:#1F4E8C;--accent-ink:#FFFFFF;--accent-weak:rgba(31,78,140,.08);
@@ -37,6 +38,7 @@
   --accent:#7FAEF0;--accent-ink:#0F1217;--accent-weak:rgba(127,174,240,.12);
   --ok:#4CC282;--warn:#E0A04A;--bad:#EF7A6C}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{overscroll-behavior-y:none}
 html.lock{overflow:hidden;overscroll-behavior-y:contain}
 html,body{font-family:var(--font);font-size:15px;line-height:1.5;background:var(--bg);color:var(--t1)}
 body{margin:0;padding-bottom:calc(var(--navh) + 36px + env(safe-area-inset-bottom));font-variant-numeric:tabular-nums}
@@ -104,6 +106,7 @@ nav .ni{display:block;line-height:0}
 nav .ni svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 nav button.on{color:var(--accent)}
 nav button.on::before{content:"";position:absolute;top:-1px;left:28%;right:28%;height:2px;background:var(--accent);border-radius:0 0 2px 2px}
+@media (prefers-color-scheme:dark){nav{background:var(--bg)}}
 /* 입력 창(시트) */
 .modal{position:fixed;inset:0;background:rgba(10,15,25,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center}
 .sheet{background:var(--surface);color:var(--t1);border-radius:20px 20px 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.18);width:100%;max-width:640px;max-height:90vh;overflow:auto;padding:8px 16px 16px;animation:up var(--t-in) var(--ease)}
