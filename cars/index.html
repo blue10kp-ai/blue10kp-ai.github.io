@@ -45,6 +45,13 @@ button{color:inherit;cursor:pointer}
 /* 상단 바: 색 없이 표면 + 헤어라인 */
 header{position:sticky;top:0;z-index:5;background:var(--surface);color:var(--t1);border-bottom:1px solid var(--line);padding:calc(8px + env(safe-area-inset-top)) 16px 8px;min-height:56px;display:flex;align-items:center;font-size:17px;font-weight:600;cursor:pointer}
 .wrap{padding:16px 16px 0;max-width:640px;margin:0 auto}
+.wrap.wide{max-width:1040px}
+.wrap.wide>.hero,.wrap.wide>.card{max-width:640px;margin-left:auto;margin-right:auto}
+.tgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin-bottom:8px}
+.tgrid .card{margin-bottom:0}
+.thist h3{margin:0 0 4px}
+.thist>div:first-of-type{border-top:0}
+@media(min-width:880px){.tgrid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start;gap:12px}}
 /* 차 고르기: 바탕 칸 안에서 선택만 흰색 */
 .cars{display:flex;gap:2px;background:var(--raised);border-radius:var(--r-ctl);padding:2px;margin:12px 16px 0}
 @media(min-width:672px){.cars{max-width:608px;margin:12px auto 0}}
@@ -668,6 +675,7 @@ function render(){
   const IC={home:'<rect x="3" y="3" width="7.5" height="9" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="5.5" rx="1.5"/><rect x="13.5" y="12" width="7.5" height="9" rx="1.5"/><rect x="3" y="15.5" width="7.5" height="5.5" rx="1.5"/>',trip:'<path d="M3.3 17a9 9 0 1 1 17.4 0"/><path d="M12 14l4-5"/><circle cx="12" cy="14" r="1"/>',maint:'<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>',tire:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v6M12 15v6M3 12h6M15 12h6"/>',ins:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>'};
   $("#nav").innerHTML=T.map(([k,l])=>`<button class="${view===k?"on":""}" data-act="view" data-id="${k}"><span class="ni"><svg viewBox="0 0 24 24" aria-hidden="true">${IC[k]}</svg></span>${l}</button>`).join("");
   const c=car();
+  $("#main").classList.toggle("wide",view==="tire");
   $("#main").innerHTML=({home:vHome,trip:vTrip,maint:vMaint,tire:vTire,ins:vIns,summary:vSummary}[view])(c);
   notifyWhere();
 }
@@ -756,15 +764,30 @@ function treadHtml(t){ // 트레드 깊이 측정 기록(앞·뒤 평균) + 남�
   if(Math.abs(l.front-l.rear)>=1)h+=`<div class="k" style="color:var(--warn)">앞뒤 깊이 차이가 1mm 이상이에요. 위치 교환을 권해요.</div>`;
   return h;
 }
+function tireHist(t){ // 타이어 한 세트의 이력: 구입 → 장착(어느 차, 그때 누적 km, 구간 주행) → 트레드 측정(남은 깊이)
+  const ev=[],lim=t.type==="윈터"?4:3;
+  if(t.bought)ev.push({d:t.bought,o:0,h:`<b>구입</b>${t.price?" · "+esc(t.price):""}${+t.baseKm?`<div class="k">앱에 기록하기 전 ${num(t.baseKm)} km 탐</div>`:""}`});
+  db.cars.forEach(car=>{const ms=carMounts(car);ms.forEach((m,i)=>{
+    if(m.tireId!==t.id)return;
+    const nx=ms[i+1],endKm=nx?nx.km:lastKm(car),dist=m.km==null||endKm==null?null:Math.max(endKm-m.km,0);
+    const tail=nx?`${esc(nx.date)} 교체`:"현재 장착 중";
+    ev.push({d:m.date,o:1,h:`<b>장착</b> · ${esc(car.nick)} · 장착 시 ${m.km==null?'<span style="color:var(--warn)">km 입력 필요</span>':num(m.km)+" km"}<div class="k">${tail}${dist==null?"":" · "+num(dist)+" km 주행"}</div>`})})});
+  (t.treads||[]).forEach(x=>{const avg=treadAvg(x),left=Math.round((avg-lim)*100)/100;
+    ev.push({d:x.date,o:2,h:`<b>트레드 측정</b> · ${num(x.km)} km 시점 · 평균 <b>${avg} mm</b> <span class="k">(앞 ${x.front} / 뒤 ${x.rear})</span><div class="k">교체 권장(${lim}mm)까지 ${left>0?left+" mm 남음":"도달"}</div>`})});
+  if(!ev.length)return"";
+  ev.sort((a,b)=>a.d.localeCompare(b.d)||a.o-b.o);
+  return ev.map(e=>`<div style="display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:13px"><div class="k" style="flex:none;width:80px">${esc(e.d)}</div><div style="flex:1;min-width:0">${e.h}</div></div>`).join("");
+}
 function vTire(c){
   let h=hero(c)+`<div class="card"><div class="acts" style="margin:0"><button class="btn pri" data-act="addTire">＋ 타이어 세트 추가</button></div><div class="note">타이어를 갈아 끼울 때 "장착"을 누르고 날짜와 그때 누적 km를 넣으면, 세트별 누적 주행거리가 자동 계산됩니다.</div></div>`;
   const tireCard=t=>{const s=tireStats(t.id),here=s.on.includes(c.id),other=s.on.filter(i=>i!==c.id).map(i=>(db.cars.find(x=>x.id===i)||{}).nick).filter(Boolean);
-    return`<div class="card"><div style="display:flex;justify-content:space-between;gap:8px"><div><div class="t" style="font-weight:600">${esc(t.brand)}</div><div class="sub">${esc(t.type)}${t.size?" · "+esc(t.size):" · 규격 확인 필요"}</div></div><span class="badge ${s.mounted?"on":""}">${here?"장착 중":other.length?esc(other.join("·"))+" 장착 중":"보관"}</span></div>
+    const hist=tireHist(t);
+    return`<div class="tgrid"><div class="card"><div style="display:flex;justify-content:space-between;gap:8px"><div><div class="t" style="font-weight:600">${esc(t.brand)}</div><div class="sub">${esc(t.type)}${t.size?" · "+esc(t.size):" · 규격 확인 필요"}</div></div><span class="badge ${s.mounted?"on":""}">${here?"장착 중":other.length?esc(other.join("·"))+" 장착 중":"보관"}</span></div>
     <div class="grid2" style="margin-top:10px;grid-template-columns:1fr 1fr 1fr;gap:10px"><div><div class="k">구입 후</div><div class="v">${ageText(t.bought)}</div><div class="k">${esc(t.bought||"구입일 미입력")}</div></div><div><div class="k">누적 주행</div><div class="v">${!s.count&&!(+t.baseKm)?"장착 이력 없음":s.unknown?"주행거리 입력 필요":num(s.dist)+" km"}</div>${+t.baseKm?`<div class="k">이전 ${num(t.baseKm)}km 포함</div>`:""}${s.unknown&&s.count?'<div class="k" style="color:var(--warn)">장착 시 km 또는 현재 km 필요</div>':""}</div><div style="text-align:right"><div class="k">남은 주행</div><div class="v">${+t.lifeKm&&!s.unknown?num(Math.max(t.lifeKm-s.dist,0))+" km":"–"}</div>${(()=>{const e=treadEst(t);return`<div class="k" style="margin-top:6px">예상 남은 거리</div><div class="v">${e==null?"–":"약 "+num(e)+" km"}</div>`})()}</div></div>
     ${+t.lifeKm&&!s.unknown?`<div class="bar"><i style="width:${Math.min(100,s.dist/t.lifeKm*100)}%"></i></div><div class="k">예상 수명 ${num(t.lifeKm)}km 중 ${Math.round(s.dist/t.lifeKm*100)}% · 남은 약 ${num(Math.max(t.lifeKm-s.dist,0))}km</div>`:""}
     ${treadHtml(t)}
     ${t.price?`<div class="sub" style="margin-top:6px">구입가 ${esc(t.price)}</div>`:""}${t.note?`<div class="sub">${esc(t.note)}</div>`:""}
-    <div class="acts">${here||other.length?"":`<button class="btn sm" data-act="mount" data-id="${t.id}">${esc(c.nick)}에 장착</button>`}<button class="btn sm" data-act="addTread" data-id="${t.id}">트레드 측정</button><button class="btn sm" data-act="editTire" data-id="${t.id}">수정</button><button class="btn sm dng" data-act="delTire" data-id="${t.id}">삭제</button></div></div>`};
+    <div class="acts">${here||other.length?"":`<button class="btn sm" data-act="mount" data-id="${t.id}">${esc(c.nick)}에 장착</button>`}<button class="btn sm" data-act="addTread" data-id="${t.id}">트레드 측정</button><button class="btn sm" data-act="editTire" data-id="${t.id}">수정</button><button class="btn sm dng" data-act="delTire" data-id="${t.id}">삭제</button></div></div>${hist?`<div class="card thist"><h3>이력 · ${esc(t.brand)}</h3>${hist}</div>`:""}</div>`};
   const cur=mountedTire(c),rest=db.tires.filter(t=>tireStats(t.id).on.length===0),oth=db.tires.filter(t=>{const o=tireStats(t.id).on;return o.length&&!o.includes(c.id)});
   h+=`<div class="sec">장착 중</div>`+(cur?tireCard(cur):`<div class="card"><div class="empty">장착된 타이어가 없습니다. 아래 보관 중 타이어에서 [장착]을 눌러 주세요.</div></div>`);
   h+=`<div class="sec">보관 중 (${rest.length}) · 두 차 공용</div>`+(rest.length?rest.map(tireCard).join(""):`<div class="card"><div class="empty">보관 중인 타이어가 없습니다</div></div>`);
