@@ -103,6 +103,8 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
 .today .m{font-size:13px;color:var(--t3)}
 .quick form{display:flex;gap:8px}.quick input{flex:1}
 .quick .btn{height:44px}
+.quick .today{margin-bottom:8px}.quick .today .d{font-size:24px}
+.qres{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}.qres .btn.sm{flex:none}
 /* 하단 메뉴 */
 nav{position:fixed;left:0;right:0;bottom:0;z-index:12;display:flex;background:var(--surface);border-top:1px solid var(--line);padding:0 8px max(0px,calc(env(safe-area-inset-bottom) - 10px))}
 nav button{flex:1;min-height:var(--navh);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:0;border-radius:0;background:none;position:relative;font-size:11px;font-weight:500;color:var(--t3)}
@@ -741,7 +743,7 @@ function render(){
 }
 function viewHome(){
   const all=sortRecs(live().slice()),part=all.slice(0,limit);
-  return inboxCard()+`<div class="card quick"><div class="today"><span class="d">${new Date().getDate()}</span><span class="m">${new Date().getMonth()+1}월 ${WD[new Date().getDay()]}요일 · 오늘 한 줄</span></div><form id="qf" data-form="quick"><input id="qt" placeholder="오늘은 어땠나요?" autocomplete="off" maxlength="200"><button class="btn pri" type="submit">저장</button></form></div>`+
+  return inboxCard()+`<div class="card quick"><div class="today"><span class="d">${new Date().getDate()}</span><span class="m">${new Date().getMonth()+1}월 ${WD[new Date().getDay()]}요일 · 오늘 한 줄</span></div><form id="qf" data-form="quick"><input id="qt" placeholder="한 줄로 (예: 어제 오펜하이머 봤다)" autocomplete="off" maxlength="200"><button class="btn pri" type="submit">저장</button></form>${qLast&&db.records.some(r=>r.id===qLast.id&&!r.del)?`<div class="note qres"><span>${esc(qLast.msg)}</span> <button class="btn sm" data-act="open" data-id="${qLast.id}">고치기</button></div>`:""}</div>`+
    (all.length?`<div class="sec" style="margin-top:16px">최근 기록 ${all.length}개</div>`+groupList(part)+(all.length>limit?`<div class="acts"><button class="btn" data-act="more">더 보기</button></div>`:""):
    `<div class="empty">아직 기록이 없어요.<br>가운데 ＋ 를 눌러 첫 기록을 남겨 보세요.<br>제목만 적어도 저장돼요.</div>`);
 }
@@ -903,6 +905,7 @@ function openHelp(){
    <b>지우기</b><br>지운 기록은 설정의 휴지통에서 30일 동안 되살릴 수 있어요.<br><br>
    <b>내 기록은 어디에?</b><br>내 Google Drive의 goodday 폴더에 저장되며, 다른 사람은 볼 수 없어요. 이 앱은 앱이 만든 파일만 열 수 있는 권한만 씁니다.<br><br>
    <b>말만해요에서 바로 찾기</b><br>말만해요에서 "맛집 검색해줘"처럼 말하면 말만해요 화면 안에 항상일상의 찾기 결과가 끼워져 나와요. 말만해요 안에서는 그 화면만 보이고, 뒤로가기는 왼쪽 위 버튼으로 해요. 말만해요의 [앱으로 열기]를 누르면 보던 화면 그대로 항상일상이 열립니다.<br><br>
+   <b>한 줄로 적으면 알아서 분류</b><br>홈의 한 줄 칸에 "어제 오펜하이머 봤는데 좋았다", "성수 칼국수 또 가고 싶다"처럼 적으면 영화·맛집·여행·일상 중 알맞은 종류로 제목·날짜·느낌을 채워 저장해요. 말만해요 설정에 Gemini 키를 넣어 두었다면 Gemini가 해석하고(적은 한 줄과 종류 이름만 보내요. 이메일·긴 숫자는 가려요), 키가 없거나 안 될 때는 낱말로 짐작해요. 잘못 나뉘었으면 바로 아래 [고치기]나 [되돌리기]를 누르세요. 아래에는 지금까지 적은 기록이 최근순으로 이어져요.<br><br>
    <b>말만해요가 알아듣게 돕는 목록</b><br>기록을 저장할 때 내 드라이브 goodday/설정 폴더에 기록 제목·종류·날짜·장소 이름·태그만 적은 목록(말만해요_색인.json)을 함께 만들어요. 말만해요가 말을 알아듣는 데만 쓰고, 한 줄 메모·사진·주소·가격은 들어가지 않아요.<br><br>
    <b>한 번 로그인하면 다른 앱도 함께</b><br>같은 브라우저에서 내 다른 앱(신한FC, 차차차 등)에 로그인했다면 항상일상도 로그인 화면 없이 바로 열려요. 로그아웃하면 모든 앱에서 함께 로그아웃됩니다. 로그인은 한 시간마다 다시 필요할 수 있어요. 아이폰 홈 화면 앱은 앱마다 따로라 서로 나눠 쓰지 못해요.<br><br>
    <b>함께 쓰려면</b><br>허용된 계정만 로그인할 수 있어요. 쓸 사람을 추가하려면 앱을 관리하는 사람에게 구글 계정(이메일)을 알려 주세요.<br><br>
@@ -981,13 +984,87 @@ document.addEventListener("click",e=>{
   else if(a==="help")openHelp();
   else if(a==="logout")logout();
 });
+/* ---------- 한 줄 → 종류 맞춰 기록 (Gemini 먼저, 안 되면 낱말 규칙) ----------
+   Gemini 키는 말만해요 설정(말만해요_설정.json)의 것을 같이 씀. 메모리에만 두고 어디에도 복사하지 않음(app\_공통\제미나이연결.md).
+   보내는 글: 사용자가 적은 한 줄(이메일·긴 숫자는 가림)과 종류·칸 이름, 오늘 날짜뿐. 기존 기록은 보내지 않음. */
+const GEMINI_MODEL_DEFAULT="gemini-2.5-flash";
+let gcfg=null,gcfgAt=0,qBusy=false,qLast=null; // qLast: 방금 저장한 기록 안내 {id,msg}
+async function loadGemini(){
+  const acct=gAcct();
+  if(gcfg&&gcfg.acct===acct&&gcfg.geminiKey)return gcfg;
+  if(gcfg&&gcfg.acct===acct&&Date.now()-gcfgAt<300000)return gcfg; // 키 없음/못 읽음: 5분은 다시 찾지 않음
+  gcfgAt=Date.now();gcfg={acct,geminiKey:"",model:GEMINI_MODEL_DEFAULT};
+  try{
+    const q="name='말만해요_설정.json' and trashed=false";
+    const d=await gfetch(DAPI+"/files?pageSize=5&orderBy=modifiedTime desc&fields="+encodeURIComponent("files(id)")+"&q="+encodeURIComponent(q));
+    for(const f of d.files||[]){
+      try{const c=parseDoc(await gfetch(DAPI+"/files/"+f.id+"?alt=media",null,true));
+        if(c&&typeof c.geminiKey==="string"&&c.geminiKey.trim()){gcfg.geminiKey=c.geminiKey.trim();if(c.model)gcfg.model=String(c.model);break}}catch(e){if(e.message==="GOOGLE_AUTH")throw e}
+    }
+  }catch(e){}
+  return gcfg;
+}
+const maskText=t=>String(t).replace(/[\w.+-]+@[\w-]+(\.[\w-]+)+/g,"[이메일]").replace(/\d[\d\s-]{6,}\d/g,"[번호]");
+function ruleKind(t){ // 규칙으로 짐작
+  const has=re=>re.test(t);
+  if(has(/영화|드라마|시리즈|넷플릭스|왓챠|디즈니|티빙|웨이브|극장|영화관|봤|시청|공연|뮤지컬|콘서트|전시|앨범|노래|음악|들었/))return"video";
+  if(has(/맛집|식당|카페|커피|먹었|맛있|맛없|점심|저녁|아침|브런치|칼국수|국밥|고기|파스타|피자|치킨|빵|디저트|술집|레스토랑|웨이팅/))return"place";
+  if(has(/여행|투어|숙소|호텔|펜션|비행기|항공|캠핑|제주|해외|일정/))return"trip";
+  return"daily";
+}
+async function aiParse(text,cfg){
+  const kinds=visKinds().map(k=>({id:k.id,name:k.name,fields:(k.fields||[]).filter(f=>f.t!=="area").map(f=>({k:f.k,label:f.l,type:f.t,options:f.o}))}));
+  const prompt="너는 사용자가 적은 한 줄 일기를 알맞은 기록 종류로 분류하고 칸을 채운다.\n종류 목록(JSON): "+JSON.stringify(kinds)+
+   "\n사용자 한 줄: \""+maskText(text).replace(/"/g,"'")+"\"\n오늘 날짜: "+today()+
+   "\n규칙: 영화·드라마·공연·음악이면 영상·음악 종류, 식당·카페·장소면 맛집·장소 종류, 여행이면 여행, 그 밖의 하루 이야기는 일상. 목록에 없는 종류 id는 쓰지 마라."+
+   " title은 작품 이름·가게 이름·여행 이름처럼 짧은 이름(없으면 한 줄 요약), note는 느낌·감상(사용자 말투 유지), date는 말에서 알 수 있는 날짜(어제·지난주 같은 말은 오늘 날짜로 계산, 모르면 오늘), rating은 사용자가 별점·점수를 분명히 말했을 때만 0~10(별 1개=2점), 아니면 0. tags는 짧은 낱말 0~4개. fields는 그 종류의 칸 k 이름에 맞는 값만(select 칸은 options 중 하나, 모르면 빼라)."+
+   "\nJSON으로만 답해라: {\"kind\":id,\"title\":..,\"note\":..,\"date\":\"YYYY-MM-DD\",\"rating\":0,\"tags\":[],\"fields\":{}}";
+  const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(cfg.model||GEMINI_MODEL_DEFAULT)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":cfg.geminiKey},
+    body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:"application/json",temperature:0}})});
+  if(!r.ok)throw new Error("Gemini "+r.status);
+  const j=await r.json(),raw=j.candidates&&j.candidates[0]&&j.candidates[0].content.parts.map(p=>p.text||"").join("");
+  return JSON.parse(String(raw||"").replace(/^```json|```$/g,"").trim());
+}
+function cleanParsed(o,text){ // Gemini 답을 믿지 않고 모양 검사
+  const ks=visKinds();if(!o||typeof o!=="object")return null;
+  const k=ks.find(x=>x.id===o.kind);if(!k)return null;
+  const s=(v,n)=>typeof v==="string"?v.trim().slice(0,n):"";
+  const x={};
+  if(o.fields&&typeof o.fields==="object")(k.fields||[]).forEach(f=>{
+    let v=o.fields[f.k];if(v==null||v==="")return;
+    if(f.t==="sel"){v=String(v);if(!(f.o||[]).includes(v))return}
+    else if(f.t==="num"){v=Number(String(v).replace(/[^\d.]/g,""));if(!isFinite(v)||v<=0)return}
+    else if(f.t==="date"){v=String(v);if(!/^\d{4}-\d{2}-\d{2}$/.test(v))return}
+    else if(f.t==="area")return;
+    else v=s(String(v),100);
+    x[f.k]=v;
+  });
+  const date=/^\d{4}-\d{2}-\d{2}$/.test(String(o.date||""))&&String(o.date)<=iso(new Date(Date.now()+864e5))?o.date:today();
+  const tags=(Array.isArray(o.tags)?o.tags:[]).map(t=>s(String(t).replace(/^#/,""),12)).filter(Boolean).slice(0,4);
+  const rating=Math.max(0,Math.min(10,Math.round(+o.rating||0)));
+  return{kind:k.id,title:s(o.title,200)||text,note:s(o.note,300),date,rating,tags,x};
+}
+async function quickSave(text){
+  if(qBusy)return;qBusy=true;
+  const btn=document.querySelector("#qf .btn");if(btn){btn.disabled=true;btn.textContent="해석 중…"}
+  let p=null,how="rule",why="";
+  try{
+    const cfg=DEMO?null:await loadGemini();
+    if(cfg&&cfg.geminiKey){try{p=cleanParsed(await aiParse(text,cfg),text);if(p)how="ai";else why="AI 답이 이상해서 규칙으로 짐작했어요"}catch(e){why="AI를 못 불러서 규칙으로 짐작했어요"}}
+    else why="말만해요 설정에 Gemini 키를 넣으면 한 줄을 AI가 해석해요";
+  }finally{qBusy=false}
+  if(!p){const kid=ruleKind(text),ks=visKinds();p={kind:ks.some(k=>k.id===kid)?kid:ks[0].id,title:text,note:"",date:today(),rating:0,tags:[],x:{}}}
+  if(!db)return;
+  const now=Date.now(),rec={id:uid(),kind:p.kind,date:p.date,title:p.title,note:p.note,rating:p.rating,tags:p.tags,x:p.x,ts:now,upd:now};
+  db.records.push(rec);save();
+  qLast={id:rec.id,msg:kindOf(rec.kind).name+"으로 저장했어요"+(how==="ai"?"":" · "+why)};
+  render();toast(kindOf(rec.kind).name+"으로 저장했어요",()=>{db.records=db.records.filter(r=>r.id!==rec.id);qLast=null;save();render()});
+}
 document.addEventListener("submit",e=>{
   if(e.target.dataset.form==="quick"){
     e.preventDefault();
     const t=$("#qt").value.trim();if(!t){toast("한 줄을 적어 주세요");return}
-    const now=Date.now(),kid=allKinds().some(k=>k.id==="daily")?"daily":visKinds()[0].id;
-    db.records.push({id:uid(),kind:kid,date:today(),title:t,note:"",rating:0,tags:[],x:{},ts:now,upd:now});
-    save();render();toast("저장했어요");
+    quickSave(t);
   }
 });
 document.addEventListener("input",e=>{
