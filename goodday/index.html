@@ -30,8 +30,11 @@
   --k-video:#4F74A8;--k-place:#B4603A;--k-trip:#3B8A80;--k-daily:#9A8230;--k-other:#6B7382;
   --font:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;
   --r-ctl:8px;--r-card:12px;--r-panel:16px;
-  --ease:cubic-bezier(.2,.8,.2,1);--t-fast:120ms;--t-in:200ms;--navh:60px
+  --ease:cubic-bezier(.2,.8,.2,1);--t-fast:120ms;--t-in:200ms;--navh:60px;
+  color-scheme:light dark /* 스크롤바·바운스 때 보이는 바탕도 앱 색을 따름 */
 }
+:root[data-theme="light"]{color-scheme:light}
+:root[data-theme="dark"]{color-scheme:dark}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0F1217;--surface:#171B22;--raised:#1E232B;--line:rgba(255,255,255,.09);
   --t1:#E8EBF0;--t2:#A5ADBA;--t3:#747C8A;
@@ -685,6 +688,12 @@ function applyTheme(){
   const m=db?db.settings.theme:(lsGet("goodday.theme")||"auto");
   if(db)lsSet("goodday.theme",m);
   if(m==="auto")document.documentElement.removeAttribute("data-theme");else document.documentElement.setAttribute("data-theme",m);
+  try{ // 상태 표시줄·주소창 색: 앱에서 라이트/다크를 고정했으면 그 색으로(기기 설정과 달라도 띠가 안 생기게)
+    document.querySelectorAll('meta[name="theme-color"]').forEach(el=>{
+      const mm=el.getAttribute("media")||"",isDark=/dark/.test(mm);
+      el.setAttribute("content",m==="auto"?(isDark?"#171B22":"#ffffff"):(m==="dark"?"#171B22":"#ffffff"));
+    });
+  }catch(e){}
 }
 
 /* ---------- 보여주기 도우미 ---------- */
