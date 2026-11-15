@@ -181,6 +181,7 @@ function norm(d){ // 옛 파일·새 파일 모두 같은 모양으로 맞춤
     tiresMigrated=true;
   }
   d.mounts??=[];d.cars.forEach(c=>{delete c.tires;delete c.mounts});
+  d.events.forEach(e=>{if(e.name==="BMW 차징카드 구입"){e.name="BMW 차징카드";tiresMigrated=true}}); // 이름에서 "구입" 제외 (한 번만, 고친 뒤 자동 저장)
   d.tires.forEach(t=>{t.newDepth??=0;t.treads??=[];t.baseKm??=0;t.lifeKm??=0;t.price??="";t.note??="";t.size??="";t.bought??=""});
   d.sel??=d.cars[0]&&d.cars[0].id;return d;
 }
@@ -628,10 +629,9 @@ function totalCard(){
   if(fcs.length)h+=`<div class="grid2" style="margin-top:10px">`+fcs.map(r=>`<div><div class="k">아낀 연료비 · ${esc(r.x.nick)}</div><div class="v save">${won(r.f.save)}</div></div>`).join("")+`</div>`+(fcs.length>1?`<div class="sub" style="margin-top:6px">합계 ${won(fcs.reduce((t,r)=>t+r.f.save,0))}</div>`:"");
   return h+`</div>`;
 }
-function insCard(c0){
-  const rows=[c0].map(c=>({c,n:nextRenew(c)})).filter(x=>x.n).sort((a,b)=>a.n.days-b.n.days);
-  if(!rows.length)return"";
-  return`<div class="card"><h3>보험 갱신</h3>`+rows.map(x=>`<div class="row"><div><div class="t">${esc(x.c.nick)}</div><div class="sub">${esc(x.n.last.insurer)} · 다음 갱신 ${x.n.date}</div></div><div class="r v" ${x.n.days<=30?'style="color:var(--warn)"':""}>${dtxt(x.n.days)}</div></div>`).join("")+`</div>`;
+function nextCard(c,btn){ // 보험 페이지의 '다음 갱신' 카드 (대시보드에도 같은 내용)
+  const n=nextRenew(c);
+  return`<div class="card"><h3>다음 갱신</h3>`+(n?`<div class="big">${dtxt(n.days)}</div><div class="sub">${n.date} (${esc(n.last.insurer)} · 지난 보험료 ${won(n.last.premium)})</div>`:`<div class="sub">보험 기록을 추가하면 갱신일을 알려 드려요</div>`)+(btn?`<div class="acts"><button class="btn pri" data-act="addIns">＋ 보험 기록 추가</button></div>`:"")+`</div>`;
 }
 
 /* ---------- 화면 ---------- */
@@ -677,12 +677,13 @@ function vHome(c){
   h+=hero(c);
   h+=`<div class="card"><h3>차량 정보${c.plate?" · "+esc(c.plate):""}</h3>${c.notes?`<div class="sub">${esc(c.notes)}</div>`:""}<div class="acts" style="margin-top:8px"><button class="btn" data-act="editCar">정보 수정</button><button class="btn" data-act="photo">내 사진 올리기</button>${c.photo?`<button class="btn" data-act="photoReset">기본 사진으로</button>`:""}</div><div class="acts"><button class="btn dng" data-act="delCar">이 차 삭제</button></div><input type="file" accept="image/*" id="photoIn" hidden></div>`;
   const mt=mountedTire(c);
-  h+=`<div class="card"><div class="grid2"><div><h3>현재 누적 주행거리</h3><div class="big">${k===null?"아직 입력 안 함":num(k)+" km"}</div><div class="sub">${lo?esc(lo.date)+" 기준":"주행 메뉴에서 입력해 주세요"}</div><div class="k" style="margin-top:12px">인도일</div><div class="v">${esc(c.delivered||"–")}</div><div class="k">${ageText(c.delivered)} 됨</div></div><div><div class="k">장착 중인 타이어</div><div class="v">${mt?esc(mt.brand):"없음"}</div>${mt?`<div class="k" style="margin-top:2px">${mt.size?esc(mt.size):"규격 확인 필요"}</div>`:""}</div></div></div>`+insCard(c)+evHome(c)+`
+  h+=`<div class="card" style="padding-left:24px;padding-right:24px"><div class="grid2" style="gap:24px"><div><h3>현재 누적 주행거리</h3><div class="big">${k===null?"아직 입력 안 함":num(k)+" km"}</div><div class="sub">${lo?esc(lo.date)+" 기준":"주행 메뉴에서 입력해 주세요"}</div></div><div><div class="k">장착 중인 타이어</div><div class="v">${mt?esc(mt.brand):"없음"}</div>${mt?`<div class="k" style="margin-top:2px">${mt.size?esc(mt.size):"규격 확인 필요"}</div>`:""}<div class="k" style="margin-top:12px">인도일</div><div class="v">${esc(c.delivered||"–")}</div><div class="k">${ageText(c.delivered)} 됨</div></div></div></div>`;
+  h+=fc?`<div class="card"><h3>아낀 연료비 · ${esc(c.nick)} (${esc(c.fuel.comp)} 대비)</h3><div class="big save">${won(fc.save)}</div></div>`:`<div class="card"><h3>아낀 연료비 · ${esc(c.nick)}</h3><div class="sub">주행거리를 입력하면 계산돼요</div></div>`;
+  h+=nextCard(c)+evHome(c)+`
   <div class="card"><h3>최근 기록</h3>`;
   if(!ev.length)h+=`<div class="empty">아직 기록이 없습니다</div>`;
   ev.forEach(e=>{h+=`<div class="row"><div class="l"><span class="ic">${e.ic}</span><div><div class="t">${esc(e.t)}</div><div class="sub">${esc(e.d)}</div></div></div>${e.r?`<div class="r">${e.r}</div>`:""}</div>`});
   h+=`</div>`;
-  h+=fc?`<div class="card"><h3>아낀 연료비 · ${esc(c.nick)} (${esc(c.fuel.comp)} 대비)</h3><div class="big save">${won(fc.save)}</div></div>`:`<div class="card"><h3>아낀 연료비 · ${esc(c.nick)}</h3><div class="sub">주행거리를 입력하면 계산돼요</div></div>`;
   h+=`<div class="card"><h3>기록 파일 (JSON)</h3><div class="sub">이 앱의 기록은 JSON 파일로 저장해 두었다가 언제든 다시 불러올 수 있어요. 두 대 이상 모든 차 기록이 한 파일에 들어갑니다.</div><div class="acts"><button class="btn pri" data-act="export">기록 저장</button><button class="btn" data-act="import">기록 불러오기</button></div><input type="file" accept="application/json" id="impIn" hidden><div class="note">기록은 내 Google Drive(Claude/app/차차차/설정)에 자동으로 저장돼요. 파일로 따로 보관하려면 기록 저장을 누르세요.</div><div class="note">한 번 로그인하면 같은 브라우저에서 다른 앱도 함께 열려요. 로그아웃은 모든 앱에서 됩니다.</div>${installHtml()}<div class="acts"><button class="btn" data-act="logout">로그아웃</button>${legacyRaw()?`<button class="btn dng" data-act="clearLegacy">이 기기에 남은 옛 기록 지우기</button>`:""}</div></div>`;
   return h;
 }
@@ -768,7 +769,7 @@ function evHome(c0){
 }
 function vIns(c){
   const n=nextRenew(c),list=[...c.ins].sort((a,b)=>b.date.localeCompare(a.date));
-  let h=hero(c)+`<div class="card"><h3>다음 갱신</h3>`+(n?`<div class="big">${dtxt(n.days)}</div><div class="sub">${n.date} (${esc(n.last.insurer)} · 지난 보험료 ${won(n.last.premium)})</div>`:`<div class="sub">보험 기록을 추가하면 갱신일을 알려 드려요</div>`)+`<div class="acts"><button class="btn pri" data-act="addIns">＋ 보험 기록 추가</button></div></div><div class="card"><h3>보험 내역${c.plate?" · 차번호 "+esc(c.plate):""}</h3>`;
+  let h=hero(c)+nextCard(c,true)+`<div class="card"><h3>보험 내역${c.plate?" · 차번호 "+esc(c.plate):""}</h3>`;
   if(!list.length)h+=`<div class="empty">아직 기록이 없습니다</div>`;
   list.forEach(i=>{h+=`<div class="row"><div><div class="t">${esc(i.insurer)}</div><div class="sub">${esc(i.date)}${i.memo?" · "+esc(i.memo):""}</div></div><div class="r"><div class="v">${won(i.premium)}</div><button class="btn sm" data-act="editIns" data-id="${i.id}">수정</button> <button class="btn sm dng" data-act="delIns" data-id="${i.id}">삭제</button></div></div>`});
   return h+`</div>`;
