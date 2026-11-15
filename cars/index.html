@@ -735,10 +735,7 @@ function vTrip(c){
 function vMaint(c){
   const list=[...c.maint].sort((a,b)=>b.date.localeCompare(a.date)),tot=list.reduce((s,m)=>s+(+m.amount||0),0),k=lastKm(c);
   let h=hero(c)+`<div class="card"><h3>정비 비용 합계</h3><div class="big">${won(tot)}</div><div class="sub">${list.length}건</div><div class="acts"><button class="btn pri" data-act="addMaint">＋ 정비 기록 추가</button></div></div>`;
-  h+=`<div class="card"><h3>예정 <button class="btn sm" style="float:right" data-act="addPlan">＋ 추가</button></h3>`;
-  if(!c.plans.length)h+=`<div class="empty">예정된 정비가 없습니다</div>`;
-  [...c.plans].sort((a,b)=>a.km-b.km).forEach(p=>{const left=k==null?null:p.km-k;h+=`<div class="row"><div><div class="t">${esc(p.text)}</div><div class="sub">${num(p.km)} km${left==null?"":left>0?" · 앞으로 "+num(left)+" km":" · "+num(-left)+" km 지남"}</div></div><button class="btn sm dng" data-act="delPlan" data-id="${p.id}">삭제</button></div>`});
-  h+=`</div><div class="card"><h3>정비 내역</h3>`;
+  h+=`<div class="card"><h3>정비 내역</h3>`;
   if(!list.length)h+=`<div class="empty">아직 기록이 없습니다</div>`;
   list.forEach(m=>{h+=`<div class="row"><div><div class="t">${esc(m.item)}</div><div class="sub">${esc(m.date)}${m.shop?" · "+esc(m.shop):""}${m.km?" · "+num(m.km)+"km":""}</div>${m.memo?`<div class="sub">${esc(m.memo)}</div>`:""}</div><div class="r"><div class="v">${m.amount?won(m.amount):"–"}</div><button class="btn sm" data-act="editMaint" data-id="${m.id}">수정</button> <button class="btn sm dng" data-act="delMaint" data-id="${m.id}">삭제</button></div></div>`});
   return h+`</div>`;
@@ -938,8 +935,6 @@ document.addEventListener("click",e=>{
       if(!o.date||!o.insurer){alert("날짜와 보험사를 입력해 주세요.");return false}
       if(a==="addIns")c.ins.push({id:uid(),...o,premium:+o.premium||0});else Object.assign(i,o,{premium:+o.premium||0});save()})}
   else if(a==="delIns"){if(confirm("이 보험 기록을 삭제할까요?")){c.ins=c.ins.filter(x=>x.id!==id);save();render()}}
-  else if(a==="addPlan")form("예정 추가",[{k:"text",l:"할 일",p:"예: 타이어 위치 교환"},{k:"km",l:"목표 누적 km",t:"number"}],o=>{if(!o.text||!+o.km){alert("할 일과 목표 km를 입력해 주세요.");return false}c.plans.push({id:uid(),text:o.text,km:+o.km});save()});
-  else if(a==="delPlan"){if(confirm("이 예정을 삭제할까요?")){c.plans=c.plans.filter(x=>x.id!==id);save();render()}}
   else if(a==="editCar")form("차량 정보 수정",carFields(c),o=>{applyCar(c,o);save()});
   else if(a==="addCar"){const n={id:uid(),nick:"새 차",model:"Tesla Model 3",trim:"",year:new Date().getFullYear(),color:"흰색",colorHex:"#f1f1f1",wheel:"",delivered:"",tireSpec:"",tireAlt:"",photo:"",startKm:0,fuel:fuelDef(),odo:[],maint:[],ins:[],plans:[],plate:"",notes:""};form("차량 추가",carFields(n),o=>{applyCar(n,o);db.cars.push(n);db.sel=n.id;view="home";save()})}
   else if(a==="delCar"){if(db.cars.length<2)return alert("마지막 차량은 삭제할 수 없습니다.");if(confirm("'"+c.nick+"' 의 모든 기록을 삭제할까요? 되돌릴 수 없습니다.")){db.cars=db.cars.filter(x=>x.id!==c.id);db.mounts=db.mounts.filter(m=>m.carId!==c.id);db.sel=db.cars[0].id;save();render()}}
