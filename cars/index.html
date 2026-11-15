@@ -676,12 +676,12 @@ function vHome(c){
   let h=empty?`<div class="card"><h3>기록 가져오기</h3><div class="sub">저장해 둔 기록 파일(JSON)이 있으면 아래 [기록 불러오기]로 가져오세요. 처음이면 주행거리부터 입력하면 됩니다.</div><div class="acts"><button class="btn pri" data-act="import">기록 불러오기</button></div></div>`:"";
   h+=hero(c);
   h+=`<div class="card"><h3>차량 정보${c.plate?" · "+esc(c.plate):""}</h3>${c.notes?`<div class="sub">${esc(c.notes)}</div>`:""}<div class="acts" style="margin-top:8px"><button class="btn" data-act="editCar">정보 수정</button><button class="btn" data-act="photo">내 사진 올리기</button>${c.photo?`<button class="btn" data-act="photoReset">기본 사진으로</button>`:""}</div><div class="acts"><button class="btn dng" data-act="delCar">이 차 삭제</button></div><input type="file" accept="image/*" id="photoIn" hidden></div>`;
-  h+=`<div class="card"><h3>현재 누적 주행거리</h3><div class="big">${k===null?"아직 입력 안 함":num(k)+" km"}</div><div class="sub">${lo?esc(lo.date)+" 기준":"아래 ＋주행거리로 입력해 주세요"}</div></div>`+evHome(c)+`
-  <div class="acts" style="margin:0 0 12px"><button class="btn pri" data-act="addOdoForm">＋ 주행거리</button><button class="btn" data-act="addMaint">＋ 정비</button></div>
+  const mt=mountedTire(c);
+  h+=`<div class="card"><div class="grid2"><div><h3>현재 누적 주행거리</h3><div class="big">${k===null?"아직 입력 안 함":num(k)+" km"}</div><div class="sub">${lo?esc(lo.date)+" 기준":"주행 메뉴에서 입력해 주세요"}</div></div><div><div class="k">인도일</div><div class="v">${esc(c.delivered||"–")}</div><div class="k" style="margin-top:6px">차를 탄 지</div><div class="v">${ageText(c.delivered)}</div><div class="k" style="margin-top:6px">장착 중인 타이어</div><div class="v">${mt?esc(mt.brand):"없음"}</div></div></div></div>`+insCard(c)+evHome(c)+`
   <div class="card"><h3>최근 기록</h3>`;
   if(!ev.length)h+=`<div class="empty">아직 기록이 없습니다</div>`;
   ev.forEach(e=>{h+=`<div class="row"><div class="l"><span class="ic">${e.ic}</span><div><div class="t">${esc(e.t)}</div><div class="sub">${esc(e.d)}</div></div></div>${e.r?`<div class="r">${e.r}</div>`:""}</div>`});
-  h+=`</div>`+insCard(c);
+  h+=`</div>`;
   h+=fc?`<div class="card"><h3>아낀 연료비 · ${esc(c.nick)} (${esc(c.fuel.comp)} 대비)</h3><div class="big save">${won(fc.save)}</div></div>`:`<div class="card"><h3>아낀 연료비 · ${esc(c.nick)}</h3><div class="sub">주행거리를 입력하면 계산돼요</div></div>`;
   h+=`<div class="card"><h3>기록 파일 (JSON)</h3><div class="sub">이 앱의 기록은 JSON 파일로 저장해 두었다가 언제든 다시 불러올 수 있어요. 두 대 이상 모든 차 기록이 한 파일에 들어갑니다.</div><div class="acts"><button class="btn pri" data-act="export">기록 저장</button><button class="btn" data-act="import">기록 불러오기</button></div><input type="file" accept="application/json" id="impIn" hidden><div class="note">기록은 내 Google Drive(Claude/app/차차차/설정)에 자동으로 저장돼요. 파일로 따로 보관하려면 기록 저장을 누르세요.</div><div class="note">한 번 로그인하면 같은 브라우저에서 다른 앱도 함께 열려요. 로그아웃은 모든 앱에서 됩니다.</div>${installHtml()}<div class="acts"><button class="btn" data-act="logout">로그아웃</button>${legacyRaw()?`<button class="btn dng" data-act="clearLegacy">이 기기에 남은 옛 기록 지우기</button>`:""}</div></div>`;
   return h;
