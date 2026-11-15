@@ -35,8 +35,9 @@
   --t1:#E8EBF0;--t2:#A5ADBA;--t3:#747C8A;
   --accent:#7FAEF0;--accent-ink:#0F1217;--accent-weak:rgba(127,174,240,.12);
   --ok:#4CC282;--warn:#E0A04A;--bad:#EF7A6C}}
+:root{color-scheme:light dark}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html{scrollbar-gutter:stable} /* 스크롤바 자리를 늘 비워 둬서, 스크롤바가 생기고 사라져도 고정 버튼이 밀리지 않음 */
+html{scrollbar-gutter:stable;min-height:100%} /* 스크롤바 자리를 늘 비워 둬서, 스크롤바가 생기고 사라져도 고정 버튼이 밀리지 않음 */
 html,body{font-family:var(--font);font-size:15px;line-height:1.5;background:var(--bg);color:var(--t1)}
 body{margin:0;padding-bottom:calc(var(--navh) + 96px + env(safe-area-inset-bottom))} /* 아래 96px: 오른쪽 아래 말만해요 버튼에 취소·저장·보내기 버튼이 가리지 않게 */
 button,input,select,textarea{font-family:var(--font)}
@@ -366,8 +367,17 @@ function salesIntent(t){ // 신한FC 영업 화면: "이달이관 보여줘", "�
   const dda=/따행/.test(tt);
   return{app:"shinhanfc",go:"sales",q:dda?"dda":"transfer",kind:"",id:ym,label:dda?"따행":"이달이관"};
 }
+function todoIntent(t){ // "할 일 보여줘", "오늘 할일 뭐야" → 신한FC 일정 Today 화면(할 일 카드: 오늘 마감·밀린 할 일·날짜 없음). q 없으면 오늘
+  const tt=t.replace(/\s+/g,"");
+  if(!/할일|투두|todo/i.test(tt))return null;
+  if(/기록|남겨|적어|저장|입력|추가|등록|메모|수정|삭제|변경|바꿔|완료|체크|넣어/.test(tt))return null;
+  if(/내일|모레|글피|다음|지난|어제|\d{1,2}월|\d{1,2}일|요일/.test(tt))return null;
+  if(!/보여|알려|열어|조회|확인|보기|목록|리스트|현황|[?？]|뭐|있어|어때|$^/.test(tt)&&!/^(오늘)?(의)?(할일|투두)$/i.test(tt))return null;
+  return{app:"shinhanfc",go:"schedule",q:"",kind:"",label:"할 일"};
+}
 function navIntent(t){
   {const s=analysisIntent(t);if(s)return s}
+  {const s=todoIntent(t);if(s)return s}
   {const s=salesIntent(t);if(s)return s}
   {const s=scopeIntent(t);if(s)return s}
   if(/일정|약속|미팅|예약|따행|이관|상담기록|엑셀|보장분석/.test(t))return null;
