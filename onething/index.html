@@ -241,6 +241,14 @@ function extractFields(t){
   }
   if((m=t.match(/([\d,]+(?:\.\d+)?)\s?(?:km|킬로)/i)))f.km=+m[1].replace(/,/g,"");
   if(!f.km&&/누적|주행거리|계기판|오도미터/.test(t)&&(m=t.match(/(\d[\d,]{3,})(?!\s?원)/)))f.km=+m[1].replace(/,/g,""); // 단위 없이 "누적 235000"
+  const carN=t.match(/하양이|빨강이/);
+  if(carN)f.car=carN[0];
+  if(!f.km&&carN&&!/충전|주유|기름|정비|수리|타이어|오일|세차|보험|검사|교체|점검|리터|kwh|원|%|시간|분|월|일|주/i.test(t.replace(/\d+\s?만\s?\d/g,""))){ // "하양이 206260" "하양이 206,260" "하양이 20만 6260" → 주행거리(km)
+    let v=null;
+    if((m=t.match(/(\d{1,3})\s?만\s?(\d{1,4})(?!\d)/)))v=+m[1]*10000+ +m[2];
+    else if((m=t.match(/(?<![\d,.])(\d{1,3}(?:,\d{3})+|\d{4,7})(?![\d,.])/)))v=+m[1].replace(/,/g,"");
+    if(v&&v>=100&&v<=2000000){f.km=v;f.kmBare=true;if(!f.date)f.date=addDays(0)}
+  }
   if((m=t.match(/([\d,]+)\s?만\s?([\d,]*)\s?원/)))f.cost=(+m[1].replace(/,/g,""))*10000+(m[2]?+m[2].replace(/,/g,""):0);
   else if((m=t.match(/([\d,]+)\s?원/)))f.cost=+m[1].replace(/,/g,"");
   return f;
@@ -256,6 +264,7 @@ const Providers={
         if(score>0)cands.push({app:a.id,kind:k.id,score,why});
       }
       const f=extractFields(text);
+      if(f.car&&f.km&&!cands.some(x=>x.app==="chachacha"&&x.kind!=="odo")){const c=cands.find(x=>x.app==="chachacha"&&x.kind==="odo");if(c){c.score+=3;c.why.push("차 이름+숫자")}else if(allowed.some(a=>a.id==="chachacha"))cands.push({app:"chachacha",kind:"odo",score:4,why:["차 이름+숫자"]})}
       if(allowed.some(a=>a.id==="gcal")){
         if(cands.some(c=>c.app==="gcal"&&c.kind!=="add"))cands.splice(0,cands.length,...cands.filter(c=>!(c.app==="gcal"&&c.kind==="add"))); // 고치기·지우기·보기 말이 있으면 '등록'은 뺌
         else if(f.date||f.time){ // 날짜·시간이 말에 있으면 일정 등록 쪽에 가산점
@@ -944,6 +953,7 @@ function setHtml(){
     <b>찾기·보기는 바로</b> (신한FC 이름 검색은 신한FC의 ‘전체검색’으로 열려 이름·연락처·주소·메모·상담기록·일정에서 찾아요): “김OO 고객 검색해줘”라고 하면 말만해요 안에 신한FC m의 고객 목록이 열리고, “맛집 검색해줘”, “강남 맛집 찾아줘”, “본 영화 찾아줘”, “여행 기록 보여줘”라고 하면 항상일상 찾기 결과가 열려요. “김OO 주민번호·연락처·계좌 알려줘”처럼 민감정보를 묻는 말도 막지 않고 신한FC 고객 화면으로 열어 줘요. 보여 줄지는 신한FC가 내 권한으로 정하고, 말만해요는 고객 데이터를 읽지 않아요. 고객 이름은 말만해요 기록에 남기지 않고 AI로도 보내지 않아요. 열린 화면에는 그 페이지만 보이고, 왼쪽 위 뒤로 버튼은 앱 안에서 한 단계 뒤로 가다가 더 갈 곳이 없으면 닫고 말만해요로 돌아와요(폰 뒤로 동작도 같아요). 오른쪽 위 [앱으로 열기]를 누르면 지금 보던 화면 그대로 그 앱이 열려요. 화면이 열려 있는 동안 오른쪽 아래 말만해요 버튼을 누르면 아래에서 묻는 창이 떠올라요. 내게 열리지 않은 앱은 열 수 없다고 알려 줘요.<br>
     <b>이관·가망·DB·진행</b>: “이관 보여줘”, “가망 고객 보여줘”, “DB 보여줘”, “진행 고객 보여줘”, “진행 삭제 고객 보여줘”, “진행 보관 고객 보여줘”, “DB 보관 보여줘”는 신한FC 고객 검색에서 그 분류만 보여 주고, “이관 보관 보여줘”, “따행 보관”은 영업의 보관 목록을 열어 줘요(“김OO 이관 보여줘”처럼 이름을 붙이면 그 이름만). <b>이달이관·따행</b>: “이달이관 보여줘”, “지난달 이관 보여줘”, “따행 보여줘”는 신한FC 영업 화면의 해당 탭이 열려요.<br>
     <b>차차차</b>: “이번 달 주행 얼마야”, “차 요약 보여줘”, “지난달 충전비 알려줘”는 요약, “주행 기록 보여줘”는 기록, “정비 기록 보여줘”·“충전 비용 알려줘”는 정비·비용 화면이 열려요. “빨강이 …”처럼 차 이름을 말하면 그 차로 열려요.<br>
+    <b>주행거리 적기</b>: “하양이 206260”, “하양이 206,260”, “하양이 20만 6260”처럼 차 이름과 숫자만 말하면 차차차 주행거리(km)로 받은편지함에 담아요(날짜는 오늘). 충전비·정비는 “하양이 충전 3만원”처럼 낱말을 같이 말하세요.<br>
     <b>묻는 창과 말만해요 버튼</b>: 앱을 열면 묻는 창이 열린 채로 시작해요. 답 카드도 이 창 안에 나와요. X로 닫으면 뒤의 최근 기록이 보이고, 오른쪽 아래 말만해요 버튼은 어느 화면에서나 떠 있어서 누르면 창이 다시 열려요.<br>
     <b>새로 적는 것은 편지로</b>: “오늘 본 영화 기록해줘”, “충전 40kWh 기록해줘”처럼 다른 앱에 기록을 새로 남기는 말은 그 앱의 받은편지함에 남기고, 카드의 [앱으로 열기]로 그 앱을 열 수 있어요(앱을 열면 반영돼요). 신한FC 상담 메모는 신한FC 고객 화면을 열어 직접 적어요. 읽기인지 쓰기인지 애매하면 어디로 보낼지 물어봐요.<br>
     <b>로그인</b>: 한 번 로그인하면 같은 브라우저에서 다른 앱(신한FC·차차차·항상일상 등)도 로그인 없이 열려요. 로그아웃하면 <b>모든 앱에서 로그아웃</b>돼요. 로그인은 1시간 정도 유지되고, 끝나면 아무 앱에서나 다시 연결하면 돼요. (아이폰은 홈 화면에 추가한 앱끼리는 나눠 쓰지 못해요.)</p></details></div>
@@ -1175,7 +1185,7 @@ async function apply(pick,how){
   try{
     await inboxPut(pick.app,item);
     rec.status="done";rec.target={app:pick.app,kind:pick.kind};delete rec.options;save();
-    const f=rec.fields,bits=[f.date&&"날짜 "+f.date,f.time&&"시간 "+f.time,f.km&&f.km+"km",f.cost&&f.cost.toLocaleString("ko-KR")+"원"].filter(Boolean);
+    const f=rec.fields,bits=[f.car&&"차 "+f.car,f.date&&"날짜 "+f.date,f.time&&"시간 "+f.time,f.km&&f.km.toLocaleString("ko-KR")+"km",f.cost&&f.cost.toLocaleString("ko-KR")+"원"].filter(Boolean);
     pending={...pending,stage:"done",canUndo:true,pickApp:pick.app,
       note:"‘"+a.name+" · "+k.label+"’ 받은편지함에 담았어요 ("+how+").\n"+(bits.length?"읽어낸 것: "+bits.join(", ")+"\n":"")+(rec.masked.length?"가린 정보: "+rec.masked.join(", ")+"\n":"")+a.name+"을 열면 반영돼요."};
   }catch(e){
