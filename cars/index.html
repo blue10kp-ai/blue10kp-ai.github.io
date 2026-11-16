@@ -385,6 +385,7 @@ async function startApp(pre){
     }
   }
   setShell(true);setSync("ok");render();scrollTo(0,0);
+  if(pendingAdds.length){const q=pendingAdds;pendingAdds=[];q.forEach(addFromParent)}
   if(tiresMigrated){tiresMigrated=false;save()} // 옛 모양에서 공용 타이어로 옮긴 결과를 저장
   applyGo();
   importInbox().catch(()=>{}); // 말만해요 받은편지함 (실패해도 앱은 그대로)
@@ -415,6 +416,44 @@ async function syncIndex(){
 }
 /* ---------- 말만해요 받은편지함: Drive Claude/app/onething/받은편지함/chachacha.json ---------- */
 const INBOX_PATH=["Claude","app","onething","받은편지함"],INBOX_FILE="chachacha.json";
+function applyInboxItem(it){ // 편지 한 통(또는 창구 메시지)을 기록에 넣음: 'ok' 넣음 · 'dup' 이미 있음 · 'skip' 못 넣음
+    const sid=String(it.id),fl=it.fields||{};
+    if(db.inboxDone.includes(sid))return'dup'; // 이미 반영됨(중복 방지) → 편지만 done 처리
+    const txt=String(it.text||"");
+    let c=db.cars.find(x=>x.nick&&txt.includes(x.nick));
+    if(!c&&db.cars.length>1){
+      const col=/빨강|빨간|레드/.test(txt)?"빨":/하양|흰|화이트/.test(txt)?"흰":"";
+      if(col)c=db.cars.find(x=>x.color&&x.color.startsWith(col)||(x.nick||"").startsWith(col==="빨"?"빨":"하"));
+    }
+    if(!c){
+      c=db.cars.find(x=>x.id===db.sel)||db.cars[0];
+      if(db.cars.length>1&&!confirm("말만해요 편지를 차계부에 넣을게요.\n\n\""+txt.slice(0,80)+"\"\n\n어느 차인지 몰라서 '"+c.nick+"'에 기록합니다.\n확인 = 기록, 취소 = 나중에")) return'skip';
+    }
+    const d=/^\d{4}-\d{2}-\d{2}/.test(fl.date||"")?fl.date.slice(0,10):iso(new Date(it.at||Date.now()));
+    const km=+fl.km||0,cost=+fl.cost||0;
+    if(it.kind==="odo"){if(!km)return'skip';c.odo.push({id:uid(),date:d,km})}
+    else if(it.kind==="fuel"||it.kind==="maint"){
+      const item=it.kind==="fuel"?(fl.note||"주유·충전"):(fl.item||"정비·관리");
+      c.maint.push({id:uid(),date:d,item,amount:cost,shop:"",km:km||"",memo:"말만해요"});
+      if(it.kind==="fuel"&&km)c.odo.push({id:uid(),date:d,km});
+    }else return'skip';
+    db.inboxDone.push(sid);return'ok'
+}
+async function markInboxDone(ids){
+  let id="root";
+  for(const n of INBOX_PATH){const f=await dFind(id,n,true);if(!f)return;id=f.id}
+  const f=await dFind(id,INBOX_FILE,false);if(!f)return;
+  const cur=parseDoc(await gfetch(DAPI+"/files/"+f.id+"?alt=media",null,true));
+  const at=new Date().toISOString();let ch=false;
+  (cur.items||[]).forEach(x=>{if(x&&x.status==="new"&&ids.includes(String(x.id))){x.status="done";x.doneAt=at;ch=true}});
+  if(ch)await gfetch(DUP+"/files/"+f.id+"?uploadType=media&fields=id",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(cur)});
+}
+async function addFromParent(m){ // 말만해요 창구: 편지를 거치지 않고 바로 기록
+  let ok=false;
+  try{if(m.id!=null){const r=applyInboxItem({id:m.id,kind:m.kind,fields:m.fields||{},text:m.text,at:m.at});if(r==='ok'){dirty=true;await driveSave(true);render()}ok=r==='ok'||r==='dup';if(ok)markInboxDone([String(m.id)]).catch(()=>{})}}catch(e){ok=false}
+  try{window.parent.postMessage({type:"blue10kp-added",id:m.id,ok},location.origin)}catch(e){}
+}
+let pendingAdds=[];
 async function importInbox(){
   if(!db)return;
   let id="root";
@@ -426,34 +465,12 @@ async function importInbox(){
   if(!todo.length)return;
   const done=[];
   for(const it of todo){
-    const sid=String(it.id),fl=it.fields||{};
-    if(db.inboxDone.includes(sid)){done.push(sid);continue} // 이미 반영됨(중복 방지) → 편지만 done 처리
-    const txt=String(it.text||"");
-    let c=db.cars.find(x=>x.nick&&txt.includes(x.nick));
-    if(!c&&db.cars.length>1){
-      const col=/빨강|빨간|레드/.test(txt)?"빨":/하양|흰|화이트/.test(txt)?"흰":"";
-      if(col)c=db.cars.find(x=>x.color&&x.color.startsWith(col)||(x.nick||"").startsWith(col==="빨"?"빨":"하"));
-    }
-    if(!c){
-      c=db.cars.find(x=>x.id===db.sel)||db.cars[0];
-      if(db.cars.length>1&&!confirm("말만해요 편지를 차계부에 넣을게요.\n\n\""+txt.slice(0,80)+"\"\n\n어느 차인지 몰라서 '"+c.nick+"'에 기록합니다.\n확인 = 기록, 취소 = 나중에")) continue;
-    }
-    const d=/^\d{4}-\d{2}-\d{2}/.test(fl.date||"")?fl.date.slice(0,10):iso(new Date(it.at||Date.now()));
-    const km=+fl.km||0,cost=+fl.cost||0;
-    if(it.kind==="odo"){if(!km)continue;c.odo.push({id:uid(),date:d,km})}
-    else if(it.kind==="fuel"||it.kind==="maint"){
-      const item=it.kind==="fuel"?(fl.note||"주유·충전"):(fl.item||"정비·관리");
-      c.maint.push({id:uid(),date:d,item,amount:cost,shop:"",km:km||"",memo:"말만해요"});
-      if(it.kind==="fuel"&&km)c.odo.push({id:uid(),date:d,km});
-    }else continue;
-    db.inboxDone.push(sid);done.push(sid);
+    const r=applyInboxItem(it);
+    if(r==='dup'||r==='ok')done.push(String(it.id));
   }
   if(!done.length)return;
   dirty=true;await driveSave(true);render(); // 기록을 먼저 저장한 뒤에 편지를 done으로
-  const cur=parseDoc(await gfetch(DAPI+"/files/"+f.id+"?alt=media",null,true)); // 다시 읽고 해당 id만 바꿔 저장
-  const at=new Date().toISOString();let ch=false;
-  (cur.items||[]).forEach(x=>{if(x&&x.status==="new"&&done.includes(String(x.id))){x.status="done";x.doneAt=at;ch=true}});
-  if(ch)await gfetch(DUP+"/files/"+f.id+"?uploadType=media&fields=id",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(cur)});
+  await markInboxDone(done); // 다시 읽고 해당 id만 done으로
 }
 async function doLogin(other){
   $("#lmsg").className="lm";$("#lmsg").textContent="로그인 중…";
@@ -550,6 +567,7 @@ window.addEventListener("message",e=>{
   if(e.origin!==location.origin||!e.data||typeof e.data!=="object")return;
   if(e.data.type==="blue10kp-go")window.blue10kpGo(e.data);
   else if(e.data.type==="blue10kp-back"){goBack();notifyWhere()}
+  else if(e.data.type==="blue10kp-add"){if(db)addFromParent(e.data);else pendingAdds.push(e.data)}
 });
 window.addEventListener("hashchange",()=>{const g=parseGo(location.hash);if(g)applyGo(g)});
 pendingGo=parseGo(location.hash);
