@@ -442,6 +442,16 @@ function showMod(app){
   if(!modPushed)modPushed=pushLayer();
   $("#mod").hidden=false;document.documentElement.classList.add("modopen");updateFab();
 }
+const ADDACK={};
+function sendAdd(app,item){ // 앱 화면에 "이 기록을 바로 넣어 줘"(blue10kp-add)를 보냄. 편지는 이미 받은편지함에 있어 앱이 못 받아도 열 때 반영됨(같은 id는 앱이 한 번만 넣음)
+  let n=0;
+  const tick=()=>{
+    const m=MODS[app];if(ADDACK[String(item.id)]||++n>12)return;
+    if(m&&m.ready){try{m.frame.contentWindow.postMessage({type:"blue10kp-add",id:item.id,kind:item.kind,fields:item.fields,text:item.text,at:item.at},location.origin)}catch(e){}}
+    setTimeout(tick,1500);
+  };
+  setTimeout(tick,600);
+}
 function openModule(n){
   const dir=APPDIR[n.app];if(!dir)return false;
   const req={go:n.go,q:n.q||"",kind:n.kind||"",id:n.id||"",month:n.month||"",car:n.car||"",memo:n.memo||"",tab:n.tab||""};
@@ -542,6 +552,7 @@ window.addEventListener("message",e=>{
     if(typeof d.lift==="number")MODS[app].fabLift=Math.max(0,Math.min(2000,d.lift)); // 올리기(새 방식)
     if("hide"in d)MODS[app].fabHide=d.hide===true; // 예전 hide 메시지는 숨김으로 호환
     if(app===modApp)updateFab();return} // 앱의 취소·저장 줄이 떠 있는 동안 버튼을 잠깐 숨김
+  if(d.type==="blue10kp-added"){ADDACK[String(d.id)]=d.ok!==false;return} // 차차차가 "바로 입력"을 받아 기록했다고 알림
   if(d.type!=="blue10kp-where")return;
   const s=v=>String(v==null?"":v).slice(0,120);
   const nw={app,go:s(d.go),q:s(d.q),kind:s(d.kind),id:s(d.id),month:s(d.month),car:s(d.car),canBack:d.canBack===true},mm=MODS[app],nk=whereKey(nw);
@@ -1185,6 +1196,11 @@ async function apply(pick,how){
   try{
     await inboxPut(pick.app,item);
     rec.status="done";rec.target={app:pick.app,kind:pick.kind};delete rec.options;save();
+    if(pick.app==="chachacha"&&["odo","fuel","maint"].includes(pick.kind)&&activeApps().some(x=>x.id==="chachacha")){ // 입력 뒤 그 화면만 보여 줌(위·아래 메뉴 없이)
+      openModule({app:"chachacha",go:pick.kind==="odo"?"records":"maint",q:"",kind:"",car:rec.fields.car||""});
+      sendAdd("chachacha",item);
+      pending=null;render();return;
+    }
     const f=rec.fields,bits=[f.car&&"차 "+f.car,f.date&&"날짜 "+f.date,f.time&&"시간 "+f.time,f.km&&f.km.toLocaleString("ko-KR")+"km",f.cost&&f.cost.toLocaleString("ko-KR")+"원"].filter(Boolean);
     pending={...pending,stage:"done",canUndo:true,pickApp:pick.app,
       note:"‘"+a.name+" · "+k.label+"’ 받은편지함에 담았어요 ("+how+").\n"+(bits.length?"읽어낸 것: "+bits.join(", ")+"\n":"")+(rec.masked.length?"가린 정보: "+rec.masked.join(", ")+"\n":"")+a.name+"을 열면 반영돼요."};
