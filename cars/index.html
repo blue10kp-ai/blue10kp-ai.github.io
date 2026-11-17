@@ -903,7 +903,9 @@ document.addEventListener("click",e=>{
   else if(a==="logout")logout();
   else if(a==="install"){const d=deferredInstall;if(d){deferredInstall=null;d.prompt();Promise.resolve(d.userChoice).catch(()=>{}).then(()=>render())}}
   else if(a==="clearLegacy"){if(confirm("이 기기(브라우저)에 남아 있는 옛 기록을 지울까요? 드라이브에 저장된 기록은 그대로 남아요.")){try{[KEY,...OLDKEYS].forEach(k=>localStorage.removeItem(k))}catch(e){}render()}}
-  else if(a==="view"){if(view!==id)navStack.push({view,sumYm});view=id;render();scrollTo(0,0)}
+  else if(a==="view"){
+    if(view===id&&db.cars.length>1){const i=db.cars.findIndex(x=>x.id===db.sel);db.sel=db.cars[(i+1)%db.cars.length].id;save();render();scrollTo(0,0)} // 이미 그 페이지에서 다시 누르면 차 바꾸기(하양이↔빨강이)
+    else{if(view!==id)navStack.push({view,sumYm});view=id;render();scrollTo(0,0)}}
   else if(a==="sumMonth"){sumYm=id;render();scrollTo(0,0)}
   else if(a==="mclose"){if(e.target===b||b.classList.contains("btn"))$("#modal").innerHTML=""}
   else if(a==="addOdoForm")form("주행거리 입력",[{k:"date",l:"날짜",t:"date",v:today()},{k:"km",l:"현재 누적 km",t:"number",p:"예: 123456"}],o=>{if(!+o.km||!o.date){alert("날짜와 누적 km를 입력해 주세요.");return false}const mx=lastKm(c);if(mx!=null&&+o.km<mx&&!confirm("직전 기록("+num(mx)+"km)보다 작습니다. 그래도 저장할까요?"))return false;c.odo.push({id:uid(),date:o.date,km:+o.km});save()});
