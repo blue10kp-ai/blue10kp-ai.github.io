@@ -1010,7 +1010,7 @@ document.addEventListener("click",e=>{
   else if(a==="close")closeSheet();
   else if(a==="edit"){const r=db.records.find(x=>x.id===id);closeSheet();if(r)openForm(r)}
   else if(a==="qmedia")setMedia(el.dataset.m);
-  else if(a==="findinfo"){el.disabled=true;el.textContent="찾는 중…";fillInfo(id,"",false).then(async a=>[a,await fillPoster(id,true)]).then(([a,b])=>{if((a||b)&&curRec===id)openDetail(id);else if(!(a||b)&&el.isConnected){el.disabled=false;el.textContent="정보 검색"}})}
+  else if(a==="findinfo"){el.disabled=true;el.textContent="찾는 중…";fillErr=[];fillInfo(id,"",true).then(async a=>[a,await fillPoster(id,true)]).then(([a,b])=>{if((a||b)&&curRec===id)openDetail(id);else if(!(a||b)&&el.isConnected){el.disabled=false;el.textContent="정보 검색";toast([...new Set(fillErr)].join(" / ")||"찾지 못했어요")}})}
   else if(a==="del")delRec(id);
   else if(a==="restore"){const r=db.records.find(x=>x.id===id);if(r){delete r.del;save();toast("되살렸어요");if(el.dataset.keep)openTrash();else closeSheet();render()}}
   else if(a==="undo"){if(toastUndo)toastUndo();$("#toast").hidden=true;toastUndo=null}
@@ -1069,13 +1069,15 @@ async function loadGemini(){
   try{
     const q="name='말만해요_설정.json' and trashed=false";
     const d=await gfetch(DAPI+"/files?pageSize=5&orderBy=modifiedTime desc&fields="+encodeURIComponent("files(id)")+"&q="+encodeURIComponent(q));
+    gcfg.why=(d.files||[]).length?"말만해요 설정 파일에 Gemini 키가 비어 있어요":"이 앱이 말만해요 설정 파일을 못 찾았어요(드라이브 권한)";
     for(const f of d.files||[]){
       try{const c=parseDoc(await gfetch(DAPI+"/files/"+f.id+"?alt=media",null,true));
-        if(c&&typeof c.geminiKey==="string"&&c.geminiKey.trim()){gcfg.geminiKey=c.geminiKey.trim();if(c.model)gcfg.model=String(c.model);break}}catch(e){if(e.message==="GOOGLE_AUTH")throw e}
+        if(c&&typeof c.geminiKey==="string"&&c.geminiKey.trim()){gcfg.geminiKey=c.geminiKey.trim();gcfg.why="";if(c.model)gcfg.model=String(c.model);break}}catch(e){if(e.message==="GOOGLE_AUTH")throw e}
     }
-  }catch(e){}
+  }catch(e){gcfg.why="드라이브에서 설정을 읽다 오류가 났어요"}
   return gcfg;
 }
+const gWhy=()=>(gcfg&&gcfg.why)||"Gemini 키를 못 읽었어요";
 const maskText=t=>String(t).replace(/[\w.+-]+@[\w-]+(\.[\w-]+)+/g,"[이메일]").replace(/\d[\d\s-]{6,}\d/g,"[번호]");
 function ruleKind(t){ // 규칙으로 짐작
   const has=re=>re.test(t);
@@ -1120,10 +1122,11 @@ function cleanParsed(o,text){ // Gemini 답을 믿지 않고 모양 검사
 /* 영화·드라마는 이름으로 검색(Gemini + 구글 검색)해서 연도·감독·출연·줄거리를 '작품 정보' 칸에 넣음. 보내는 글: 작품 이름과 사용자가 적은 한 줄(가림 처리). */
 const wantInfo=r=>!!r&&!(r.x&&r.x.info)&&((r.kind==="video"&&(!r.x||!r.x.type||["영화","드라마","음악"].includes(r.x.type)))||r.kind==="book"||r.kind==="place");
 async function aiInfo(r,text,cfg){
-  const pl=r.kind==="place",kind=(r.x&&r.x.type)||(pl?"맛집":"영화"),mu=kind==="음악";
-  const prompt="웹 검색으로 아래 "+(pl?"장소":mu?"곡·앨범":"작품")+"을 확인해 한국어로 정리해라.\n"+(pl?"장소 이름":mu?"곡·앨범 이름":"작품 이름")+": \""+maskText(r.title).replace(/"/g,"'")+"\" ("+kind+")\n사용자가 적은 말: \""+maskText(text).replace(/"/g,"'")+"\""+
+  const pl=r.kind==="place",bk=r.kind==="book",kind=(r.x&&r.x.type)||(pl?"맛집":bk?"책":"영화"),mu=kind==="음악";
+  const prompt="웹 검색으로 아래 "+(pl?"장소":bk?"책":mu?"곡·앨범":"작품")+"을 확인해 한국어로 정리해라.\n"+(pl?"장소 이름":bk?"책 이름":mu?"곡·앨범 이름":"작품 이름")+": \""+maskText(r.title).replace(/"/g,"'")+"\" ("+kind+")\n사용자가 적은 말: \""+maskText(text).replace(/"/g,"'")+"\""+
    "\n같은 이름이 여럿이면 말 속 단서(지역·시기·아티스트 등)로 고르고, 단서가 없으면 가장 알려진 것을 고르되 첫 줄 끝에 (동명이 있을 수 있어요)라고 덧붙여라."+
-   (pl?"\n형식(별표·# 같은 기호 없이 일반 글자로):\n첫 줄: 이름 · 지역(시·구까지) · "+(kind==="맛집"?"음식 종류 · 개업연도(알면)":"분류 · 개장·건립연도(알면)")+"\n둘째 줄: "+(kind==="맛집"?"대표 메뉴 / 가격대 / 영업시간 중 확실한 것":"볼거리 / 이용 시간·요금 중 확실한 것")+"\n셋째 줄부터: 소개 1~2문장. 연도는 4자리 숫자로만."
+   (bk?"\n형식(별표·# 같은 기호 없이 일반 글자로):\n첫 줄: 제목 · 저자 · 출판연도(4자리) · 출판사\n둘째 줄: ISBN: 13자리 숫자(978 또는 979로 시작, 확실할 때만. 모르면 이 줄 생략)\n셋째 줄부터: 책 소개 2~3문장."
+   :pl?"\n형식(별표·# 같은 기호 없이 일반 글자로):\n첫 줄: 이름 · 지역(시·구까지) · "+(kind==="맛집"?"음식 종류 · 개업연도(알면)":"분류 · 개장·건립연도(알면)")+"\n둘째 줄: "+(kind==="맛집"?"대표 메뉴 / 가격대 / 영업시간 중 확실한 것":"볼거리 / 이용 시간·요금 중 확실한 것")+"\n셋째 줄부터: 소개 1~2문장. 연도는 4자리 숫자로만."
    :mu?"\n형식(별표·# 같은 기호 없이 일반 글자로):\n첫 줄: 곡명(원어·영문 제목) · 아티스트(원어·영문 이름) · 발매연도 · 장르\n둘째 줄: 앨범: … / 작사·작곡 등 알려진 참여자\n셋째 줄부터: 곡·앨범 소개 1~2문장.\n첫 줄의 연도는 이 곡이 처음 나온 해 4자리로 써라."
    :"\n형식(별표·# 같은 기호 없이 일반 글자로):\n첫 줄: 제목(원제) · 연도 · 장르 · 국가\n둘째 줄: 감독: … / 출연: …\n셋째 줄부터: 줄거리 2~3문장(결말 스포일러 금지).")+
    "\n확실하지 않은 것은 쓰지 말고, 찾지 못했으면 '찾지 못했어요' 한 줄만 답해라.";
@@ -1211,20 +1214,39 @@ async function fillPoster(id,quiet){
   const r=db&&db.records.find(x=>x.id===id);if(!r||!wantPoster(r))return false;
   try{
     const f=await findPoster(r);const r2=db&&db.records.find(x=>x.id===id);if(!r2)return false;
-    if(!f.p&&!f.link){if(!quiet)toast("그림을 찾지 못했어요");return false}
+    if(!f.p&&!f.link){fillErr.push("그림을 못 찾았어요");if(!quiet)toast("그림을 찾지 못했어요");return false}
     r2.x=r2.x||{};if(f.p)r2.x.poster=f.p;if(f.link&&!r2.x.link)r2.x.link=f.link;r2.upd=Date.now();save();return !!f.p;
-  }catch(e){if(!quiet)toast("그림을 못 불러왔어요");return false}
+  }catch(e){fillErr.push("그림 검색 오류("+String(e&&e.message||e).slice(0,30)+")");if(!quiet)toast("그림을 못 불러왔어요");return false}
 }
 const BOOK_RE=/^https:\/\/books\.google\.com\/books\/content\?[\w=&%.\-]+$/;
 const posterUrl=(r,w)=>{
   const p=(r.x&&r.x.poster)||"";
   if(/^\/[\w.-]+$/.test(p))return TMDB_IMG+w+p;
   if(ART_RE.test(p))return p.replace(/\d+x\d+bb\.jpg$/,(w==="w154"?"200":"400")+"x"+(w==="w154"?"200":"400")+"bb.jpg");
-  if(BOOK_RE.test(p)||WIKI_RE.test(p))return p;
+  if(BOOK_RE.test(p)||WIKI_RE.test(p)||KYOBO_RE.test(p))return p;
   return"";
 };
 /* 책: 구글 도서 검색(키 필요 없음)으로 저자·출판사·출판연도·소개·표지·링크를 채움 */
+let fillErr=[]; // 채우기가 안 됐을 때 이유를 모아 화면에 보임
+const KYOBO_RE=/^https:\/\/contents\.kyobobook\.co\.kr\/sih\/fit-in\/\d+x0\/pdt\/97[89]\d{10}\.jpg$/;
 async function fillBook(id,text,quiet){
+  if(await fillBookGB(id,text,true))return true; // 구글 도서(무료 한도가 차면 안 됨) → 안 되면 Gemini 검색 + 교보문고 표지
+  const r=db&&db.records.find(x=>x.id===id);if(!r||(r.x&&r.x.info))return false;
+  try{
+    const cfg=await loadGemini();if(!cfg||!cfg.geminiKey){fillErr.push("구글 도서는 오늘 한도가 찼고, "+gWhy());if(!quiet)toast("책 정보를 찾지 못했어요");return false}
+    let t=await aiInfo(r,text||r.title,cfg);
+    const r2=db&&db.records.find(x=>x.id===id);if(!r2)return false;
+    if(!t){fillErr.push("Gemini가 책을 못 찾았어요");if(!quiet)toast("책 정보를 찾지 못했어요");return false}
+    const m=/ISBN[^0-9]{0,6}(97[89][\d\- ]{10,16})/i.exec(t),isbn=m?m[1].replace(/\D/g,""):"";
+    t=t.split("\n").filter(l=>!/^\s*ISBN/i.test(l)).join("\n").replace(/\n{3,}/g,"\n\n").trim();
+    const p=t.split("\n")[0].split("·").map(s=>s.trim());
+    r2.x=r2.x||{};r2.x.info=t;if(p[1])r2.x.author=p[1].slice(0,100);if(p[3]&&!/^\d{4}$/.test(p[3]))r2.x.publisher=p[3].slice(0,100);
+    if(isbn.length===13){r2.x.poster="https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/"+isbn+".jpg";r2.x.link="https://search.kyobobook.co.kr/search?keyword="+isbn}
+    else r2.x.link="https://search.naver.com/search.naver?where=book&query="+encodeURIComponent(p[0]||r2.title);
+    r2.upd=Date.now();save();return true;
+  }catch(e){fillErr.push("Gemini 오류("+String(e&&e.message||e).slice(0,40)+")");if(!quiet)toast("책 정보를 못 불러왔어요");return false}
+}
+async function fillBookGB(id,text,quiet){
   const r=db&&db.records.find(x=>x.id===id);if(!r)return false;
   try{
     let it=null;
@@ -1267,15 +1289,15 @@ async function fillInfo(id,text,quiet){ // 기록 하나에 작품 정보 채우
   const r=db&&db.records.find(x=>x.id===id);if(!r||!wantInfo(r))return false;
   if(r.kind==="book")return fillBook(id,text||r.title,quiet);
   try{
-    const cfg=await loadGemini();if(!cfg||!cfg.geminiKey){if(!quiet)toast("말만해요 설정에 Gemini 키가 있어야 작품을 검색해요");return false}
+    const cfg=await loadGemini();if(!cfg||!cfg.geminiKey){fillErr.push(gWhy());if(!quiet)toast("말만해요 설정에 Gemini 키가 있어야 작품을 검색해요");return false}
     const t=await aiInfo(r,text||r.title,cfg);
     const r2=db&&db.records.find(x=>x.id===id);if(!r2)return false;
-    if(!t){if(!quiet)toast("작품 정보를 찾지 못했어요");return false}
+    if(!t){fillErr.push("Gemini가 정보를 못 찾았어요");if(!quiet)toast("작품 정보를 찾지 못했어요");return false}
     r2.x=r2.x||{};r2.x.info=t;r2.upd=Date.now();
     if(r2.kind==="place"){const nm=encodeURIComponent((t.split("\n")[0].split("·")[0]||r2.title).replace(/\s*\([^)]*\)/g,"").trim()||r2.title);
       if(!r2.x.map)r2.x.map="https://map.naver.com/p/search/"+nm;if(!r2.x.link&&r2.x.type!=="멋곳")r2.x.link="https://search.naver.com/search.naver?query="+nm}
     save();return true;
-  }catch(e){if(!quiet)toast("작품 정보를 못 불러왔어요");return false}
+  }catch(e){fillErr.push("Gemini 오류("+String(e&&e.message||e).slice(0,40)+")");if(!quiet)toast("작품 정보를 못 불러왔어요");return false}
 }
 async function quickSave(text){
   if(qBusy)return;qBusy=true;
@@ -1319,18 +1341,20 @@ async function mediaSave(m,text){
   const now=Date.now(),x={};if(def[2])x.type=def[2];
   const rec={id:uid(),kind:def[1],date:today(),title:text.slice(0,200),note:"",rating:0,tags:[],x,ts:now,upd:now};
   db.records.push(rec);save();
-  const q=qLast={id:rec.id,msg:m+"으로 저장했어요 · 정보 찾는 중…"};render();
-  let ok=false;
+  const q=qLast={id:rec.id,msg:m+(m==="영화"?"로":"으로")+" 저장했어요 · 정보 찾는 중…"};render();
+  let ok=false;fillErr=[];
   try{
     if(def[1]==="book")ok=await fillBook(rec.id,text,true);
     else{ok=await fillInfo(rec.id,text,true);await fillPoster(rec.id,true)}
+    if(m==="영화"&&!hasTmdb())fillErr.push("포스터는 설정의 TMDB 키가 있어야 가져와요");
     const r=db&&db.records.find(a=>a.id===rec.id);
     if(r){
       if(def[1]!=="book"&&ok){const t=titleFromInfo(r);if(t)r.title=t}
       if(def[1]==="book"&&ok){const t=titleFromInfo(r);if(t)r.title=t}
       if(def[1]==="place"&&!r.x.map)r.x.map="https://map.naver.com/p/search/"+encodeURIComponent(text);
       r.upd=Date.now();save();
-      if(qLast===q)q.msg=m+"으로 저장했어요"+(ok?"":" · 정보를 못 찾아 이름만 저장했어요"),q.info=ok?String(r.x.info).split("\n")[0]:"";
+      const why=[...new Set(fillErr)].join(" / ");
+      if(qLast===q)q.msg=m+(m==="영화"?"로":"으로")+" 저장했어요"+(ok?"":" · 정보를 못 찾아 이름만 저장했어요")+(why?" ("+why+")":""),q.info=ok?String(r.x.info).split("\n")[0]:"";
     }
   }catch(e){}
   qBusy=false;
