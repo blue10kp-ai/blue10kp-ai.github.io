@@ -212,6 +212,10 @@ html.embed .toast{bottom:calc(88px + env(safe-area-inset-bottom))}
 .vgrid{position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,transparent calc(33.33% - .5px),rgba(255,255,255,.14) calc(33.33% - .5px),rgba(255,255,255,.14) calc(33.33% + .5px),transparent calc(33.33% + .5px),transparent calc(66.66% - .5px),rgba(255,255,255,.14) calc(66.66% - .5px),rgba(255,255,255,.14) calc(66.66% + .5px),transparent calc(66.66% + .5px)),linear-gradient(180deg,transparent calc(33.33% - .5px),rgba(255,255,255,.14) calc(33.33% - .5px),rgba(255,255,255,.14) calc(33.33% + .5px),transparent calc(33.33% + .5px),transparent calc(66.66% - .5px),rgba(255,255,255,.14) calc(66.66% - .5px),rgba(255,255,255,.14) calc(66.66% + .5px),transparent calc(66.66% + .5px))}
 .vmsg{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;font-size:13px;color:#8A919C;line-height:1.6;white-space:pre-line}
 .vmsg:empty{display:none}
+.camon{width:96px;height:96px;border-radius:50%;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.06);color:#E9ECF1;display:grid;place-items:center;transition:transform .1s var(--ease),background-color .12s var(--ease)}
+.camon:active{transform:scale(.94);background:rgba(255,255,255,.12)}
+.camon svg.i{width:36px;height:36px;stroke-width:1.3}
+.shoot.idle .vgrid,.shoot.idle .sbar .shutter,.shoot.idle #flipBtn{visibility:hidden}
 .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .25s ease}
 .flash.on{opacity:.85;transition:none}
 .sbar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;width:100%;max-width:560px;padding:20px 28px 28px}
@@ -994,9 +998,15 @@ async function addrOf(lat,lng){
 }
 
 /* ---------- 카메라 (촬영 페이지가 보일 때만 켬, 정사각형으로만 찍음) ---------- */
-const cam={stream:null,facing:lsGet("goodday.facing")==="user"?"user":"environment",err:"",busy:false,want:false};
+const cam={stream:null,facing:lsGet("goodday.facing")==="user"?"user":"environment",err:"",busy:false,want:false,armed:false}; // armed: 사용자가 카메라 버튼을 눌러 켰을 때만 카메라를 씀
+function camIdle(){ // 처음 화면: 가운데 카메라 버튼만
+  const m=$("#vmsg");if(!m)return;
+  m.innerHTML=`<button class="camon" data-act="camOn" aria-label="카메라 켜기"><svg class="i"><use href="#i-cam"/></svg></button>`;
+  $("#shoot").classList.add("idle");
+}
 function camSync(){
-  const want=!!db&&!$("#shoot").hidden&&!LAYERS.length&&!document.hidden;
+  if(!cam.armed&&$("#shoot")&&!$("#shoot").hidden)camIdle();
+  const want=cam.armed&&!!db&&!$("#shoot").hidden&&!LAYERS.length&&!document.hidden;
   cam.want=want;
   if(want&&!cam.stream&&!cam.busy)camStart();
   else if(!want&&cam.stream)camStop();
@@ -1004,11 +1014,11 @@ function camSync(){
 async function camStart(){
   const v=$("#vid"),m=$("#vmsg");
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){cam.err="이 브라우저는 화면 안 카메라를 못 써요.\n가운데 버튼을 누르면 휴대폰 카메라가 열려요.";m.textContent=cam.err;return}
-  cam.busy=true;m.textContent="";
+  cam.busy=true;m.textContent="카메라 켜는 중…";$("#shoot").classList.remove("idle");
   try{
     const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:cam.facing},width:{ideal:1920},height:{ideal:1920}},audio:false});
     if(!cam.want){s.getTracks().forEach(t=>t.stop());return}
-    cam.stream=s;cam.err="";v.srcObject=s;v.classList.toggle("mir",cam.facing==="user");
+    cam.stream=s;cam.err="";m.textContent="";v.srcObject=s;v.classList.toggle("mir",cam.facing==="user");
     try{await v.play()}catch(e){}
   }catch(e){
     cam.err=e&&e.name==="NotAllowedError"?"카메라 권한이 꺼져 있어요.\n가운데 버튼을 누르면 휴대폰 카메라가 열려요.":"카메라를 켜지 못했어요.\n가운데 버튼을 누르면 휴대폰 카메라가 열려요.";
@@ -1017,8 +1027,10 @@ async function camStart(){
 }
 function camStop(){if(cam.stream){cam.stream.getTracks().forEach(t=>t.stop());cam.stream=null}const v=$("#vid");if(v)v.srcObject=null}
 document.addEventListener("visibilitychange",camSync);
+function camOn(){cam.armed=true;camSync()}
 async function shutter(){
   const v=$("#vid");
+  if(!cam.armed){camOn();return} // 처음 누르면 카메라부터 켬
   if(!cam.stream||!v.videoWidth){$("#fCam").dataset.sq="1";$("#fCam").click();return}
   const w=v.videoWidth,h=v.videoHeight,s=Math.min(w,h),o=Math.min(s,2048),c=document.createElement("canvas");
   c.width=c.height=o;const g=c.getContext("2d");
@@ -1517,7 +1529,7 @@ function openHelp(){
   openLayer("sub",`<div class="lh"><button class="ib" data-act="close" aria-label="뒤로">${ico("back")}</button><h2>사용 설명</h2></div><div class="lb help">
    <p><b>테마 5개</b> · 보고(영화·드라마·연극·공연·책), 듣고(음악), 먹고(식당·카페·술집), 가고(여행지·핫플레이스), 일(미팅·만난 사람).</p>
    <p><b>페이지 4개</b> · 촬영(첫 화면) → 입력 → 보기 → 설정.</p>
-   <p><b>촬영</b> · 앱을 열면 카메라 화면이에요. 가운데 버튼을 누르면 정사각형으로 찍혀요. 위 왼쪽 앨범은 휴대폰 사진첩에서 고르기, 글은 사진 없이 글만 쓰기, 오른쪽 위는 앞뒤 카메라 바꾸기와 설정이에요. 아래 왼쪽 작은 사진을 누르면 보기로 가요.</p>
+   <p><b>촬영</b> · 앱을 열면 가운데에 카메라 버튼이 있어요. 누르면 카메라가 켜지고, 아래 둥근 버튼을 누르면 정사각형으로 찍혀요. 위 왼쪽 앨범은 휴대폰 사진첩에서 고르기, 글은 사진 없이 글만 쓰기, 오른쪽 위는 앞뒤 카메라 바꾸기와 설정이에요. 아래 왼쪽 작은 사진을 누르면 보기로 가요.</p>
    <p><b>입력</b> · 찍거나 고른 사진이 폴라로이드로 올라오고, 아래 칸에 글을 쓰면 폴라로이드 흰 칸에 손글씨처럼 바로 보여요. 그 밑에서 테마 5개 중 하나를 고르고(안 고르면 자동) 저장해요. 사진 속 날짜·시간과 위치를 자동으로 읽고, 위치가 없으면 지금 위치를 써요. 사진과 글은 따로 저장되고 보일 때만 합쳐져요.</p>
    <p><b>보기</b> · 폴라로이드가 가로로 늘어서요. 좌우로 밀어 넘기고, 가운데 사진을 누르면 상세가 열려요. 아래 막대로 빨리 넘길 수 있어요. 목록에는 작은 사진을 먼저 받아 빠르게 보이고, 상세에서 큰 사진을 받아요.</p>
    <p><b>AI가 채우는 것</b> · 테마를 고르지 않으면(자동) 제미나이가 글과 사진을 보고 테마를 정해요. 보고는 작품 정보(연도·감독·출연·줄거리), 듣고는 곡 정보, 먹고는 사진 위치 근처 식당·술집 후보 3곳, 가고는 장소 소개, 일은 만난 사람을 남겨요(설정에서 캘린더를 연결하면 그 시간 앞뒤 3시간의 일정 이름·장소·참석자를 붙여요. 캘린더는 읽기만 해요). 먹고 후보는 상세 화면에서 눌러서 맞는 곳으로 바꿀 수 있어요.</p>
@@ -1557,6 +1569,7 @@ document.addEventListener("click",e=>{
   if(t.dataset.purge){const r=db.records.find(x=>x.id===t.dataset.purge);if(r&&confirm("완전히 지울까요? 사진 파일도 함께 지워지고 되살릴 수 없어요.")){dropPhoto(r);db.records=db.records.filter(x=>x!==r);save();drawTrash();drawSettings()}return}
   const a=t.dataset.act,top=LAYERS[LAYERS.length-1];
   if(a==="shutter")shutter();
+  else if(a==="camOn")camOn();
   else if(a==="flip")flipCam();
   else if(a==="view")openView();
   else if(a==="retake")closeTop();
