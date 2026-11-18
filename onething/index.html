@@ -1,11 +1,14 @@
 <!doctype html>
-<html lang="ko">
+<html lang="ko" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#171B22" media="(prefers-color-scheme: dark)">
-<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#171B22">
+<meta name="color-scheme" content="dark">
+<script id="th">/* 기본은 다크. 저장해 둔 값(빠른 캐시)이 light면 밝게. 화면이 그려지기 전에 정해서 깜빡임 방지 */
+(function(){var t="dark";try{if(localStorage.getItem("onething.theme")==="light")t="light"}catch(e){}
+document.documentElement.setAttribute("data-theme",t);
+if(t==="light"){var m=document.querySelector('meta[name=theme-color]');if(m)m.content="#ffffff";var c=document.querySelector('meta[name=color-scheme]');if(c)c.content="light"}})();</script>
 <meta name="robots" content="noindex,nofollow">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231F4E8C'/%3E%3Crect x='25' y='12' width='14' height='26' rx='7' fill='none' stroke='white' stroke-width='4'/%3E%3Cpath d='M16 31a16 16 0 0 0 32 0M32 47v8' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="manifest" href="manifest.webmanifest">
@@ -30,12 +33,12 @@
   --font:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;
   --r-ctl:8px;--r-card:12px;--ease:cubic-bezier(.2,.8,.2,1);--t-fast:120ms;--navh:60px
 }
-@media (prefers-color-scheme:dark){:root{
+html[data-theme="dark"]{
   --bg:#0F1217;--surface:#171B22;--raised:#1E232B;--line:rgba(255,255,255,.09);
   --t1:#E8EBF0;--t2:#A5ADBA;--t3:#747C8A;
   --accent:#7FAEF0;--accent-ink:#0F1217;--accent-weak:rgba(127,174,240,.12);
-  --ok:#4CC282;--warn:#E0A04A;--bad:#EF7A6C}}
-:root{color-scheme:light dark}
+  --ok:#4CC282;--warn:#E0A04A;--bad:#EF7A6C;color-scheme:dark}
+html[data-theme="light"]{color-scheme:light}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{scrollbar-gutter:stable;min-height:100%} /* 스크롤바 자리를 늘 비워 둬서, 스크롤바가 생기고 사라져도 고정 버튼이 밀리지 않음 */
 html,body{font-family:var(--font);font-size:15px;line-height:1.5;background:var(--bg);color:var(--t1)}
@@ -468,12 +471,12 @@ function deliverModule(n,dir,req){
     const f=document.createElement("iframe");f.title=adapter(n.app).name;f.setAttribute("allow","microphone");
     m=MODS[n.app]={frame:f,ready:false,where:{app:n.app,...req},stack:[],restoring:null};
     f.addEventListener("load",()=>{m.ready=true});
-    f.src=dir+"?embed=1&t="+Date.now()+"#"+modHash(req);
+    f.src=dir+"?embed=1&theme="+curTheme()+"&t="+Date.now()+"#"+modHash(req);
     $("#modbody").appendChild(f);
   }else{
     m.where={app:n.app,...req};
     if(m.ready){try{m.frame.contentWindow.postMessage({type:"blue10kp-go",...req},location.origin)}catch(e){}}
-    else m.frame.src=dir+"?embed=1&t="+Date.now()+"#"+modHash(req); // 아직 읽는 중이면 새 주소로
+    else m.frame.src=dir+"?embed=1&theme="+curTheme()+"&t="+Date.now()+"#"+modHash(req); // 아직 읽는 중이면 새 주소로
   }
   if(m.stack.length){ // 이미 화면 기록이 있으면: 요청한 화면이 도착할 때까지 중간 화면은 건너뜀(1.5초 안전장치)
     m.expect=expKey;
@@ -718,8 +721,19 @@ const store=()=>DEMO?Mem:Drive;
 const LOGDIR=[...BASE,"설정"],LOGFILE="말만해요_기록.json",INBOX_DIR=[...BASE,"받은편지함"];
 /* 내 설정(Gemini 키·모델)은 기록과 따로 내 드라이브에 보관: Claude/app/onething/설정/말만해요_설정.json */
 const CFGFILE="말만해요_설정.json";
+/* 다크 모드: 기본 켬. 값은 설정 파일(cfg.dark)에 저장하고, 깜빡임 방지용 빠른 캐시로 localStorage(onething.theme)도 씀.
+   앱을 embed로 띄울 때 주소에 ?theme=dark|light 를 붙이고, 모드를 바꾸면 열려 있는 앱에 {type:"blue10kp-theme",theme}를 보냄 */
+const curTheme=()=>document.documentElement.getAttribute("data-theme")==="light"?"light":"dark";
+function applyTheme(t,fromUser){
+  t=t==="light"?"light":"dark";
+  document.documentElement.setAttribute("data-theme",t);
+  const m=document.querySelector("meta[name=theme-color]");if(m)m.content=t==="dark"?"#171B22":"#ffffff";
+  const c=document.querySelector("meta[name=color-scheme]");if(c)c.content=t;
+  try{localStorage.setItem("onething.theme",t)}catch(e){}
+  if(fromUser)Object.keys(MODS).forEach(k=>{const m=MODS[k];if(m&&m.ready){try{m.frame.contentWindow.postMessage({type:"blue10kp-theme",theme:t},location.origin)}catch(e){}}});
+}
 let cfg={geminiKey:"",model:GEMINI_MODEL_DEFAULT};
-async function loadCfg(){try{const c=await store().read(LOGDIR,CFGFILE);if(c)cfg={...cfg,...c}}catch(e){}}
+async function loadCfg(){try{const c=await store().read(LOGDIR,CFGFILE);if(c)cfg={...cfg,...c}}catch(e){} applyTheme(cfg.dark===false?"light":"dark")}
 async function saveCfg(){try{await store().write(LOGDIR,CFGFILE,cfg)}catch(e){alert("설정을 저장하지 못했어요. 다시 시도해 주세요.")}}
 let db=null,me="",dirty=false,saving=false,again=false,saveT=null,retryT=null;
 const normDb=d=>{d=d||{};d.records??=[];d.off??=[];return d};
@@ -970,7 +984,9 @@ function setHtml(){
     <b>주행거리 적기</b>: “하양이 206260”, “하양이 206,260”, “하양이 20만 6260”처럼 차 이름과 숫자만 말하면 차차차 주행거리(km)로 받은편지함에 담아요(날짜는 오늘). 충전비·정비는 “하양이 충전 3만원”처럼 낱말을 같이 말하세요.<br>
     <b>묻는 창과 말만해요 버튼</b>: 앱을 열면 묻는 창이 열린 채로 시작해요. 답 카드도 이 창 안에 나와요. X로 닫으면 뒤의 최근 기록이 보이고, 오른쪽 아래 말만해요 버튼은 어느 화면에서나 떠 있어서 누르면 창이 다시 열려요.<br>
     <b>새로 적는 것은 편지로</b>: “오늘 본 영화 기록해줘”, “충전 40kWh 기록해줘”처럼 다른 앱에 기록을 새로 남기는 말은 그 앱의 받은편지함에 남기고, 카드의 [앱으로 열기]로 그 앱을 열 수 있어요(앱을 열면 반영돼요). 신한FC 상담 메모는 신한FC 고객 화면을 열어 직접 적어요. 읽기인지 쓰기인지 애매하면 어디로 보낼지 물어봐요.<br>
+    <b>다크 모드</b>: 기본은 다크예요. 설정의 ‘다크 모드’ 체크를 끄면 밝은 화면으로 바뀌고, 이 설정은 말만해요 안에 열리는 신한FC·차차차·항상일상 화면에도 함께 적용돼요.<br>
     <b>로그인</b>: 한 번 로그인하면 같은 브라우저에서 다른 앱(신한FC·차차차·항상일상 등)도 로그인 없이 열려요. 로그아웃하면 <b>모든 앱에서 로그아웃</b>돼요. 로그인은 1시간 정도 유지되고, 끝나면 아무 앱에서나 다시 연결하면 돼요. (아이폰은 홈 화면에 추가한 앱끼리는 나눠 쓰지 못해요.)</p></details></div>
+  <div class="card"><label class="chk" style="margin:0"><input type="checkbox" id="darkchk" ${cfg.dark===false?"":"checked"}>다크 모드 (기본 켬)</label></div>
   ${isStandalone()?"":`<div class="card" id="installcard"><h3>앱 설치</h3><div class="t">홈 화면에 추가해서 앱처럼 쓰세요</div>
     <p class="k" style="margin:6px 0 0">안드로이드 크롬: 브라우저 메뉴 → ‘앱 설치’ 또는 ‘홈 화면에 추가’. 아이폰 사파리: 공유 → ‘홈 화면에 추가’.</p>
     <div class="acts"><button class="btn pri" id="installbtn" ${installEv?"":"hidden"}>앱 설치</button></div></div>`}
@@ -1007,6 +1023,7 @@ function bind(){
     pending=null;render();const tx=$("#txt");if(tx){tx.value=(d.getMonth()+1)+"월 "+d.getDate()+"일"+t+" "+e.title.replace(/^[^\s)]{1,10}\)\s*/,"")+"을 ";tx.focus()}});
   document.querySelectorAll("[data-resume]").forEach(b=>b.onclick=()=>resume(b.dataset.resume));
   document.querySelectorAll("[data-app]").forEach(c=>c.onchange=()=>{const id=c.dataset.app;db.off=db.off.filter(x=>x!==id);if(!c.checked)db.off.push(id);save();render()});
+  const dk=$("#darkchk");if(dk)dk.onchange=async()=>{cfg.dark=dk.checked;applyTheme(dk.checked?"dark":"light",true);await saveCfg()};
   const lo=$("#logout");if(lo)lo.onclick=logout;
   const gs=$("#gsave");if(gs)gs.onclick=async()=>{const k=$("#gkey").value.trim();if(k)cfg.geminiKey=k;cfg.model=$("#gmodel").value.trim()||GEMINI_MODEL_DEFAULT;await saveCfg();render()};
   const gd=$("#gdel");if(gd)gd.onclick=async()=>{cfg.geminiKey="";await saveCfg();render()};
