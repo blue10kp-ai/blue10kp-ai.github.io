@@ -22,162 +22,266 @@ var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("co
 <link rel="preconnect" href="https://www.googleapis.com">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <title>항상일상</title>
 <style>
-/* 차차차·신한FC m과 같은 디자인 기준(색·글자·버튼·하단 메뉴)을 이 파일 안에 옮겨 둔 것 */
 :root{
-  --bg:#F4F5F7;--surface:#FFFFFF;--raised:#F0F2F5;--line:rgba(20,30,50,.10);
+  --bg:#F4F5F7;--surface:#FFFFFF;--raised:#ECEEF2;--line:rgba(20,30,50,.10);
   --t1:#151A22;--t2:#4B5361;--t3:#6B7382;
   --accent:#1F4E8C;--accent-ink:#FFFFFF;--accent-weak:rgba(31,78,140,.08);
-  --ok:#1D7A46;--warn:#A8620B;--bad:#C0392B;--star:#C77F0A;
-  --k-video:#4F74A8;--k-place:#B4603A;--k-trip:#3B8A80;--k-daily:#9A8230;--k-other:#6B7382;
+  --bad:#C0392B;
+  --c-see:#2F6FD0;--c-hear:#13897A;--c-eat:#B5701A;--c-go:#4F8A22;--c-work:#B04A66;--c-none:#7C8594;
+  --pframe:#FFFFFF;--pink:#14181F;--pmut:#7C8594;--pshadow:0 1px 2px rgba(20,30,50,.08),0 4px 12px rgba(20,30,50,.06);
   --font:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;
-  --r-ctl:8px;--r-card:12px;--r-panel:16px;
-  --ease:cubic-bezier(.2,.8,.2,1);--t-fast:120ms;--t-in:200ms;--navh:60px;
-  color-scheme:light dark /* 스크롤바·바운스 때 보이는 바탕도 앱 색을 따름 */
+  --mono:ui-monospace,"SF Mono","JetBrains Mono","D2Coding",Menlo,Consolas,monospace;
+  --ease:cubic-bezier(.2,.8,.2,1);--navh:64px;
+  color-scheme:light dark
 }
 :root[data-theme="light"]{color-scheme:light}
-:root[data-theme="dark"]{color-scheme:dark}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+:root[data-theme="dark"]{color-scheme:dark;
   --bg:#0F1217;--surface:#171B22;--raised:#1E232B;--line:rgba(255,255,255,.09);
-  --t1:#E8EBF0;--t2:#A5ADBA;--t3:#747C8A;
+  --t1:#E8EBF0;--t2:#A5ADBA;--t3:#7B8494;
   --accent:#7FAEF0;--accent-ink:#0F1217;--accent-weak:rgba(127,174,240,.12);
-  --ok:#4CC282;--warn:#E0A04A;--bad:#EF7A6C;--star:#E8B04A;
-  --k-video:#7FA3D6;--k-place:#E08E66;--k-trip:#6CC0B4;--k-daily:#D2BA5E;--k-other:#A5ADBA}}
-:root[data-theme="dark"]{
-  --bg:#0F1217;--surface:#171B22;--raised:#1E232B;--line:rgba(255,255,255,.09);
-  --t1:#E8EBF0;--t2:#A5ADBA;--t3:#747C8A;
-  --accent:#7FAEF0;--accent-ink:#0F1217;--accent-weak:rgba(127,174,240,.12);
-  --ok:#4CC282;--warn:#E0A04A;--bad:#EF7A6C;--star:#E8B04A;
-  --k-video:#7FA3D6;--k-place:#E08E66;--k-trip:#6CC0B4;--k-daily:#D2BA5E;--k-other:#A5ADBA}
+  --bad:#EF7A6C;
+  --c-see:#7FAEF0;--c-hear:#5CC7B5;--c-eat:#E3AB5E;--c-go:#9CCB74;--c-work:#DE95A9;--c-none:#7B8494;
+  --pframe:#E9E6DF;--pink:#1A1D22;--pmut:#6E6A62;--pshadow:none}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;font-family:var(--font);font-size:15px;line-height:1.5;background:var(--bg);color:var(--t1)}
+body{min-height:100vh;min-height:100dvh}
 html.lock{overflow:hidden}
-html,body{font-family:var(--font);font-size:15px;line-height:1.5;background:var(--bg);color:var(--t1)}
-body{margin:0;padding-bottom:calc(var(--navh) + 24px + env(safe-area-inset-bottom))}
-button,input,select,textarea{font-family:var(--font)}
-button{color:inherit;cursor:pointer}
-.btn,.rec,.chips button,.seg button,.rowbtn,nav button{transition:background-color var(--t-fast) var(--ease),border-color var(--t-fast) var(--ease),color var(--t-fast) var(--ease),transform var(--t-fast) var(--ease)}
-.btn:active,.rec:active{transform:scale(.98)}
-button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button,input,textarea,select{font-family:var(--font);color:inherit}
+button{cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-header{position:sticky;top:0;z-index:5;background:var(--surface);color:var(--t1);border-bottom:1px solid var(--line);padding:calc(8px + env(safe-area-inset-top)) 16px 8px;min-height:56px;display:flex;align-items:center;font-size:17px;font-weight:600}
-header small{margin-left:auto;font-size:11px;font-weight:500;color:var(--t3)}
-header small.fail{color:var(--bad)}
-.wrap{padding:16px 16px 0;max-width:640px;margin:0 auto}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);padding:16px;margin-bottom:8px}
-.card h3{margin:0 0 8px;font-size:13px;font-weight:500;color:var(--t3)}
-.sub{color:var(--t2);font-size:13px;line-height:1.45}
-.k{color:var(--t3);font-size:12px}
-.empty{color:var(--t3);text-align:center;padding:28px 0;font-size:14px;line-height:1.6}
-.note{font-size:13px;color:var(--t3);margin-top:8px}
-.btn{display:inline-flex;align-items:center;justify-content:center;height:36px;padding:0 16px;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--surface);color:var(--t2);font-size:14px;font-weight:600;line-height:1;white-space:nowrap}
-.btn:active{background:var(--raised)}
-.btn.pri{border-color:var(--accent);color:var(--accent)}
-.btn.dng{color:var(--bad)}
-.btn.sm{height:28px;padding:0 12px;font-size:12px}
-.btn:disabled{opacity:.4}
-.acts{display:flex;gap:8px;margin-top:16px}.acts .btn{flex:1}
-label{display:block;font-size:13px;color:var(--t3);margin:16px 0 4px}
-input,select,textarea{width:100%;height:44px;padding:0 12px;font:inherit;font-size:16px;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--surface);color:var(--t1)}
-textarea{height:auto;padding:8px 12px;line-height:1.45}
-input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
-.inl{display:flex;gap:8px}.inl>*{flex:1;min-width:0}
-.seg{display:flex;gap:2px;background:var(--raised);border-radius:var(--r-ctl);padding:2px}
-.seg button{flex:1;min-height:34px;padding:0 8px;border:0;border-radius:6px;background:none;color:var(--t2);font-size:13px;font-weight:500}
-.seg button.on{background:var(--surface);color:var(--t1);box-shadow:0 0 0 1px var(--line)}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chips button{min-height:34px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:0 12px;font-size:13px;color:var(--t2)}
-.chips button.on{border-color:var(--accent);color:var(--accent);background:var(--accent-weak);font-weight:600}
-/* 기록 카드 */
-.dh{font-size:13px;font-weight:500;color:var(--t2);margin:20px 4px 8px}
-.dh:first-child{margin-top:0}
-.rec{display:block;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);padding:12px 16px;margin-bottom:8px}
-.rec:active{background:var(--raised)}
-.rec .top{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--t3)}
-.rec .top .kd{font-weight:500;color:var(--t2);display:inline-flex;align-items:center;gap:8px}
-.kdot{display:inline-block;vertical-align:middle;margin-right:4px;width:8px;height:8px;border-radius:50%;background:var(--kc,var(--k-other));flex:none}
-.kdot.video{--kc:var(--k-video)}.kdot.place{--kc:var(--k-place)}.kdot.trip{--kc:var(--k-trip)}.kdot.daily{--kc:var(--k-daily)}
-.rec .top .st{margin-left:auto}
-.rec .tt{font-size:16px;font-weight:600;margin:4px 0 0;word-break:break-word}
-.rec .nt{font-size:13px;color:var(--t2);margin-top:4px;word-break:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.rec .tg{margin-top:8px;font-size:12px;color:var(--accent)}
-.st{color:var(--star);letter-spacing:1px;font-size:13px;white-space:nowrap}
-.trash{opacity:.9}
-/* 오늘 한 줄 */
-.today{display:flex;align-items:baseline;gap:8px;margin-bottom:12px}
-.today .d{font-size:32px;line-height:1;font-weight:600;font-variant-numeric:tabular-nums}
-.today .m{font-size:13px;color:var(--t3)}
-.quick form{display:flex;gap:8px}.quick input{flex:1}
-.rec .pst{float:right;width:44px;height:64px;object-fit:cover;border-radius:6px;margin:0 0 4px 12px;background:var(--raised)}
-.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 10px;margin-bottom:8px;align-items:start}
-.tile{display:block;text-align:left;min-width:0;padding:0;background:none;border:0;color:inherit}
-.tile .cv{aspect-ratio:2/3;border-radius:8px;overflow:hidden;background:var(--raised);border:1px solid var(--line);display:flex;align-items:center;justify-content:center}
-.tile .cv.sq{aspect-ratio:1/1}
-.tile .cv img{width:100%;height:100%;object-fit:cover;display:block}
-.tile .cv.nf::after{content:attr(data-c);font-size:32px;font-weight:600;color:var(--t3)}
-.tile:active .cv{opacity:.8}
-.tile .tn{font-size:13px;font-weight:600;margin-top:6px;line-height:1.3;word-break:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.tile .tm{font-size:12px;color:var(--t2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tile .td{font-size:11px;color:var(--t3);margin-top:1px}
-.tile .td .st{font-size:11px}
-.sheet .pst.big.sq{aspect-ratio:1/1}
-.sheet .pst.big{display:block;width:120px;height:auto;aspect-ratio:2/3;object-fit:cover;border-radius:8px;margin:0 0 12px;background:var(--raised)}
-.quick .btn{height:44px}
-.chips.qm{margin-top:8px;flex-wrap:nowrap;overflow-x:auto}.chips.qm button{min-height:28px;font-size:12px;padding:0 12px;flex:none}
-.quick .today{margin-bottom:8px}.quick .today .d{font-size:24px}
-.qres{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}.qres .btn.sm{flex:none}
-/* 하단 메뉴 */
-nav{position:fixed;left:0;right:0;bottom:0;z-index:12;display:flex;background:var(--surface);border-top:1px solid var(--line);padding:0 8px max(0px,calc(env(safe-area-inset-bottom) - 10px))}
-nav button{flex:1;min-height:var(--navh);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:0;border-radius:0;background:none;position:relative;font-size:11px;font-weight:500;color:var(--t3)}
-nav .ni{display:block;line-height:0}
-nav .ni svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
-nav button.on{color:var(--accent)}
-nav button.on::before{content:"";position:absolute;top:-1px;left:28%;right:28%;height:2px;background:var(--accent);border-radius:0 0 2px 2px}
-nav .plus .pc{width:44px;height:44px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;margin-top:-12px;box-shadow:0 0 0 4px var(--surface)}
-nav .plus .pc svg{width:24px;height:24px;stroke:currentColor;stroke-width:2}
-nav .plus{color:var(--accent)}
-nav .plus span.l{margin-top:-2px}
-/* 입력 창(시트) */
-.modal{position:fixed;inset:0;background:rgba(10,15,25,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center}
-.sheet{background:var(--surface);color:var(--t1);border-radius:20px 20px 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.18);width:100%;max-width:640px;max-height:92vh;max-height:92dvh;overflow:auto;padding:8px 16px calc(16px + env(safe-area-inset-bottom));animation:up var(--t-in) var(--ease)}
-.sheet::before{content:"";display:block;width:40px;height:5px;border-radius:3px;background:var(--t3);opacity:.5;margin:2px auto 12px}
-.sheet h3{margin:0 0 4px;font-size:18px;font-weight:600;word-break:break-word}
-@keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
-.sheet .acts.stk{position:sticky;bottom:calc(-16px - env(safe-area-inset-bottom));background:var(--surface);padding:12px 0 calc(16px + env(safe-area-inset-bottom));margin-bottom:calc(-16px - env(safe-area-inset-bottom))}
-.stars{display:flex;gap:2px}
-.stars button{width:44px;height:44px;border:0;background:none;font-size:28px;line-height:1;color:var(--t3)}
-.stars button.on{color:var(--star)}
-.kv{display:flex;gap:12px;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
-.kv .a{flex:0 0 84px;color:var(--t3);font-size:13px}.kv .b{flex:1;word-break:break-word}
-.kv a{color:var(--accent)}
-.row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 0;border-top:1px solid var(--line)}
-.row:first-child{border-top:0}
-.row .t{font-weight:500}.row .r{text-align:right;color:var(--t3);font-size:13px}
-.rowbtn{display:flex;width:100%;justify-content:space-between;align-items:center;padding:12px 0;border:0;border-top:1px solid var(--line);background:none;text-align:left;font-size:15px;font-weight:500}
-.rowbtn:first-child{border-top:0}
-.rowbtn .r{color:var(--t3);font-size:13px;font-weight:400}
-.sec{font-size:13px;font-weight:500;color:var(--t2);margin:20px 4px 8px}
-.toast{position:fixed;left:16px;right:16px;bottom:calc(var(--navh) + 16px + env(safe-area-inset-bottom));z-index:30;max-width:420px;margin:0 auto;background:var(--t1);color:var(--bg);border-radius:var(--r-ctl);padding:12px 16px;font-size:14px;display:flex;align-items:center;gap:12px;animation:up var(--t-in) var(--ease)}
-.toast button{margin-left:auto;border:0;background:none;color:var(--bg);font-weight:700;font-size:14px;text-decoration:underline}
-.back{border:0;background:none;color:var(--accent);font-size:14px;font-weight:600;padding:4px 0;margin-bottom:8px}
-.demo{font-size:11px;color:var(--warn);margin-left:8px;font-weight:500}
 [hidden]{display:none!important}
-/* 말만해요 안(embed): 위·아래 메뉴 없이 그 페이지만, 위쪽은 말만해요 플로팅 버튼 자리 56px */
-html.embed header,html.embed nav{display:none!important}
-html.embed body{padding-top:56px;padding-bottom:calc(104px + env(safe-area-inset-bottom))} /* 오른쪽 아래 88px는 말만해요 버튼 자리 */
-html.embed .toast{bottom:calc(88px + env(safe-area-inset-bottom))} /* 오른쪽 아래 말만해요 버튼(56px) 위로 */
+svg.i{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.ib{width:36px;height:36px;border:0;border-radius:10px;background:none;color:var(--t2);display:inline-grid;place-items:center;flex:none;transition:background-color .12s var(--ease)}
+.ib:active{background:var(--raised)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:none;color:var(--t1);font-size:13px;white-space:nowrap;text-decoration:none;transition:background-color .12s var(--ease)}
+.btn:active{background:var(--raised)}
+.btn.p{background:var(--accent);border-color:transparent;color:var(--accent-ink);font-weight:500}
+.btn.dng{color:var(--bad)}
+.btn:disabled{opacity:.45}
+.btn svg.i{width:16px;height:16px}
+/* 테마 색 */
+.see{--c:var(--c-see)}.hear{--c:var(--c-hear)}.eat{--c:var(--c-eat)}.go{--c:var(--c-go)}.work{--c:var(--c-work)}.none{--c:var(--c-none)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c,var(--c-none));flex:none}
+/* 머리 */
+header{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(8px + env(safe-area-inset-top)) 12px 4px 16px}
+.hrow{display:flex;align-items:center;gap:4px;min-height:40px}
+.hrow h1{margin:0;font-size:20px;font-weight:500;flex:1;min-width:0;display:flex;align-items:center;gap:4px;white-space:nowrap}
+.hrow h1 .cnt{font-size:12px;color:var(--t3);font-weight:400;margin-left:6px}
+.hrow .nv{width:28px;height:28px}
+#sync{font-size:11px;color:var(--t3);margin-right:2px;white-space:nowrap}
+#sync.fail{color:var(--bad)}
+.srow{display:flex;align-items:center;gap:8px;height:36px;padding:0 4px 0 12px;border-radius:10px;background:var(--raised);color:var(--t3);margin:4px 0 8px}
+.srow input{flex:1;min-width:0;height:34px;border:0;background:none;font-size:15px;color:var(--t1);outline:0}
+.srow input::placeholder{color:var(--t3)}
+.seg{display:flex;gap:2px;background:var(--surface);border-radius:8px;padding:2px;flex:none}
+.seg button{border:0;background:none;font-size:12px;padding:2px 8px;border-radius:6px;color:var(--t3);height:26px}
+.seg button.on{background:var(--raised);color:var(--t1)}
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
+.chips::-webkit-scrollbar{display:none}
+.chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:14px;border:1px solid var(--line);background:none;font-size:13px;color:var(--t2);white-space:nowrap;flex:none}
+.chip.on{background:var(--t1);color:var(--bg);border-color:transparent}
+.chip.pick.on{background:var(--surface);color:var(--t1);border-color:var(--c,var(--t1))}
+/* 목록 (폴라로이드) */
+.wrap{padding:0 16px;max-width:720px;margin:0 auto}
+.day{display:flex;justify-content:space-between;font-size:12px;color:var(--t3);margin:16px 2px 8px}
+.pgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (min-width:600px){.pgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.pola{display:block;width:100%;text-align:left;border:0;background:var(--pframe);border-radius:4px;padding:8px 8px 0;box-shadow:var(--pshadow);color:var(--pink);transition:transform .12s var(--ease)}
+.pola:active{transform:scale(.98)}
+.ph{position:relative;aspect-ratio:1/1;border-radius:2px;overflow:hidden;background:#2A2F38}
+.ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.ph .stamp{position:absolute;right:6px;bottom:4px;font-size:10px;color:#F2C879;letter-spacing:.04em;text-shadow:0 1px 2px rgba(0,0,0,.7)}
+.ph .rec{position:absolute;left:6px;top:6px;font-size:10px;line-height:16px;padding:0 6px;border-radius:4px;background:rgba(10,13,17,.62);color:#E6E9EE}
+.ph .busy{position:absolute;left:6px;bottom:6px;font-size:10px;line-height:16px;padding:0 6px;border-radius:4px;background:rgba(10,13,17,.62);color:#E6E9EE}
+.ph .txt{position:absolute;inset:0;padding:12px;display:flex;align-items:center;font-size:14px;line-height:1.5;color:#3A3730;background:#F6F2E8;overflow:hidden;word-break:break-word}
+:root[data-theme="dark"] .ph .txt{background:#D9D4C8}
+.cp{padding:8px 2px 10px;min-height:52px}
+.cp .ct{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cp .cm{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--pmut);margin-top:2px;white-space:nowrap;overflow:hidden}
+.cp .cm .dot{width:6px;height:6px}
+.empty{color:var(--t3);text-align:center;padding:48px 16px;font-size:14px;line-height:1.7}
+/* 아래 메뉴 */
+nav{position:fixed;left:0;right:0;bottom:0;z-index:12;height:calc(var(--navh) + env(safe-area-inset-bottom));padding:0 24px env(safe-area-inset-bottom);background:var(--surface);border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-around}
+nav .it{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--t2);border:0;background:none;width:64px;padding:6px 0}
+nav .cam{width:52px;height:52px;border-radius:16px;border:0;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center}
+nav .cam svg.i{width:24px;height:24px}
+html.embed header{padding-top:56px}
+html.embed nav{left:50%;right:auto;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom));height:56px;padding:0 8px;border:1px solid var(--line);border-radius:18px;gap:4px}
+html.embed nav .it{width:52px}
+html.embed nav .cam{width:44px;height:44px;border-radius:14px}
+html.embed body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
+/* 겹 화면 (새 기록 · 상세 · 설정) */
+.layer{position:fixed;inset:0;z-index:20;background:var(--bg);overflow-y:auto;overscroll-behavior:contain;animation:rise .18s var(--ease)}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.lh{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:4px;padding:calc(8px + env(safe-area-inset-top)) 12px 8px;background:var(--bg)}
+.lh h2{margin:0;flex:1;font-size:17px;font-weight:500;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lh h2.sm{font-size:14px;font-weight:400;color:var(--t3)}
+html.embed .lh{padding-top:56px}
+.lb{max-width:640px;margin:0 auto;padding:0 16px calc(32px + env(safe-area-inset-bottom))}
+html.embed .lb{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
+/* 새 기록 */
+.shot{position:relative;border-radius:12px;overflow:hidden;background:var(--raised);aspect-ratio:4/3;display:grid;place-items:center;color:var(--t3);font-size:13px}
+.shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.shot .stamp{position:absolute;right:10px;bottom:8px;font-size:11px;color:#F2C879;letter-spacing:.04em;text-shadow:0 1px 2px rgba(0,0,0,.7)}
+.shot .x{position:absolute;right:8px;top:8px;width:32px;height:32px;border-radius:10px;border:0;background:rgba(10,13,17,.55);color:#fff;display:grid;place-items:center}
+.shotbtns{display:flex;gap:8px;margin-top:8px}
+.auto{display:grid;grid-template-columns:18px 1fr auto;gap:4px 10px;align-items:center;margin-top:12px;font-size:14px}
+.auto svg.i{width:16px;height:16px;color:var(--t3)}
+.auto input{height:32px;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:0 8px;font-size:14px;color:var(--t1);min-width:0}
+.auto .two{display:flex;gap:6px;min-width:0}.auto .two input{flex:1}
+.auto .s{font-size:11px;color:var(--t3);white-space:nowrap}
+.auto .lv{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+textarea.note{display:block;width:100%;margin-top:12px;min-height:96px;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:12px;font-size:16px;line-height:1.5;color:var(--t1);resize:vertical}
+textarea.note:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.hint{font-size:12px;color:var(--t3);margin-top:8px}
+/* 상세 */
+.dph{position:relative;margin:0 -16px;background:#000}
+.dph img{display:block;width:100%;max-height:62vh;object-fit:contain;margin:0 auto}
+.dph .ph{aspect-ratio:auto;height:240px;border-radius:0}
+.dph .stamp{position:absolute;right:12px;bottom:10px;font-size:11px;color:#F2C879;letter-spacing:.04em;text-shadow:0 1px 2px rgba(0,0,0,.7)}
+.dph .rec{position:absolute;left:12px;top:12px;font-size:11px;line-height:18px;padding:0 8px;border-radius:4px;background:rgba(10,13,17,.62);color:#E6E9EE}
+.dt{font-size:22px;font-weight:500;line-height:1.3;margin:16px 0 0;word-break:break-word}
+.dw{font-size:15px;color:var(--t2);margin-top:8px;white-space:pre-wrap;word-break:break-word}
+.meta{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:12px;font-size:12px;color:var(--t3)}
+.meta span{display:inline-flex;align-items:center;gap:6px}
+.meta svg.i{width:14px;height:14px}
+.sec{margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}
+.lab{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t3);margin-bottom:10px}
+.lab svg.i{width:14px;height:14px}
+.inf{display:flex;gap:14px;align-items:flex-start}
+.inf .po{width:76px;flex:none;border-radius:6px;overflow:hidden;background:var(--raised)}
+.inf .po img{display:block;width:100%}
+.l1{font-size:14px;color:var(--t1);font-weight:500;word-break:break-word}
+.l2{font-size:13px;color:var(--t2);margin-top:4px;word-break:break-word}
+.sum{font-size:13px;color:var(--t2);margin-top:10px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.cand{display:flex;flex-direction:column}
+.cand button{display:flex;align-items:center;gap:10px;min-height:44px;padding:6px 0;border:0;border-top:1px solid var(--line);background:none;text-align:left;font-size:14px}
+.cand button:first-child{border-top:0}
+.cand .ck{width:16px;color:var(--accent)}
+.cand .w{font-size:12px;color:var(--t3);margin-left:auto;text-align:right;max-width:45%}
+.ppl{display:flex;flex-wrap:wrap;gap:8px}
+.pp{display:inline-flex;align-items:center;gap:8px;height:30px;padding:0 12px 0 4px;border-radius:15px;background:var(--raised);font-size:13px}
+.pp b{width:22px;height:22px;border-radius:50%;background:var(--accent-weak);color:var(--accent);display:grid;place-items:center;font-size:11px;font-weight:500}
+.why{font-size:12px;color:var(--t3);margin-top:8px}
+.foot{display:flex;gap:8px;margin-top:28px;padding-top:16px;border-top:1px solid var(--line)}
+.foot .sp{flex:1}
+.full{position:fixed;inset:0;z-index:40;background:#000;display:grid;place-items:center}
+.full img{max-width:100%;max-height:100%;object-fit:contain}
+/* 설정 */
+.rowbtn{display:flex;width:100%;align-items:center;justify-content:space-between;gap:12px;min-height:48px;padding:8px 0;border:0;border-top:1px solid var(--line);background:none;text-align:left;font-size:15px}
+.rowbtn:first-child{border-top:0}
+.rowbtn .r{color:var(--t3);font-size:13px;text-align:right}
+.rowbtn .r.ok{color:var(--t1)}
+.grp{background:var(--surface);border-radius:12px;padding:0 16px;margin-top:12px}
+.gl{font-size:12px;color:var(--t3);margin:20px 4px 0}
+.sw{width:40px;height:24px;border-radius:12px;background:var(--raised);border:1px solid var(--line);position:relative;flex:none}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--t3);transition:transform .15s var(--ease)}
+.sw.on{background:var(--accent);border-color:transparent}.sw.on::after{background:var(--accent-ink);transform:translateX(16px)}
+.help p{font-size:14px;color:var(--t2);line-height:1.7;margin:12px 0}
+.help b{color:var(--t1);font-weight:500}
+input.fld{width:100%;height:40px;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:0 12px;font-size:15px;color:var(--t1);margin-top:8px}
+.trow{display:flex;align-items:center;gap:8px;padding:10px 0;border-top:1px solid var(--line);font-size:14px}
+.trow:first-child{border-top:0}
+.trow .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.toast{position:fixed;left:16px;right:16px;bottom:calc(var(--navh) + 16px + env(safe-area-inset-bottom));z-index:50;max-width:420px;margin:0 auto;background:var(--t1);color:var(--bg);border-radius:10px;padding:10px 14px;font-size:14px;display:flex;align-items:center;gap:12px;animation:rise .18s var(--ease)}
+.toast button{margin-left:auto;border:0;background:none;color:var(--bg);font-weight:600;font-size:14px;text-decoration:underline}
+html.embed .toast{bottom:calc(88px + env(safe-area-inset-bottom))}
+.demo{font-size:11px;color:var(--c-eat);margin-left:6px;font-weight:400}
+/* 손글씨 캡션 */
+.pen{font-family:"Nanum Pen Script","Pretendard Variable",cursive;color:#2E2C28;font-size:21px;line-height:1.1;padding:8px 4px 10px;min-height:52px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:keep-all;overflow-wrap:anywhere}
+.pola{display:block;background:var(--pframe);border-radius:3px;padding:8px 8px 0;box-shadow:var(--pshadow)}
+.pola .ph{border-radius:1px}
+/* 촬영 페이지: 카메라처럼 늘 어두운 화면 */
+.shoot{position:fixed;inset:0;background:#0A0B0D;color:#E9ECF1;display:flex;flex-direction:column;align-items:center;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.stop{display:flex;align-items:center;gap:4px;width:100%;max-width:560px;padding:8px 12px}
+.stop .sp{flex:1}
+.sbtn{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 10px;border:0;border-radius:10px;background:none;color:#C9CED6;font-size:13px}
+.sbtn:active{background:rgba(255,255,255,.08)}
+.shoot #sync{color:#8A919C}
+.vf{position:relative;width:min(100vw,calc(100dvh - 240px),560px);aspect-ratio:1/1;margin:auto 0;background:#15171B;overflow:hidden}
+.vf video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.vf video.mir{transform:scaleX(-1)}
+.vgrid{position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,transparent calc(33.33% - .5px),rgba(255,255,255,.14) calc(33.33% - .5px),rgba(255,255,255,.14) calc(33.33% + .5px),transparent calc(33.33% + .5px),transparent calc(66.66% - .5px),rgba(255,255,255,.14) calc(66.66% - .5px),rgba(255,255,255,.14) calc(66.66% + .5px),transparent calc(66.66% + .5px)),linear-gradient(180deg,transparent calc(33.33% - .5px),rgba(255,255,255,.14) calc(33.33% - .5px),rgba(255,255,255,.14) calc(33.33% + .5px),transparent calc(33.33% + .5px),transparent calc(66.66% - .5px),rgba(255,255,255,.14) calc(66.66% - .5px),rgba(255,255,255,.14) calc(66.66% + .5px),transparent calc(66.66% + .5px))}
+.vmsg{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;font-size:13px;color:#8A919C;line-height:1.6;white-space:pre-line}
+.vmsg:empty{display:none}
+.flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .25s ease}
+.flash.on{opacity:.85;transition:none}
+.sbar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;width:100%;max-width:560px;padding:20px 28px 28px}
+.shutter{width:76px;height:76px;border-radius:50%;border:4px solid #E9ECF1;background:#E9ECF1;box-shadow:inset 0 0 0 3px #0A0B0D;transition:transform .1s var(--ease)}
+.shutter:active{transform:scale(.93)}
+.gal{justify-self:start;width:52px;height:52px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:#15171B;color:#C9CED6;display:grid;place-items:center;padding:0;overflow:hidden;position:relative}
+.gal .gp{display:block;width:100%;height:100%}
+.gal .ph{aspect-ratio:auto;width:100%;height:100%;border-radius:0}
+.gal .ph .stamp,.gal .ph .rec,.gal .ph .busy{display:none}
+.gal .ph .txt{font-size:7px;padding:4px}
+/* 보기 페이지 */
+.vtop{position:sticky;top:0;z-index:3;background:var(--bg);padding:calc(6px + env(safe-area-inset-top)) 12px 2px}
+html.embed .vtop{padding-top:56px}
+.vtop .hrow h1{font-size:18px}
+.cf{position:relative;height:calc(var(--w,220px) + 140px);margin:0 0 -12px;perspective:1100px;overflow:hidden;touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:grab}
+.cfc{position:absolute;left:50%;top:8px;width:var(--w,220px);margin-left:calc(var(--w,220px) / -2);transform-style:preserve-3d;will-change:transform}
+.cfc .pola{pointer-events:none;-webkit-box-reflect:below 4px linear-gradient(transparent 72%,rgba(255,255,255,.16))}
+#vbody{display:flex;flex-direction:column;justify-content:center;min-height:calc(100dvh - 150px)}
+.cfc .ph img{-webkit-user-drag:none}
+.cfm{text-align:center;padding:4px 24px 0;min-height:68px}
+.cfm .ct{font-size:16px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cfm .cm{display:flex;justify-content:center;flex-wrap:wrap;align-items:center;gap:4px 6px;font-size:12px;color:var(--t3);margin-top:2px}
+.cfm .cn{font-size:11px;color:var(--t3);margin-top:4px}
+.scrub{display:block;width:calc(100% - 64px);max-width:480px;margin:8px auto 24px;accent-color:var(--accent);height:20px}
+/* 입력 페이지 */
+.epola{width:min(78vw,300px);margin:4px auto 0}
+.epola .ph{display:grid;place-items:center}
+.epola .ph .emp{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:#8A919C;font-size:12px;text-align:center;padding:16px;background:#22262D}
+.epola .ph .emp .btnrow{margin:0}
+.epola .ph .emp .btn{color:#E9ECF1;border-color:rgba(255,255,255,.2)}
+.epola .pen:empty::before{content:"여기에 글이 적혀요";color:#A39E93}
+.eacts{display:flex;justify-content:center;gap:8px;margin-top:10px}
+.eacts .btn{height:28px;font-size:12px}
+.themes5{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:10px}
+.themes5 .chip{justify-content:center;padding:0 4px;height:34px;border-radius:10px}
+/* 상세: 위는 폴라로이드 */
+.dpola{width:min(86vw,360px);margin:4px auto 0;cursor:zoom-in}
+.dpola .pen{font-size:24px;-webkit-line-clamp:4}
 /* 로그인 화면: 차차차와 같은 모양 */
 .login{max-width:360px;margin:16vh auto 0;padding:0 24px;text-align:center}
 .login h1{font-size:28px;font-weight:700;margin:0 0 4px;letter-spacing:-.5px}
 .login p{margin:0 0 24px;color:var(--t2);font-size:14px}
-.login .btn{width:100%;height:44px;font-size:15px;margin-top:8px}
+.login .btn{width:100%;height:44px;font-size:15px;margin-top:8px;border-radius:8px;font-weight:600}
+.login .btn.pri{border-color:var(--accent);color:var(--accent)}
 .login .lm{min-height:22px;margin:0 0 12px;font-size:13px;color:var(--t3)}
 .login .lm.err{color:var(--bad)}
-.login .hint{margin-top:20px;font-size:12px;color:var(--t3)}
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-cam" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></symbol>
+<symbol id="i-img" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M21 16l-5-5-8 9"/></symbol>
+<symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/></symbol>
+<symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+<symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+<symbol id="i-l" viewBox="0 0 24 24"><path d="M14 6l-6 6 6 6"/></symbol>
+<symbol id="i-r" viewBox="0 0 24 24"><path d="M10 6l6 6-6 6"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+<symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+<symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
+<symbol id="i-gem" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></symbol>
+<symbol id="i-redo" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v4h-4"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+<symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+<symbol id="i-user"viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+</defs></svg>
+
 <section id="login" class="login">
   <h1>항상일상</h1>
   <p>나의 일상 기록장</p>
@@ -185,11 +289,25 @@ html.embed .toast{bottom:calc(88px + env(safe-area-inset-bottom))} /* 오른쪽 
   <button class="btn pri" id="loginBtn" hidden>Google 계정으로 로그인</button>
   <button class="btn" id="loginOtherBtn" hidden>다른 계정으로 로그인</button>
 </section>
-<header id="title" hidden><span>항상일상</span><span class="demo" id="demoTag" hidden>체험 모드</span><small id="sync"></small></header>
-<div class="wrap" id="main" hidden></div>
-<nav id="nav" hidden></nav>
-<div id="modal"></div>
+<section id="shoot" class="shoot" hidden>
+  <div class="stop">
+    <button class="sbtn" data-act="album" aria-label="휴대폰 앨범에서 고르기"><svg class="i"><use href="#i-img"/></svg><span>앨범</span></button>
+    <button class="sbtn" data-act="write" aria-label="글만 쓰기"><svg class="i"><use href="#i-pen"/></svg><span>글</span></button>
+    <span class="sp"></span><span id="sync"></span>
+    <button class="sbtn" data-act="flip" id="flipBtn" aria-label="앞뒤 카메라 바꾸기"><svg class="i"><use href="#i-redo"/></svg></button>
+    <button class="sbtn" data-act="settings" aria-label="설정"><svg class="i"><use href="#i-gear"/></svg></button>
+  </div>
+  <div class="vf" id="vf"><video id="vid" playsinline muted autoplay></video><div class="vgrid"></div><div class="vmsg" id="vmsg"></div><div class="flash" id="flash"></div></div>
+  <div class="sbar">
+    <button class="gal" data-act="view" id="galBtn" aria-label="보기"></button>
+    <button class="shutter" data-act="shutter" aria-label="찍기"></button>
+    <span class="gsp"></span>
+  </div>
+</section>
+<div id="layers"></div>
 <div id="toast" class="toast" hidden></div>
+<input type="file" id="fCam" accept="image/*" capture="environment" hidden>
+<input type="file" id="fAlb" accept="image/*" hidden>
 
 <script>
 "use strict";
@@ -197,155 +315,137 @@ html.embed .toast{bottom:calc(88px + env(safe-area-inset-bottom))} /* 오른쪽 
 const ALLOWED=["blue10kp@gmail.com"]; // 로그인을 허용할 구글 계정 (소문자로, 여러 명이면 쉼표로 추가). 화면 보호용이며, 실제 보호는 각자의 Google Drive 권한입니다.
 const GCLIENT="482206908404-5sdbvetcrc8j7ctrhe6aa23ccmd3d05d.apps.googleusercontent.com"; // 구글 로그인 클라이언트 ID (차차차와 같은 값, 공개되어도 되는 값)
 const GSCOPE="openid email https://www.googleapis.com/auth/drive.file"; // 이 앱이 만든 파일만 접근 (Drive 전체 권한 아님)
-const GPICKER_KEY=""; // 파일 선택 창(Google Picker)용 브라우저 API 키. 사용자가 구글 클라우드에서 발급해 여기에 붙여 넣음(출처 제한 키는 공개되어도 됨). 비어 있으면 받은편지함 연결은 "준비 중"으로 보임
-const GPROJECT="482206908404"; // 구글 클라우드 프로젝트 번호(클라이언트 ID 앞 숫자)
-const DRIVE_PATH=["goodday"],DRIVE_FILE="goodday_기록.json"; // 각자의 내 드라이브 안 저장 위치
-const VER="1단계 (2026-11-14)";
+const DRIVE_PATH=["goodday"],DRIVE_FILE="goodday_기록.json",PHOTO_DIR="사진"; // 각자의 내 드라이브 안 저장 위치
+const VER="2단계 · 촬영·보기 (2026-11-19)";
 /* ===== 끝 ===== */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const p2=n=>String(n).padStart(2,"0");
+const iso=d=>d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate());
+const hm=d=>p2(d.getHours())+":"+p2(d.getMinutes());
 const today=()=>iso(new Date());
 const WD="일월화수목금토";
-const EMBED=/[?&]embed=1(&|$)/.test(location.search); // 말만해요 안에 끼워 보일 때(로그아웃 숨김, 로그인 화면 대신 안내)
+const EMBED=/[?&]embed=1(&|$)/.test(location.search); // 말만해요 안에 끼워 보일 때
 if(EMBED)document.documentElement.classList.add("embed");
 const DEMO=/^(localhost|127\.0\.0\.1)$/.test(location.hostname)&&/[?&]demo=1/.test(location.search); // 내 컴퓨터에서 화면 확인용(구글 로그인·Drive 저장 없음)
 /* localStorage는 막힐 수 있어 항상 감쌈 (화면 모드·파일 번호 같은 기기 편의 값만 둠. 기록은 두지 않음) */
 const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 const lsDel=k=>{try{localStorage.removeItem(k)}catch(e){}};
+const ico=(n,c)=>`<svg class="i"${c?` style="${c}"`:""}><use href="#i-${n}"/></svg>`;
 
-/* ---------- 기본 종류 ---------- */
-const BASE=[
- {id:"video",name:"영상·음악",noteLabel:"한 줄 감상",fields:[
-  {k:"type",l:"구분",t:"sel",o:["영화","드라마","공연","음악","기타"]},
-  {k:"where",l:"본 곳·들은 곳",t:"text",ph:"극장, 넷플릭스…"},
-  {k:"with",l:"함께한 사람",t:"text"},
-  {k:"info",l:"작품 정보",t:"area"},
-  {k:"link",l:"관련 정보 링크",t:"url",ll:"관련 정보 보기"}]},
- {id:"book",name:"책",noteLabel:"한 줄 감상",fields:[
-  {k:"author",l:"저자",t:"text"},
-  {k:"publisher",l:"출판사",t:"text"},
-  {k:"info",l:"책 정보",t:"area"},
-  {k:"link",l:"관련 정보 링크",t:"url",ll:"관련 정보 보기"}]},
- {id:"place",name:"맛집·장소",noteLabel:"한 줄 메모",fields:[
-  {k:"type",l:"구분",t:"sel",o:["맛집","멋곳"]},
-  {k:"addr",l:"주소",t:"text"},
-  {k:"map",l:"지도 링크",t:"url",ph:"지도 앱에서 공유한 링크를 붙여 넣기",ll:"지도 열기"},
-  {k:"menu",l:"먹은 메뉴",t:"text"},
-  {k:"price",l:"가격(원)",t:"num"},
-  {k:"again",l:"또 갈까요",t:"sel",o:["또 갈래요","글쎄요","다시는 안 가요"]},
-  {k:"info",l:"장소 정보",t:"area"},
-  {k:"link",l:"관련 정보 링크",t:"url",ll:"관련 정보 보기"}]},
- {id:"trip",name:"여행",noteLabel:"한 줄 메모",fields:[
-  {k:"region",l:"지역",t:"text"},
-  {k:"start",l:"시작일",t:"date"},
-  {k:"end",l:"끝난 날",t:"date"}]},
- {id:"daily",name:"일상",noteLabel:"오늘의 한 줄",fields:[
-  {k:"mood",l:"기분",t:"sel",o:["좋음","괜찮음","그저 그럼","별로"]}]}
-];
-const CUSTOM_FIELDS=[{k:"detail",l:"자세히",t:"area"}];
+/* ---------- 테마 5개 ---------- */
+const THEMES=[["see","보고"],["hear","듣고"],["eat","먹고"],["go","가고"],["work","일"]];
+const TH=Object.fromEntries(THEMES);
+const thName=t=>TH[t]||"기타";
+const thCls=t=>TH[t]?t:"none";
 
-/* ---------- 자료 모양 ---------- */
+/* ---------- 자료 모양 ----------
+   기록: {id,theme,date,time,title,note,loc:{lat,lng,addr},photo:{full,thumb},rec:{url,src},art,sub,info,link,map,cands:[{name,what,near}],pick,people:[],q,why,ts,upd,del}
+   예전 기록(kind·x)은 불러올 때 새 모양으로 옮김(예전 칸은 그대로 둠) */
 let db=null,dirty=false,me="";
+function oldTheme(r){
+  const x=r.x||{},t=x.type||"";
+  if(r.kind==="video")return t==="음악"?"hear":"see";
+  if(r.kind==="book")return"see";
+  if(r.kind==="place")return t==="멋곳"?"go":"eat";
+  if(r.kind==="trip")return"go";
+  return"";
+}
+const TMDB_IMG="https://image.tmdb.org/t/p/";
 function norm(d){
-  d=d&&typeof d==="object"?d:{};d.v=1;
+  d=d&&typeof d==="object"?d:{};
   d.records=Array.isArray(d.records)?d.records:[];
   const s=d.settings=d.settings&&typeof d.settings==="object"?d.settings:{};
-  s.stars=s.stars==="num"?"num":"star";
-  s.theme=["auto","light","dark"].includes(s.theme)?s.theme:"auto";
-  s.dark=typeof s.dark==="boolean"?s.dark:s.theme!=="light"; // 기본 다크 켬 (예전에 라이트를 골랐던 사람만 꺼짐)
-  s.hidden=Array.isArray(s.hidden)?s.hidden:[];
-  s.custom=Array.isArray(s.custom)?s.custom:[];
-  s.lastKind??="";
-  s.inboxFile=s.inboxFile&&typeof s.inboxFile.id==="string"?{id:s.inboxFile.id,name:String(s.inboxFile.name||"")}:null;
-  d.records.forEach(r=>{r.tags=Array.isArray(r.tags)?r.tags:[];r.x=r.x&&typeof r.x==="object"?r.x:{};r.rating=+r.rating||0;r.note??="";r.date??=""});
-  const lim=Date.now()-30*864e5; // 휴지통은 30일 뒤 자동 정리
+  s.dark=typeof s.dark==="boolean"?s.dark:s.theme!=="light"; // 기본 다크
+  if(d.v!==2){ // 예전(1단계) 기록 옮기기
+    d.records.forEach(r=>{
+      if(r.theme!==undefined)return;
+      const x=r.x&&typeof r.x==="object"?r.x:{};
+      r.theme=oldTheme(r);
+      if(x.info&&!r.info)r.info=String(x.info);
+      if(x.link&&!r.link)r.link=String(x.link);
+      if(x.map&&!r.map)r.map=String(x.map);
+      if(x.type&&!r.sub)r.sub=String(x.type);
+      const p=String(x.poster||"");
+      const u=/^\/[\w.-]+$/.test(p)?TMDB_IMG+"w342"+p:/\d+x\d+bb\.jpg$/.test(p)?p.replace(/\d+x\d+bb\.jpg$/,"400x400bb.jpg"):p;
+      if(u&&imgOk(u)){r.art=u;r.rec={url:u,src:"예전 기록"}}
+      if(x.addr&&!r.loc)r.loc={addr:String(x.addr)};
+      if(!r.theme&&r.kind)r.sub=r.sub||({daily:"일상",trip:"여행"}[r.kind]||"");
+    });
+    d.v=2;
+  }
+  d.records.forEach(r=>{
+    r.theme=TH[r.theme]?r.theme:"";r.title=String(r.title||"");r.note=String(r.note||"");r.date=/^\d{4}-\d\d-\d\d$/.test(r.date||"")?r.date:"";
+    r.time=/^\d\d:\d\d$/.test(r.time||"")?r.time:"";
+    if(r.loc&&typeof r.loc!=="object")r.loc=null;
+    r.people=Array.isArray(r.people)?r.people:[];r.cands=Array.isArray(r.cands)?r.cands:[];
+    delete r.busy;
+  });
+  const lim=Date.now()-30*864e5,gone=d.records.filter(r=>r.del&&r.del<lim); // 휴지통은 30일 뒤 자동 정리
   d.records=d.records.filter(r=>!(r.del&&r.del<lim));
+  if(gone.length)setTimeout(()=>gone.forEach(dropPhoto),3000);
   return d;
 }
-const allKinds=()=>[...BASE,...db.settings.custom.map(c=>({id:c.id,name:c.name,noteLabel:"한 줄 메모",fields:CUSTOM_FIELDS,custom:true}))];
-const kindOf=id=>allKinds().find(k=>k.id===id)||{id,name:"(없어진 종류)",noteLabel:"한 줄 메모",fields:[]};
-const visKinds=()=>allKinds().filter(k=>!db.settings.hidden.includes(k.id));
 const live=()=>db.records.filter(r=>!r.del);
-const sortRecs=a=>a.sort((x,y)=>(y.date||"").localeCompare(x.date||"")||(y.upd||0)-(x.upd||0));
+const sortRecs=a=>a.sort((x,y)=>((y.date||"")+(y.time||"")).localeCompare((x.date||"")+(x.time||""))||(y.ts||0)-(x.ts||0));
 function seedDemo(){
   const t=new Date(),d=n=>{const x=new Date(t);x.setDate(x.getDate()-n);return iso(x)},now=Date.now();
-  const R=(kind,date,title,note,rating,tags,x)=>({id:uid(),kind,date,title,note,rating,tags,x,ts:now,upd:now});
-  return norm({records:[
-    R("video",d(1),"괜찮은 영화 한 편","엔딩이 오래 남았다",8,["영화","혼자"],{type:"영화",where:"동네 극장",with:""}),
-    R("place",d(2),"성수 칼국수집","국물이 깔끔함. 줄이 길다",9,["점심","또가고싶다"],{addr:"서울 성동구",map:"https://map.naver.com/",menu:"바지락칼국수",price:"11000",again:"또 갈래요"}),
-    R("daily",d(0),"비 오는 날, 커피 한 잔","창가 자리에 앉았다",0,[],{mood:"괜찮음"}),
-    R("trip",d(20),"제주 가을 여행","3박 4일",10,["가족"],{region:"제주",start:d(20),end:d(17)}),
-    R("place",d(19),"제주 흑돼지 거리","저녁 식사",7,["저녁"],{menu:"흑돼지",price:"58000",again:"글쎄요"})
+  const R=(theme,date,time,title,note,o)=>({id:uid(),theme,date,time,title,note,ts:now,upd:now,people:[],cands:[],...o});
+  return norm({v:2,records:[
+    R("see",d(0),"21:30","오펜하이머","3시간이 순삭. 마지막 장면 소름",{sub:"영화",loc:{addr:"서울 마포구 연남동"},info:"오펜하이머(Oppenheimer) · 2023 · 영화 · 미국\n감독: 크리스토퍼 놀란 / 출연: 킬리언 머피 외\n원자폭탄 개발을 이끈 과학자의 삶을 그린 전기 영화.",link:"https://search.naver.com/search.naver?query=%EC%98%A4%ED%8E%9C%ED%95%98%EC%9D%B4%EB%A8%B8"}),
+    R("eat",d(0),"19:05","연남동 손칼국수","바지락 국물이 진하고 김치가 좋음",{loc:{addr:"서울 마포구 연남동"},info:"연남동 손칼국수 · 마포구 연남동 · 칼국수\n바지락칼국수 / 9,000원대\n오래된 동네 칼국수집.",cands:[{name:"연남동 손칼국수",what:"칼국수",near:"약 20m"},{name:"연남 바지락집",what:"칼국수·수제비",near:"약 50m"},{name:"골목 선술집",what:"주점",near:"약 90m"}],pick:0,map:"https://map.naver.com/p/search/%EC%97%B0%EB%82%A8%EB%8F%99"}),
+    R("work",d(0),"14:00","팀 미팅","신규 DB 배분 정리, 다음 주 교육. 최수진, 박상선 참석",{loc:{addr:"서울 영등포구"},people:["최수진","박상선"]}),
+    R("hear",d(1),"08:40","비 오는 날 들은 노래","재즈 피아노, 퇴근길",{}),
+    R("go",d(2),"11:20","남한산성","단풍 마지막 주말",{loc:{addr:"경기 광주시 남한산성면"}})
   ]});
 }
 
 /* ---------- 말만해요와 연결 (주소 # 뒤: #go=search&q=&kind= / #go=record&id= , embed 모드, 위치 알리기) ---------- */
-let pendingGo=null,curRec=null,rootRec=null; // rootRec = 말만해요가 열어 준 기록(그 화면이 맨 처음이라 앱 안 뒤로가기 없음)
-function hashGo(){ // 주소 # 뒤 값은 서버로 나가지 않음. 읽은 뒤 지움
-  try{const u=new URLSearchParams(location.hash.replace(/^#/,""));return u.get("go")?{go:u.get("go"),q:u.get("q")||"",kind:u.get("kind")||"",id:u.get("id")||""}:null}catch(e){return null}
-}
+let pendingGo=null;
+function hashGo(){try{const u=new URLSearchParams(location.hash.replace(/^#/,""));return u.get("go")?{go:u.get("go"),q:u.get("q")||"",kind:u.get("kind")||"",id:u.get("id")||""}:null}catch(e){return null}}
 pendingGo=hashGo();
-function cleanHash(){try{if(location.hash)history.replaceState(null,"",location.pathname+location.search)}catch(e){}}
-function kindIdFrom(v){ // 영상·맛집·여행·일상(또는 종류 이름·번호) → 종류 번호
+function cleanHash(){try{if(location.hash)history.replaceState(history.state,"",location.pathname+location.search)}catch(e){}}
+function themeFrom(v){ // 보고·듣고·먹고·가고·일 또는 예전 이름(영상·음악·책·맛집·여행) → 테마
   v=String(v||"").trim();if(!v)return"";
-  const ks=allKinds();
-  return(ks.find(k=>k.id===v)||ks.find(k=>k.name===v)||ks.find(k=>k.name.startsWith(v)||v.startsWith(k.name.split("·")[0])))?.id||"";
+  if(TH[v])return v;
+  const f=THEMES.find(t=>t[1]===v);if(f)return f[0];
+  if(/영화|영상|드라마|책|공연|연극|보/.test(v))return"see";
+  if(/음악|노래|듣/.test(v))return"hear";
+  if(/맛집|식당|먹/.test(v))return"eat";
+  if(/여행|장소|멋곳|가/.test(v))return"go";
+  if(/일|업무|미팅/.test(v))return"work";
+  return"";
 }
-const kindShort=id=>{const k=allKinds().find(x=>x.id===id);return k?(k.custom?k.name:k.name.split("·")[0]):""};
 window.blue10kpGo=function(o){
   o=o||{};
-  if(!db){pendingGo={go:o.go,q:o.q||"",kind:o.kind||"",id:o.id||""};return} // 로그인 전이면 로그인 뒤에 이어서
-  rootRec=o.go==="record"?String(o.id||""):null;
-  if(o.go==="search"){
-    S.q=String(o.q||"");S.kind=kindIdFrom(o.kind);S.min=0;S.from="";S.to="";S.tag="";
-    closeSheet();view="find";tripOpen=null;render();scrollTo(0,0);
-  }else if(o.go==="record"){
-    const r=db.records.find(x=>x.id===String(o.id||""));
-    closeSheet();
-    if(r){if(r.kind==="trip"&&!r.del){view="trip";tripOpen=r.id;render();scrollTo(0,0)}else{view="home";render();openDetail(r.id)}}
-    else{view="home";render();toast("기록을 찾지 못했어요")}
-  }else if(o.go==="home"||o.go==="trips"||o.go==="settings"){
-    closeSheet();view=o.go==="trips"?"trip":o.go==="settings"?"set":"home";tripOpen=null;render();scrollTo(0,0);
-  }
+  if(!db){pendingGo={go:o.go,q:o.q||"",kind:o.kind||"",id:o.id||""};return}
+  closeAll();
+  if(o.go==="search"){F.q=String(o.q||"");F.th=themeFrom(o.kind);F.mode="all";render();openView(true)}
+  else if(o.go==="record"){const r=db.records.find(x=>x.id===String(o.id||""));render();if(r)openDetail(r.id,true);else{toast("기록을 찾지 못했어요");if(EMBED)openView(true)}}
+  else if(o.go==="settings"){render();openSettings(true)}
+  else if(o.go==="shoot"||o.go==="camera"){render()}
+  else{F.q="";F.th="";render();openView(true)}
   cleanHash();
 };
 function runPendingGo(){if(pendingGo&&db){const o=pendingGo;pendingGo=null;window.blue10kpGo(o)}}
 let lastLift=-1;
-function fabLift(){ // 아래쪽에 떠 있는 버튼(시트의 취소·저장 줄 등)의 가장 위 끝이 화면 바닥에서 몇 px인지 부모(말만해요)에게 알림 → 말만해요 버튼이 그만큼 올라감
+function fabLift(){ // 아래쪽 버튼 줄의 위 끝을 말만해요에 알림 → 말만해요 버튼이 그만큼 올라감
   if(!EMBED||window.parent===window)return;
-  let lift=0;
-  const sh=document.querySelector("#modal .sheet");
-  if(sh){
-    const H=innerHeight;let ty=0;try{ty=new DOMMatrix(getComputedStyle(sh).transform).m42||0}catch(e){} // 올라오는 움직임 중이어도 최종 자리 기준으로 잼
-    sh.querySelectorAll(".acts .btn").forEach(b=>{const r=b.getBoundingClientRect(),top=r.top-ty,bot=r.bottom-ty;if(r.height>0&&bot>0&&top<H)lift=Math.max(lift,Math.min(H,Math.round(H-top)))})
-  }
-  if(lift===lastLift)return;
-  lastLift=lift;
+  let lift=0;const H=innerHeight;
+  document.querySelectorAll(".layer .foot .btn").forEach(b=>{const r=b.getBoundingClientRect();if(r.height>0&&r.bottom>0&&r.top<H)lift=Math.max(lift,Math.round(H-r.top))});
+  if(lift===lastLift)return;lastLift=lift;
   try{window.parent.postMessage({type:"blue10kp-fab",lift},location.origin)}catch(e){}
 }
-function schedLift(){setTimeout(fabLift,0);setTimeout(fabLift,280)} // 창이 올라오는 움직임이 끝난 뒤에도 다시 잼
 document.addEventListener("scroll",()=>fabLift(),true);
 window.addEventListener("resize",()=>fabLift());
-function canBack(){ // 앱 안에서 한 단계 뒤로 갈 곳이 있는가
-  if(!db)return false;
-  if($("#modal").firstChild)return !(curRec&&curRec===rootRec&&!tripOpen);
-  return !!(tripOpen&&tripOpen!==rootRec);
-}
-function goBack(){
-  if(!db||!canBack())return;
-  if($("#modal").firstChild){closeSheet();return}
-  tripOpen=null;render();
-}
-function reportWhere(){ // embed일 때 지금 위치를 부모(말만해요)에게 알림 → [앱으로 열기]가 그 화면으로 열림
+function reportWhere(){
   if(!EMBED||window.parent===window||!db)return;
-  let w={go:"home"};
-  if(curRec)w={go:"record",id:curRec};
-  else if(view==="find")w={go:"search",q:S.q,kind:kindShort(S.kind)};
-  else if(view==="trip")w=tripOpen?{go:"record",id:tripOpen}:{go:"trips"};
-  else if(view==="set")w={go:"settings"};
+  const top=LAYERS[LAYERS.length-1];let w={go:"shoot"};
+  if(top&&top.kind==="detail")w={go:"record",id:top.id};
+  else if(top&&top.kind==="set")w={go:"settings"};
+  else if(viewLayer())w=F.q||F.th?{go:"search",q:F.q,kind:F.th?thName(F.th):""}:{go:"home"};
   try{window.parent.postMessage({type:"blue10kp-where",app:"goodday",go:w.go,q:w.q||"",kind:w.kind||"",id:w.id||"",canBack:canBack()},location.origin)}catch(e){}
 }
 window.addEventListener("message",e=>{ // 말만해요가 보낸 요청만 받음(같은 출처, 부모 창)
@@ -355,94 +455,13 @@ window.addEventListener("message",e=>{ // 말만해요가 보낸 요청만 받�
   if(d.type==="blue10kp-theme"){if(d.theme==="dark"||d.theme==="light"){embTheme=d.theme;applyTheme()}return}
   if(d.type!=="blue10kp-go")return;
   window.blue10kpGo({go:String(d.go||""),q:String(d.q||""),kind:String(d.kind||""),id:String(d.id||"")});
-  if(!db)boot(); // 로그인이 아직이면 다시 확인
+  if(!db)boot();
 });
 window.addEventListener("hashchange",()=>{const o=hashGo();if(o)window.blue10kpGo(o)});
-window.addEventListener("storage",e=>{if(e.key===GA&&EMBED&&!db)boot()}); // 말만해요에서 로그인하면 이어서 열기
 
-/* ---------- 말만해요 받은편지함 (파일 선택 창으로 고른 파일 하나만 읽고, 처리한 쪽지는 done 표시) ---------- */
-let inbox=[],inboxMsg="",inboxHide=false;
-const INBOX_KINDS=["video","place","trip","daily"];
-let demoDoc={items:[
-  {id:"d1",at:new Date().toISOString(),from:"onething",kind:"place",text:"점심에 성수동 만두집 갔다. 육즙이 좋았고 또 가고 싶다",fields:{title:"성수동 만두집",menu:"군만두",price:9000},status:"new"},
-  {id:"d2",at:new Date().toISOString(),from:"onething",kind:"video",text:"어제 본 영화 괜찮았다",fields:{},status:"new"},
-  {id:"d3",at:new Date().toISOString(),from:"onething",kind:"daily",text:"취소한 쪽지",fields:{},status:"cancelled"}]};
-async function inboxDoc(){
-  const f=db.settings.inboxFile;
-  if(DEMO)return demoDoc;
-  return parseDoc(await gfetch(DAPI+"/files/"+f.id+"?alt=media",null,true));
-}
-async function inboxCheck(){
-  inbox=[];inboxMsg="";
-  const f=db.settings.inboxFile;if(!f||!f.id)return;
-  try{
-    const doc=await inboxDoc(),items=Array.isArray(doc&&doc.items)?doc.items:[];
-    const have=new Set(db.records.map(r=>r.srcId).filter(Boolean));
-    const fresh=items.filter(i=>i&&i.id&&i.status==="new");
-    inbox=fresh.filter(i=>!have.has(String(i.id))).slice(0,50);
-    const dup=fresh.filter(i=>have.has(String(i.id))).map(i=>i.id); // 기록엔 들어갔는데 done 표시가 빠진 것
-    if(dup.length)inboxMarkDone(dup);
-  }catch(e){if(e.message!=="GOOGLE_AUTH")inboxMsg="받은편지함 파일을 열지 못했어요. 설정에서 다시 연결해 주세요."}
-}
-function inboxToRec(it,now){
-  const kind=INBOX_KINDS.includes(it.kind)?it.kind:"daily",k=kindOf(kind);
-  const f=it.fields&&typeof it.fields==="object"?it.fields:{},text=String(it.text||"").trim();
-  const first=text.split(/\n/)[0],title=String(f.title||first||"말만해요 메모").trim().slice(0,120);
-  const at=new Date(it.at),date=/^\d{4}-\d\d-\d\d$/.test(String(f.date||""))?f.date:(isNaN(at)?today():iso(at));
-  const x={};k.fields.forEach(fl=>{const v=f[fl.k];if(v!=null&&v!==""&&typeof v!=="object")x[fl.k]=String(v).slice(0,200)});
-  const rating=Math.max(0,Math.min(10,Math.round(+f.rating)||0));
-  return{id:uid(),kind,date,title,note:text&&text!==title?text.slice(0,300):"",rating,tags:Array.isArray(f.tags)?parseTags(f.tags.join(" ")):[],x,ts:now,upd:now,src:"말만해요",srcId:String(it.id)};
-}
-async function inboxAccept(){
-  const items=inbox.slice();if(!items.length)return;
-  const now=Date.now();
-  items.forEach(it=>db.records.push(inboxToRec(it,now)));
-  const ids=items.map(i=>i.id);
-  inbox=[];save();render();toast(items.length+"통을 기록에 넣었어요");
-  await inboxMarkDone(ids);
-}
-async function inboxMarkDone(ids){
-  const f=db.settings.inboxFile;if(!f||!f.id||!ids.length)return;
-  try{
-    const doc=await inboxDoc();let ch=false;
-    (doc.items||[]).forEach(i=>{if(ids.includes(i.id)&&i.status==="new"){i.status="done";i.doneAt=new Date().toISOString();ch=true}});
-    if(ch&&!DEMO)await gfetch(DUP+"/files/"+f.id+"?uploadType=media&fields=id",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(doc)});
-  }catch(e){inboxMsg="받은편지함에 완료 표시를 못 했어요. 기록은 들어갔고, 다음에 다시 시도해요."}
-}
-let pickerLoad=null;
-function loadPicker(){return pickerLoad||(pickerLoad=new Promise((res,rej)=>{const sc=document.createElement("script");sc.src="https://apis.google.com/js/api.js";sc.onload=()=>gapi.load("picker",{callback:res,onerror:rej});sc.onerror=()=>rej(new Error("load"));document.head.appendChild(sc)}))}
-async function pickInbox(){
-  if(DEMO){db.settings.inboxFile={id:"demo",name:"goodday.json"};save();await inboxCheck();inboxHide=false;render();openInbox();return}
-  if(!GPICKER_KEY){toast("아직 준비 중이에요 (구글 설정이 필요해요)");return}
-  try{
-    await loadPicker();const t=gTok||storedTok();if(!t)throw new Error("GOOGLE_AUTH");
-    const view=new google.picker.DocsView(google.picker.ViewId.DOCS).setIncludeFolders(true).setSelectFolderEnabled(false).setMode(google.picker.DocsViewMode.LIST);
-    new google.picker.PickerBuilder().setOAuthToken(t).setDeveloperKey(GPICKER_KEY).setAppId(GPROJECT).addView(view).setLocale("ko").setTitle("받은편지함 파일(goodday.json) 고르기")
-     .setCallback(async d=>{if(d.action===google.picker.Action.PICKED&&d.docs&&d.docs[0]){const o=d.docs[0];db.settings.inboxFile={id:o.id,name:String(o.name||"")};save();inboxHide=false;await inboxCheck();render();openInbox()}}).build().setVisible(true);
-  }catch(e){toast(e.message==="GOOGLE_AUTH"?"다시 로그인해 주세요":"파일 선택 창을 열지 못했어요")}
-}
-function openInbox(){
-  const f=db.settings.inboxFile;
-  openSheet(`<h3>말만해요 받은편지함</h3>
-   <div class="sub" style="margin-top:4px">말만해요가 보낸 쪽지를 앱을 열 때 확인해서, 카드로 보여 드려요. 확인하고 넣기를 누른 쪽지만 기록이 됩니다.</div>
-   <div class="kv" style="margin-top:16px"><div class="a">상태</div><div class="b">${f?"연결됨 · "+esc(f.name||"선택한 파일"):"연결 안 됨"}</div></div>
-   ${f?`<div class="kv"><div class="a">대기</div><div class="b">${inbox.length}통</div></div>`:""}
-   ${inboxMsg?`<div class="note" style="color:var(--bad)">${esc(inboxMsg)}</div>`:""}
-   <div class="note">연결할 때 파일 선택 창이 열리면 내 드라이브의 Claude › app › onething › 받은편지함 › goodday.json 을 한 번 골라 주세요. 이 앱은 고른 그 파일만 읽습니다.</div>
-   <div class="acts"><button class="btn pri" data-act="inboxPick">${f?"다시 고르기":"파일 고르기"}</button>${f?`<button class="btn" data-act="inboxRecheck">지금 확인</button>`:""}</div>
-   <div class="acts">${f?`<button class="btn dng" data-act="inboxOff">연결 끊기</button>`:""}<button class="btn" data-act="close">닫기</button></div>`);
-}
-function inboxCard(){
-  if(!inbox.length||inboxHide)return"";
-  return`<div class="card"><h3>말만해요에서 ${inbox.length}통이 왔어요</h3>
-   ${inbox.slice(0,5).map(i=>`<div class="row"><span class="t" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><i class="kdot ${esc(INBOX_KINDS.includes(i.kind)?i.kind:"daily")}"></i> ${esc(String(i.text||"").slice(0,60))}</span></div>`).join("")}
-   ${inbox.length>5?`<div class="note">외 ${inbox.length-5}통</div>`:""}
-   <div class="acts"><button class="btn" data-act="inboxLater">나중에</button><button class="btn pri" data-act="inboxYes">기록에 넣기</button></div></div>`;
-}
-
-/* ---------- 구글 로그인 (차차차와 같은 방식: Google Identity Services 토큰) ---------- */
-const GTK="goodday.gtoken",GAC="goodday.gaccount",FID_KEY="goodday.fid"; // GTK = 예전 전용 토큰(한 번 공통 출입증으로 옮김)
-const GA="blue10kp.gauth"; // 공통 출입증: 모든 앱이 같이 쓰는 이름 (app\_공통\공통로그인.md)
+/* ---------- 구글 로그인 (차차차와 같은 방식: 공통 출입증 blue10kp.gauth) ---------- */
+const GTK="goodday.gtoken",GAC="goodday.gaccount",FID_KEY="goodday.fid";
+const GA="blue10kp.gauth";
 const DRIVEFILE="https://www.googleapis.com/auth/drive.file";
 const SUPER={"https://www.googleapis.com/auth/drive.file":["https://www.googleapis.com/auth/drive"]};
 let gTok=null,pend=null,gaSeen=false;
@@ -450,23 +469,17 @@ const allowedEm=e=>ALLOWED.map(x=>x.toLowerCase()).includes(String(e||"").toLowe
 const hasScope=(sc,need)=>sc.includes(need)||(SUPER[need]||[]).some(x=>sc.includes(x));
 function readGa(){try{const g=JSON.parse(lsGet(GA)||"null");return g&&g.v===1&&typeof g.token==="string"&&+g.exp&&Array.isArray(g.scopes)?g:null}catch(e){return null}}
 function writeGa(token,exp,scopes,email){lsSet(GA,JSON.stringify({v:1,token,exp,scopes,email:email||""}));gaSeen=!!readGa()}
-const gaFresh=g=>!!g&&g.exp>Date.now()+120000; // 만료까지 2분 이상
+const gaFresh=g=>!!g&&g.exp>Date.now()+120000;
 const gaScopeOk=g=>!!g&&hasScope(g.scopes,DRIVEFILE);
 function storedTok(){const g=readGa();return gaFresh(g)&&gaScopeOk(g)?g.token:null}
 function clearTok(t){const g=readGa();if(g&&(!t||g.token===t))lsDel(GA);gTok=null}
-function migrateOld(){ // 예전 전용 토큰을 공통 출입증으로 한 번 옮김
-  try{
-    const o=JSON.parse(lsGet(GTK)||"null");
-    if(o&&o.token&&o.exp>Date.now()+120000&&!readGa()&&gAcct())writeGa(o.token,o.exp,["openid","email",DRIVEFILE],gAcct());
-  }catch(e){}
-  lsDel(GTK);
-}
+function migrateOld(){try{const o=JSON.parse(lsGet(GTK)||"null");if(o&&o.token&&o.exp>Date.now()+120000&&!readGa()&&gAcct())writeGa(o.token,o.exp,["openid","email",DRIVEFILE],gAcct())}catch(e){}lsDel(GTK)}
 const gAcct=()=>{const g=readGa();return(g&&g.email)||lsGet(GAC)||""};
-function requestTok(prompt,noHint){
+function requestTok(prompt,noHint,extra){
   return new Promise((res,rej)=>{
     const g=window.google&&google.accounts&&google.accounts.oauth2;
     if(!g)return rej(new Error("구글 로그인 모듈을 불러오지 못했습니다. 잠시 후 다시 시도하세요."));
-    const c=g.initTokenClient({client_id:GCLIENT,scope:GSCOPE,include_granted_scopes:true,hint:noHint?undefined:(gAcct()||undefined),
+    const c=g.initTokenClient({client_id:GCLIENT,scope:GSCOPE+(extra?" "+extra:""),include_granted_scopes:true,hint:noHint?undefined:(gAcct()||undefined),
       callback:r=>{
         if(r.error)return rej(new Error("구글 연결 실패: "+r.error));
         const sc=String(r.scope||"").split(/\s+/).filter(Boolean);
@@ -478,27 +491,27 @@ function requestTok(prompt,noHint){
     c.requestAccessToken({prompt:prompt==null?"":prompt});
   });
 }
-async function gfetch(url,opt,asText,retry){
+async function gfetch(url,opt,as,retry){ // as: undefined=json, true=text, "blob"
   const t=gTok||storedTok();if(!t)throw new Error("GOOGLE_AUTH");
   const o=opt||{},r=await fetch(url,{...o,headers:{Authorization:"Bearer "+t,...(o.headers||{})},cache:"no-store"});
   if(r.status===401){
     const n=storedTok();
-    if(n&&n!==t&&!retry){gTok=n;return gfetch(url,opt,asText,true)} // 다른 앱에서 새로 로그인했으면 그 토큰으로 이어서
+    if(n&&n!==t&&!retry){gTok=n;return gfetch(url,opt,as,true)}
     clearTok(t);throw new Error("GOOGLE_AUTH");
   }
   if(!r.ok)throw new Error("Drive "+r.status+": "+(await r.text()).slice(0,160));
-  return asText?r.text():r.json();
+  if(r.status===204)return null;
+  return as==="blob"?r.blob():as?r.text():r.json();
 }
-/* 화면이 다시 보일 때 공통 출입증을 다시 읽음: 다른 앱에서 로그인했으면 이어 쓰고, 로그아웃했으면 함께 로그아웃 */
 function gaSync(){
   if(DEMO||!db)return;
   const g=readGa();
   if(g){
     gaSeen=true;
     if(g.token!==gTok&&gaFresh(g)&&gaScopeOk(g)&&allowedEm(g.email)){
-      if(me&&g.email.toLowerCase()!==me.toLowerCase()){ // 다른 앱에서 다른 계정으로 바꿈
+      if(me&&g.email.toLowerCase()!==me.toLowerCase()){
         if(dirty)return;
-        lsSet(GAC,g.email.toLowerCase());lsDel(FID_KEY);db=null;fileId=null;folderId=null;lastMod=null;me=g.email.toLowerCase();gTok=g.token;inbox=[];
+        lsSet(GAC,g.email.toLowerCase());lsDel(FID_KEY);resetData();me=g.email.toLowerCase();gTok=g.token;
         startApp().catch(e=>showLogin(e.message==="GOOGLE_AUTH"?"":"기록을 불러오지 못했어요. ("+String(e.message).slice(0,60)+")"));
         return;
       }
@@ -506,37 +519,33 @@ function gaSync(){
     }
     return;
   }
-  if(gaSeen&&!dirty){ // 다른 앱에서 로그아웃함
-    gaSeen=false;gTok=null;db=null;fileId=null;folderId=null;lastMod=null;me="";inbox=[];
-    showLogin("다른 앱에서 로그아웃했어요. 다시 로그인해 주세요.",false);
-  }
+  if(gaSeen&&!dirty){gaSeen=false;gTok=null;resetData();showLogin("다른 앱에서 로그아웃했어요. 다시 로그인해 주세요.",false)}
 }
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)gaSync()});
 window.addEventListener("focus",gaSync);
 
-/* ---------- 내 Google Drive 저장 (내 드라이브/goodday/goodday_기록.json, 이 앱이 만든 파일만 접근) ---------- */
+/* ---------- 내 Google Drive 저장 (내 드라이브/goodday/goodday_기록.json, 사진은 goodday/사진) ---------- */
 const DAPI="https://www.googleapis.com/drive/v3",DUP="https://www.googleapis.com/upload/drive/v3";
-let fileId=null,folderId=null,lastMod=null,saving=false,again=false,retryT=null,saveT=null;
+let fileId=null,folderId=null,photoDir=null,lastMod=null,saving=false,again=false,retryT=null,saveT=null;
+function resetData(){db=null;dirty=false;fileId=null;folderId=null;photoDir=null;lastMod=null;me="";THUMBS.clear();appCfg={acct:"",tmdbKey:"",geminiKey:""};gcfg=null}
 const qv=x=>String(x).replace(/\\/g,"\\\\").replace(/'/g,"\\'");
 async function dFind(parent,name,folder){
   const q="'"+qv(parent)+"' in parents and name='"+qv(name)+"' and trashed=false"+(folder?" and mimeType='application/vnd.google-apps.folder'":"");
   const d=await gfetch(DAPI+"/files?pageSize=10&fields="+encodeURIComponent("files(id,name,modifiedTime)")+"&q="+encodeURIComponent(q));
   return(d.files||[])[0]||null;
 }
+async function mkFolder(name,parent){return gfetch(DAPI+"/files?fields=id",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,mimeType:"application/vnd.google-apps.folder",parents:[parent]})})}
 async function dFolder(create){
   if(folderId)return folderId;
   let id="root";
-  for(const n of DRIVE_PATH){
-    let f=await dFind(id,n,true);
-    if(!f){if(!create)return null;f=await gfetch(DAPI+"/files?fields=id",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:n,mimeType:"application/vnd.google-apps.folder",parents:[id]})})}
-    id=f.id;
-  }
+  for(const n of DRIVE_PATH){let f=await dFind(id,n,true);if(!f){if(!create)return null;f=await mkFolder(n,id)}id=f.id}
   return folderId=id;
 }
+async function subDir(name){const fo=await dFolder(true);let d=await dFind(fo,name,true);if(!d)d=await mkFolder(name,fo);return d.id}
 const cachedFid=()=>{try{return JSON.parse(lsGet(FID_KEY)||"null")}catch(e){return null}};
 const cacheFid=()=>lsSet(FID_KEY,JSON.stringify({file:fileId,folder:folderId,acct:gAcct()}));
-const parseDoc=t=>JSON.parse(t.replace(/^﻿/,""));
-async function loadDrive(){ // 드라이브의 기록 파일 → 객체 (없으면 null)
+const parseDoc=t=>JSON.parse(t.replace(/^\uFEFF/,""));
+async function loadDrive(){
   const c=cachedFid();
   if(c&&c.file&&c.acct===gAcct()){
     try{
@@ -551,15 +560,11 @@ async function loadDrive(){ // 드라이브의 기록 파일 → 객체 (없으�
 }
 function setSync(st){
   const el=$("#sync");if(!el)return;
-  const t=new Date(),hm=String(t.getHours()).padStart(2,"0")+":"+String(t.getMinutes()).padStart(2,"0");
   el.className=st==="fail"?"fail":"";
-  el.textContent=st==="saving"?"저장 중…":st==="ok"?"저장됨 "+hm:st==="fail"?"저장 안 됨 (다시 시도 중)":"";
-  if(view==="set"&&$("#syncRow"))$("#syncRow").textContent=el.textContent||"–";
+  el.textContent=st==="saving"?"저장 중":st==="fail"?"저장 안 됨":"";
+  el.title=st==="ok"?"저장됨 "+hm(new Date()):"";
 }
-function save(){ // 기록이 바뀔 때마다 부름 → 잠시 뒤 드라이브에 저장
-  if(DEMO){setSync("");return}
-  dirty=true;setSync("saving");clearTimeout(saveT);saveT=setTimeout(()=>driveSave(),500);
-}
+function save(){if(DEMO){return}dirty=true;setSync("saving");clearTimeout(saveT);saveT=setTimeout(()=>driveSave(),600)}
 async function driveSave(force){
   if(DEMO||!db||!dirty&&!force)return;
   if(saving){again=true;return}
@@ -571,7 +576,7 @@ async function driveSave(force){
       if(!force){
         const cur=await gfetch(DAPI+"/files/"+fileId+"?fields=modifiedTime");
         if(lastMod&&cur.modifiedTime!==lastMod&&!confirm("다른 기기에서 기록이 바뀌었어요.\n확인 = 지금 화면의 기록으로 덮어쓰기\n취소 = 드라이브에 있는 기록 불러오기")){
-          const d=await loadDrive();if(d){db=norm(d);dirty=false;setSync("ok");applyTheme();render()}return;
+          const d=await loadDrive();if(d){db=norm(d);dirty=false;setSync("ok");applyTheme();closeAll();render()}return;
         }
       }
       meta=await gfetch(DUP+"/files/"+fileId+"?uploadType=media&fields=id,modifiedTime",{method:"PATCH",headers:{"Content-Type":"application/json"},body});
@@ -588,21 +593,31 @@ async function driveSave(force){
     else retryT=setTimeout(()=>driveSave(),15000);
   }finally{saving=false;if(again){again=false;driveSave()}}
 }
-/* ---------- 말만해요 해석용 색인 (goodday/설정/말만해요_색인.json) ----------
-   말만해요가 말을 알아듣는 데만 쓰는 목록. 본문 메모·사진·주소·가격·지도 링크는 넣지 않음.
-   기록이 저장될 때 다시 만들고, 내용이 그대로면 다시 쓰지 않음. 실패해도 기록 저장에는 영향 없음. */
+/* 사진 올리기: 큰 사진(긴 변 1600)과 작은 사진(480) 두 장. 이 앱이 만든 파일이라 drive.file 권한으로 충분 */
+async function upPhoto(blob,name){
+  if(!photoDir)photoDir=await subDir(PHOTO_DIR);
+  const bd="gp"+uid(),head="--"+bd+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+JSON.stringify({name,parents:[photoDir],mimeType:"image/jpeg"})+"\r\n--"+bd+"\r\nContent-Type: image/jpeg\r\n\r\n";
+  const m=await gfetch(DUP+"/files?uploadType=multipart&fields=id",{method:"POST",headers:{"Content-Type":"multipart/related; boundary="+bd},body:new Blob([head,blob,"\r\n--"+bd+"--"])});
+  return m.id;
+}
+function dropPhoto(r){ // 영구 삭제한 기록의 사진 파일도 지움(실패해도 기록에는 영향 없음)
+  if(DEMO||!r||!r.photo)return;
+  [r.photo.full,r.photo.thumb].filter(Boolean).forEach(id=>gfetch(DAPI+"/files/"+id,{method:"DELETE"}).catch(()=>{}));
+}
+const THUMBS=new Map(); // 드라이브 사진 → 화면용 주소 (메모리에만)
+async function photoUrl(id){
+  if(!id)return"";
+  if(THUMBS.has(id))return THUMBS.get(id);
+  const p=gfetch(DAPI+"/files/"+id+"?alt=media",null,"blob").then(b=>URL.createObjectURL(b));
+  THUMBS.set(id,p);
+  try{const u=await p;THUMBS.set(id,u);return u}catch(e){THUMBS.delete(id);return""}
+}
+/* ---------- 말만해요 해석용 색인 (goodday/설정/말만해요_색인.json): 제목·테마·날짜만, 메모·사진·주소는 넣지 않음 ---------- */
 const IDX_FILE="말만해요_색인.json",IDX_DIR="설정",IDX_KEY="goodday.idx";
 let idxBusy=false,idxAgain=false;
 function buildIndex(){
-  const items=db.records.filter(r=>!r.del).map(r=>{
-    const k=kindOf(r.kind),x=r.x||{},o={id:r.id,kind:r.kind,kindName:k?k.name:"",title:String(r.title||""),date:r.date||""};
-    const place=r.kind==="place"?o.title:r.kind==="trip"?String(x.region||""):r.kind==="video"?String(x.where||""):"";
-    if(place)o.place=place;
-    if(r.kind==="video"&&x.type)o.type=String(x.type);
-    if(r.tags&&r.tags.length)o.tags=r.tags.slice(0,10).map(String);
-    return o;
-  }).sort((a,b)=>a.id<b.id?-1:a.id>b.id?1:0);
-  return{v:1,app:"goodday",items};
+  const items=live().map(r=>{const o={id:r.id,kind:r.theme||"",kindName:thName(r.theme),title:r.title,date:r.date||""};if((r.theme==="eat"||r.theme==="go")&&r.title)o.place=r.title;if(r.sub)o.type=r.sub;return o}).sort((a,b)=>a.id<b.id?-1:a.id>b.id?1:0);
+  return{v:2,app:"goodday",kinds:THEMES.map(t=>({id:t[0],name:t[1]})),items};
 }
 async function idxSync(){
   if(DEMO||!db)return;
@@ -610,71 +625,59 @@ async function idxSync(){
   idxBusy=true;
   try{
     const idx=buildIndex(),sig=JSON.stringify(idx),c=(()=>{try{return JSON.parse(lsGet(IDX_KEY)||"null")}catch(e){return null}})();
-    if(c&&c.acct===gAcct()&&c.sig===sig&&c.id)return; // 같으면 다시 쓰지 않음
-    const body=JSON.stringify({...idx,updated:new Date().toISOString()});
-    const fo=await dFolder(true);let dir=await dFind(fo,IDX_DIR,true);
-    if(!dir)dir=await gfetch(DAPI+"/files?fields=id",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:IDX_DIR,mimeType:"application/vnd.google-apps.folder",parents:[fo]})});
+    if(c&&c.acct===gAcct()&&c.sig===sig&&c.id)return;
+    const body=JSON.stringify({...idx,updated:new Date().toISOString()}),dir=await subDir(IDX_DIR);
     let id=c&&c.acct===gAcct()?c.id:null;
-    if(!id){const f=await dFind(dir.id,IDX_FILE,false);if(f)id=f.id}
-    if(id){await gfetch(DUP+"/files/"+id+"?uploadType=media&fields=id",{method:"PATCH",headers:{"Content-Type":"application/json"},body})}
-    else{
-      const bd="gi"+uid(),mp="--"+bd+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+JSON.stringify({name:IDX_FILE,parents:[dir.id],mimeType:"application/json"})+"\r\n--"+bd+"\r\nContent-Type: application/json\r\n\r\n"+body+"\r\n--"+bd+"--";
-      const m=await gfetch(DUP+"/files?uploadType=multipart&fields=id",{method:"POST",headers:{"Content-Type":"multipart/related; boundary="+bd},body:mp});id=m.id;
-    }
+    if(!id){const f=await dFind(dir,IDX_FILE,false);if(f)id=f.id}
+    if(id)await gfetch(DUP+"/files/"+id+"?uploadType=media&fields=id",{method:"PATCH",headers:{"Content-Type":"application/json"},body});
+    else{const bd="gi"+uid(),mp="--"+bd+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+JSON.stringify({name:IDX_FILE,parents:[dir],mimeType:"application/json"})+"\r\n--"+bd+"\r\nContent-Type: application/json\r\n\r\n"+body+"\r\n--"+bd+"--";
+      id=(await gfetch(DUP+"/files?uploadType=multipart&fields=id",{method:"POST",headers:{"Content-Type":"multipart/related; boundary="+bd},body:mp})).id}
     lsSet(IDX_KEY,JSON.stringify({acct:gAcct(),id,sig}));
-  }catch(e){/* 색인은 덤: 실패하면 다음 저장 때 다시 */}
+  }catch(e){}
   finally{idxBusy=false;if(idxAgain){idxAgain=false;idxSync()}}
 }
 window.addEventListener("online",()=>{if(dirty&&db)driveSave()});
-window.addEventListener("beforeunload",e=>{if(dirty){e.preventDefault();e.returnValue=""}});
+window.addEventListener("beforeunload",e=>{if(dirty||PEND.size){e.preventDefault();e.returnValue=""}});
 
 /* ---------- 로그인 화면 · 허용 계정 ---------- */
-function setShell(on){["title","main","nav"].forEach(i=>{$("#"+i).hidden=!on});$("#login").hidden=on}
-function showLogin(msg,isErr){ // 로그인 전·만료 때: 화면에서 기록을 모두 치움
-  $("#modal").innerHTML="";$("#main").innerHTML="";$("#nav").innerHTML="";
+function setShell(on){$("#shoot").hidden=!on;$("#login").hidden=on;if(on)renderShoot();camSync()}
+function showLogin(msg,isErr){
+  closeAll();$("#galBtn").innerHTML="";
   setShell(false);
   const m=$("#lmsg");m.textContent=msg||"";m.className="lm"+(msg&&isErr!==false&&/권한|실패|만료|못|않|닫혔|허용/.test(msg)?" err":"");
   $("#loginBtn").textContent="Google 계정으로 로그인";$("#loginBtn").hidden=false;$("#loginOtherBtn").hidden=false;
-  if(EMBED){ // 말만해요 안: 로그인 화면 대신 안내
-    m.className="lm";m.textContent="말만해요에서 다시 로그인해 주세요";
-    $("#loginBtn").hidden=true;$("#loginOtherBtn").hidden=true;const h=document.querySelector("#login .hint");if(h)h.hidden=true;
-  }
+  if(EMBED){m.className="lm";m.textContent="말만해요에서 다시 로그인해 주세요";$("#loginBtn").hidden=true;$("#loginOtherBtn").hidden=true}
 }
-async function denyAccount(em){
-  gTok=null;pend=null;lsDel(FID_KEY);
-  db=null;dirty=false;fileId=null;folderId=null;lastMod=null;me="";
-  showLogin("권한이 없습니다. 이 앱은 허용된 계정만 쓸 수 있어요. 허용된 계정으로 다시 로그인해 주세요.");
-}
+async function denyAccount(){gTok=null;pend=null;lsDel(FID_KEY);resetData();showLogin("권한이 없습니다. 이 앱은 허용된 계정만 쓸 수 있어요. 허용된 계정으로 다시 로그인해 주세요.")}
 async function checkAccount(){
   const u=await gfetch("https://www.googleapis.com/oauth2/v3/userinfo");
   const em=String(u.email||"").toLowerCase();
   if(!em)throw new Error("구글 계정 이메일을 읽지 못했습니다.");
-  return{em,ok:ALLOWED.map(x=>x.toLowerCase()).includes(em)&&u.email_verified!==false};
+  return{em,ok:allowedEm(em)&&u.email_verified!==false};
 }
 async function afterToken(){
   const a=await checkAccount();
-  if(!a.ok){await denyAccount(a.em);return}
+  if(!a.ok){await denyAccount();return}
   const changed=gAcct()&&gAcct()!==a.em;
-  lsSet(GAC,a.em);me=a.em;
+  lsSet(GAC,a.em);
   if(pend&&gTok)writeGa(gTok,pend.exp,pend.scopes,a.em);
-  if(changed){db=null;dirty=false;fileId=null;folderId=null;lastMod=null;lsDel(FID_KEY)}
+  if(changed){resetData();lsDel(FID_KEY)}
+  me=a.em;
   await startApp();
 }
 async function startApp(){
   $("#lmsg").className="lm";$("#lmsg").textContent="기록을 불러오는 중…";
   $("#loginBtn").hidden=true;$("#loginOtherBtn").hidden=true;
-  if(db&&dirty){await driveSave(true)} // 만료 동안 저장 못 한 기록이 있으면 먼저 저장
+  if(db&&dirty){await driveSave(true)}
   else{
     const d=await loadDrive();
-    if(d)db=norm(d);
-    else{db=norm({});dirty=true;await driveSave(true)} // 처음 쓰는 계정: 빈 기록 파일 만들기
+    if(d){const was=d.v;db=norm(d);if(was!==2){dirty=true;driveSave()}}
+    else{db=norm({v:2});dirty=true;await driveSave(true)}
   }
   me=me||gAcct();
-  applyTheme();setShell(true);setSync("ok");view="home";render();scrollTo(0,0);
-  runPendingGo();
-  idxSync();
-  appCfgLoad().then(()=>{if(db&&view==="set"&&!$("#modal").firstChild)render()});
-  inboxCheck().then(()=>{if(db&&view==="home"&&!$("#modal").firstChild)render()});
+  applyTheme();setShell(true);setSync("ok");render();
+  if(EMBED&&!pendingGo)openView(true); // 말만해요 안에서는 보기 페이지부터
+  runPendingGo();idxSync();appCfgLoad();
 }
 async function doLogin(other){
   $("#lmsg").className="lm";$("#lmsg").textContent="로그인 중…";
@@ -683,21 +686,20 @@ async function doLogin(other){
 }
 $("#loginBtn").addEventListener("click",()=>doLogin(false));
 $("#loginOtherBtn").addEventListener("click",()=>doLogin(true));
-async function boot(){ // 열자마자: 공통 출입증(권한·계정·만료)이 맞으면 로그인 화면 없이 시작, 아니면 로그인 화면
+async function boot(){
   applyTheme();
-  if(DEMO){db=seedDemo();me="demo@local";$("#demoTag").hidden=false;setShell(true);render();runPendingGo();return}
+  if(DEMO){db=seedDemo();me="demo@local";setShell(true);render();if(EMBED&&!pendingGo)openView(true);runPendingGo();return}
   migrateOld();
-  const g=readGa();
-  if(g)gaSeen=true;
+  const g=readGa();if(g)gaSeen=true;
   if(gaFresh(g)&&gaScopeOk(g)&&allowedEm(g.email)){
     try{
       me=g.email.toLowerCase();lsSet(GAC,me);gTok=g.token;
-      checkAccount().then(a=>{if(!a.ok)denyAccount(a.em)},()=>{});
+      checkAccount().then(a=>{if(!a.ok)denyAccount()},()=>{});
       await startApp();return;
     }catch(e){showLogin(e.message==="GOOGLE_AUTH"?"":"기록을 불러오지 못했어요. 인터넷을 확인하고 다시 시도해 주세요. ("+e.message.slice(0,60)+")");return}
   }
   showLogin("");
-  if(gaFresh(g)&&allowedEm(g.email)&&!gaScopeOk(g))$("#loginBtn").textContent="구글 연결 (권한 추가)"; // 계정은 같은데 권한만 모자람
+  if(gaFresh(g)&&allowedEm(g.email)&&!gaScopeOk(g))$("#loginBtn").textContent="구글 연결 (권한 추가)";
 }
 async function logout(){
   if(!confirm("모든 앱에서 로그아웃됩니다. 로그아웃할까요?"))return;
@@ -706,693 +708,905 @@ async function logout(){
     if(dirty&&!confirm("저장되지 않은 기록이 있습니다. 그래도 로그아웃할까요?"))return;
     clearTok();gaSeen=false;lsDel(GA);
   }
-  db=null;dirty=false;fileId=null;folderId=null;lastMod=null;me="";inbox=[];inboxMsg="";
-  closeSheet();
-  showLogin("로그아웃했습니다.",false);
+  resetData();showLogin("로그아웃했습니다.",false);
 }
 
 /* ---------- 화면 모드 ---------- */
 let embTheme="";
 function applyTheme(){
-  if(!embTheme&&EMBED){const m=/[?&]theme=(dark|light)(&|$)/.exec(location.search);if(m)embTheme=m[1]} // 말만해요 안: 말만해요 값 우선(저장은 안 함)
-  const dark=embTheme?embTheme==="dark":db?db.settings.dark!==false:lsGet("goodday.dark")!=="0"; // 기본 다크
+  if(!embTheme&&EMBED){const m=/[?&]theme=(dark|light)(&|$)/.exec(location.search);if(m)embTheme=m[1]}
+  const dark=embTheme?embTheme==="dark":db?db.settings.dark!==false:lsGet("goodday.dark")!=="0";
   if(db&&!embTheme)lsSet("goodday.dark",dark?"1":"0");
   document.documentElement.setAttribute("data-theme",dark?"dark":"light");
-  try{ // 상태 표시줄·주소창 색도 같은 값으로(띠가 안 생기게)
-    document.querySelectorAll('meta[name="theme-color"]').forEach(el=>el.setAttribute("content",dark?"#171B22":"#ffffff"));
-  }catch(e){}
+  try{document.querySelectorAll('meta[name="theme-color"]').forEach(el=>el.setAttribute("content",dark?"#0F1217":"#F4F5F7"))}catch(e){}
 }
 
-/* ---------- 보여주기 도우미 ---------- */
-function dlabel(d){
+/* ---------- 그림 주소 검사 (허락한 곳의 그림만 보임) ---------- */
+const ART_RE=/^https:\/\/is\d*-ssl\.mzstatic\.com\/image\/[\w\/.\-]+\/\d+x\d+bb\.jpg$/;
+const WIKI_RE=/^https:\/\/upload\.wikimedia\.org\/wikipedia\/[\w\/.%\-,()~!']+$/;
+const KYOBO_RE=/^https:\/\/contents\.kyobobook\.co\.kr\/sih\/fit-in\/\d+x0\/pdt\/97[89]\d{10}\.jpg$/;
+const BOOK_RE=/^https:\/\/books\.google\.com\/books\/content\?[\w=&%.\-]+$/;
+const TMDB_RE=/^https:\/\/image\.tmdb\.org\/t\/p\/w\d+\/[\w.-]+$/;
+const OSM_RE=/^https:\/\/tile\.openstreetmap\.org\/\d+\/\d+\/\d+\.png$/;
+const imgOk=u=>[ART_RE,WIKI_RE,KYOBO_RE,BOOK_RE,TMDB_RE,OSM_RE].some(re=>re.test(String(u||"")));
+const LINK_RE=/^https:\/\/([\w-]+\.)*(naver\.com|themoviedb\.org|apple\.com|wikipedia\.org|kyobobook\.co\.kr|google\.com|openstreetmap\.org)\//;
+
+/* ---------- 보여주기 ---------- */
+const F={q:"",th:"",mode:"all",at:new Date()}; // 찾기: 글자, 테마, 기간(all·day·month·year)
+function periodLabel(){
+  const a=F.at;
+  if(F.mode==="day")return(a.getMonth()+1)+"월 "+a.getDate()+"일 "+WD[a.getDay()];
+  if(F.mode==="month")return a.getFullYear()+"년 "+(a.getMonth()+1)+"월";
+  if(F.mode==="year")return a.getFullYear()+"년";
+  return"항상일상";
+}
+function inPeriod(r){
+  if(F.mode==="all")return true;
+  const a=F.at,d=r.date||"";
+  if(F.mode==="day")return d===iso(a);
+  if(F.mode==="month")return d.slice(0,7)===iso(a).slice(0,7);
+  return d.slice(0,4)===String(a.getFullYear());
+}
+function hay(r){return[r.title,r.note,r.info,r.sub,thName(r.theme),r.loc&&r.loc.addr,(r.people||[]).join(" "),(r.cands||[]).map(c=>c.name).join(" ")].join(" ").toLowerCase()}
+function shown(){
+  const ws=F.q.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  return sortRecs(live().filter(r=>(!F.th||r.theme===F.th)&&inPeriod(r)&&ws.every(w=>hay(r).includes(w))));
+}
+function dayHead(d){
   const m=/^(\d{4})-(\d\d)-(\d\d)$/.exec(d||"");if(!m)return"날짜 없음";
-  const dt=new Date(+m[1],+m[2]-1,+m[3]);
-  return(d===today()?"오늘 · ":"")+(+m[2])+"월 "+(+m[3])+"일 ("+WD[dt.getDay()]+")"+(+m[1]!==new Date().getFullYear()?" "+m[1]:"");
+  const dt=new Date(+m[1],+m[2]-1,+m[3]),y=new Date().getFullYear();
+  return(+m[1]!==y?m[1]+"년 ":"")+(+m[2])+"월 "+(+m[3])+"일 "+WD[dt.getDay()];
 }
-function ratingTxt(r){
-  if(!r)return"";
-  if(db.settings.stars==="num")return r+"/10";
-  const n=Math.max(1,Math.round(r/2));return"★".repeat(n)+"☆".repeat(5-n);
+const stampOf=r=>(r.date||"").slice(2).replace(/-/g," ");
+function photoOf(r){ // 목록·상세에 쓸 그림: 내 사진 > 추천 사진
+  if(PEND.has(r.id))return{kind:"mine",src:PEND.get(r.id).prev};
+  if(r.photo&&r.photo.thumb)return{kind:"drive",id:r.photo.thumb,full:r.photo.full};
+  if(r.rec&&imgOk(r.rec.url))return{kind:"rec",src:r.rec.url};
+  return{kind:"text"};
 }
-const safeUrl=u=>/^https?:\/\//i.test(String(u||"").trim())?String(u).trim():"";
-const money=n=>(+n||0).toLocaleString("ko-KR")+"원";
-function fieldVal(f,v){
-  if(v==null||v==="")return"";
-  if(f.t==="url"){const u=safeUrl(v);return u?`<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(f.ll||"열기")}</a>`:esc(v)}
-  if(f.t==="num")return esc(money(v));
-  if(f.t==="date")return esc(dlabel(v));
-  return esc(v).replace(/\n/g,"<br>");
+function phHtml(r){
+  const p=photoOf(r);
+  const busy=BUSY.has(r.id)?`<span class="busy">${BUSY.get(r.id)}</span>`:"";
+  if(p.kind==="text")return`<div class="ph"><div class="txt">${esc((r.note||r.title).slice(0,90))}</div>${busy}</div>`;
+  const img=p.kind==="drive"?`<img alt="" data-dimg="${esc(p.id)}">`:`<img alt="" src="${esc(p.src)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`;
+  return`<div class="ph">${p.kind==="rec"?`<div class="txt">${esc((r.note||r.title).slice(0,90))}</div>`:""}${img}${p.kind==="rec"?`<span class="rec">추천 사진</span>`:`<span class="stamp mono">${esc(stampOf(r))}</span>`}${busy}</div>`;
 }
-function recCard(r){
-  const k=kindOf(r.kind),tg=r.tags.map(t=>"#"+esc(t)).join(" ");
-  const pu=posterUrl(r,"w154");
-  return`<button class="rec${r.del?" trash":""}" data-act="open" data-id="${r.id}">${pu?`<img class="pst" src="${pu}" alt="" loading="lazy">`:""}
-   <div class="top"><span class="kd"><i class="kdot ${esc(r.kind)}"></i>${esc(k.name)}</span><span class="st">${ratingTxt(r.rating)}</span></div>
-   <div class="tt">${esc(r.title)}</div>${r.note?`<div class="nt">${esc(r.note)}</div>`:""}${tg?`<div class="tg">${tg}</div>`:""}</button>`;
+const capOf=r=>String(r.note||r.title||"").replace(/\s+/g," ").trim();
+function polaInner(r){ // 폴라로이드: 위 사진, 아래 흰 칸에 손글씨처럼 적은 글 (사진과 글은 따로 저장, 보일 때만 합침)
+  return`${phHtml(r)}<div class="pen">${esc(capOf(r).slice(0,48))}</div>`;
 }
-/* 영상·음악은 타일(포스터·앨범 그림 + 제목·연도·입력일), 나머지는 카드 */
-const isMusic=r=>!!(r.x&&r.x.type==="음악");
-const isSq=r=>isMusic(r)||r.kind==="place"; // 정사각형 그림(앨범·장소 사진)
-const isTile=r=>r.kind==="video"||r.kind==="book"||(r.kind==="place"&&!!(r.x&&(r.x.poster||r.x.info||r.x.link)));
-function infoYear(r){const m=String((r.x&&r.x.info)||"").split("\n")[0].match(/\b(19|20)\d{2}\b/g);return m?m[m.length-1]:""}
-function infoArtist(r){ // 정보 첫 줄 "이름 · 아티스트(저자·지역) · 연도 · …"의 둘째 칸
-  const p=String((r.x&&r.x.info)||"").split("\n")[0].split("·").map(s=>s.trim());
-  return p[1]&&!/^(19|20)\d{2}$/.test(p[1])?p[1].replace(/\s*\([^)]*\)/g,"").trim():"";
+const shortAddr=a=>{const p=String(a||"").split(/\s+/).filter(Boolean);return(p.find(x=>/[구군시]$/.test(x)&&!/특별시|광역시/.test(x))||p[1]||p[0]||"")};
+function header(){
+  const n=shown().length,nav=F.mode!=="all";
+  return`<div class="hrow"><button class="ib" data-act="close" aria-label="촬영으로">${ico("cam")}</button>${nav?`<button class="ib nv" data-act="prev" aria-label="이전">${ico("l")}</button>`:""}<h1>${esc(F.mode==="all"?"보기":periodLabel())}<span class="cnt mono">${n}</span></h1>${nav?`<button class="ib nv" data-act="next" aria-label="다음">${ico("r")}</button>`:""}<button class="ib" data-act="settings" aria-label="설정">${ico("gear")}</button></div>
+  <div class="srow">${ico("search")}<input id="q" type="search" placeholder="검색" value="${esc(F.q)}" autocomplete="off"><div class="seg">${[["all","전체"],["day","일"],["month","월"],["year","년"]].map(m=>`<button data-mode="${m[0]}" class="${F.mode===m[0]?"on":""}">${m[1]}</button>`).join("")}</div></div>
+  <div class="chips"><button class="chip${F.th?"":" on"}" data-th="">전체</button>${THEMES.map(t=>`<button class="chip ${t[0]}${F.th===t[0]?" on":""}" data-th="${t[0]}"><i class="dot"></i>${t[1]}</button>`).join("")}</div>`;
 }
-function tileDate(d){const m=/^(\d{4})-(\d\d)-(\d\d)$/.exec(d||"");return m?(+m[1]!==new Date().getFullYear()?m[1].slice(2)+".":"")+m[2]+"."+m[3]:""}
-function recTile(r){
-  const pu=posterUrl(r,"w342"),mu=isSq(r),yr=infoYear(r),ar=r.kind!=="video"||isMusic(r)?infoArtist(r):"";
-  const meta=[ar,yr||((r.x&&r.x.type)||(r.kind==="book"?"책":""))].filter(Boolean).join(" · ");
-  return`<button class="tile${r.del?" trash":""}" data-act="open" data-id="${r.id}"><div class="cv${mu?" sq":""}${pu?"":" nf"}" data-c="${esc([...r.title][0]||"·")}">${pu?`<img src="${pu}" alt="" loading="lazy" onerror="this.parentNode.classList.add('nf');this.remove()">`:""}</div>
-   <div class="tn">${esc(r.title)}</div>${meta?`<div class="tm">${esc(meta)}</div>`:""}<div class="td">${esc(tileDate(r.date))} 입력${r.rating?` <span class="st">${ratingTxt(r.rating)}</span>`:""}</div></button>`;
+/* ---------- 촬영 페이지 (첫 화면) ---------- */
+function renderShoot(){
+  if(!db)return;
+  const rs=sortRecs(live()),g=$("#galBtn");
+  if(g){const r=rs[0];g.innerHTML=r?`<span class="gp ${thCls(r.theme)}">${phHtml(r)}</span>`:ico("img");loadImgs(g)}
+  const c=$("#galCnt");if(c)c.textContent=rs.length?rs.length:"";
 }
-function groupList(arr){
-  let out="",cur=null,tiles="";
-  const flush=()=>{if(tiles){out+=`<div class="tiles">${tiles}</div>`;tiles=""}};
-  arr.forEach(r=>{
-    if(r.date!==cur){flush();cur=r.date;out+=`<div class="dh">${esc(dlabel(r.date))}</div>`}
-    if(isTile(r))tiles+=recTile(r);else{flush();out+=recCard(r)}
+function render(){if(!db)return;renderShoot();viewRefresh(true);setSync(dirty?"saving":"ok");reportWhere()}
+function renderList(){if(!db)return;renderShoot();viewRefresh(false)}
+let io=null;
+function loadImgs(root,now){ // 드라이브 사진은 화면에 보일 때 불러옴 (작은 사진 먼저, 큰 사진은 상세에서)
+  const els=root.querySelectorAll("img[data-dimg]");if(!els.length)return;
+  const go=el=>{const id=el.dataset.dimg;el.removeAttribute("data-dimg");photoUrl(id).then(u=>{if(u)el.src=u})};
+  if(now||!("IntersectionObserver" in window)){els.forEach(go);return}
+  if(!io)io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){io.unobserve(e.target);go(e.target)}}),{rootMargin:"300px"});
+  els.forEach(el=>io.observe(el));
+}
+
+/* ---------- 보기 페이지: 아이튠즈 앨범 넘기기처럼 가로로 늘어선 폴라로이드, 좌우로 밀어 넘김 ---------- */
+const CF={pos:0,list:[],els:new Map(),W:220,drag:null,raf:0,snapT:0};
+function openView(root){
+  openLayer("view",`<div class="vtop" id="vtop"></div><div id="vbody"></div>`,null,root);
+  CF.pos=0;drawView(true);
+}
+const viewLayer=()=>LAYERS.find(l=>l.kind==="view");
+function viewRefresh(head){
+  const L=viewLayer();if(!L)return;
+  const cur=CF.list[Math.round(CF.pos)];drawView(head,cur&&cur.id);
+}
+function drawView(head,keepId){
+  const L=viewLayer();if(!L)return;
+  if(head){
+    const q=$("#q"),focus=q&&document.activeElement===q,pos=focus?q.selectionStart:0;
+    L.el.querySelector("#vtop").innerHTML=header();
+    if(focus){const n=$("#q");n.focus();try{n.setSelectionRange(pos,pos)}catch(e){}}
+  }else{const c=L.el.querySelector(".cnt");if(c)c.textContent=shown().length}
+  CF.list=shown();CF.els.forEach(el=>el.remove());CF.els.clear();
+  const n=CF.list.length,box=L.el.querySelector("#vbody");
+  if(keepId){const i=CF.list.findIndex(r=>r.id===keepId);CF.pos=i>=0?i:Math.min(Math.round(CF.pos),Math.max(0,n-1))}else CF.pos=Math.min(CF.pos,Math.max(0,n-1));
+  if(!n){box.innerHTML=`<div class="empty">${live().length?"맞는 기록이 없어요":"아직 기록이 없어요<br>촬영 화면에서 찍거나 글을 남겨 보세요"}</div>`;return}
+  box.innerHTML=`<div class="cf" id="cf"></div><div class="cfm" id="cfm"></div>${n>1?`<input type="range" class="scrub" id="cfs" min="0" max="${n-1}" step="1" value="${Math.round(CF.pos)}" aria-label="넘기기">`:""}`;
+  const cf=box.querySelector("#cf");
+  CF.W=Math.round(Math.min(cf.clientWidth*.68,320));
+  cf.style.setProperty("--w",CF.W+"px");
+  cfBind(cf);cfSync();
+}
+function cfCard(r,i){
+  const b=document.createElement("div");b.className="cfc";b.dataset.id=r.id;
+  b.innerHTML=`<div class="pola ${thCls(r.theme)}">${polaInner(r)}</div><div class="refl"></div>`;
+  loadImgs(b,true);return b;
+}
+function cfSync(){
+  const cf=$("#cf");if(!cf)return;
+  const n=CF.list.length,c=Math.round(CF.pos),keep=new Set();
+  for(let i=Math.max(0,c-5);i<=Math.min(n-1,c+5);i++){
+    const r=CF.list[i];keep.add(r.id);
+    let el=CF.els.get(r.id);if(!el){el=cfCard(r,i);CF.els.set(r.id,el);cf.appendChild(el)}
+    el.dataset.i=i;
+  }
+  for(const [id,el] of CF.els)if(!keep.has(id)){el.remove();CF.els.delete(id)}
+  const W=CF.W,step=W*.62;
+  for(const el of CF.els.values()){
+    const d=+el.dataset.i-CF.pos,ad=Math.abs(d),s=Math.sign(d);
+    const x=ad<=1?d*step:s*(step+(ad-1)*W*.22),rot=-Math.max(-1,Math.min(1,d))*58,z=-Math.min(ad,1)*150-Math.max(0,ad-1)*24;
+    el.style.transform=`translateX(${x.toFixed(1)}px) translateZ(${z.toFixed(1)}px) rotateY(${rot.toFixed(1)}deg)`;
+    el.style.zIndex=String(1000-Math.round(ad*10));
+    el.style.opacity=ad>4.6?"0":"1";
+  }
+  cfMeta();
+}
+function cfMeta(){
+  const i=Math.max(0,Math.min(CF.list.length-1,Math.round(CF.pos))),r=CF.list[i],m=$("#cfm");
+  if(m&&r&&(m.dataset.id!==r.id||m.dataset.busy!==String(BUSY.has(r.id)))){
+    m.dataset.id=r.id;m.dataset.busy=String(BUSY.has(r.id));
+    m.innerHTML=`<div class="ct">${esc(r.title||"기록")}</div><div class="cm ${thCls(r.theme)}"><i class="dot"></i>${esc(r.theme?thName(r.theme):(r.sub||"기타"))}<span>· ${esc(dayHead(r.date))}${r.time?" "+esc(r.time):""}</span>${r.loc&&r.loc.addr?`<span>· ${esc(shortAddr(r.loc.addr))}</span>`:""}</div><div class="cn mono">${i+1} / ${CF.list.length}${BUSY.has(r.id)?" · "+esc(BUSY.get(r.id)):""}</div>`;
+  }
+  const s=$("#cfs");if(s&&document.activeElement!==s)s.value=i;
+}
+function cfGo(t){
+  cancelAnimationFrame(CF.raf);
+  t=Math.max(0,Math.min(CF.list.length-1,t));
+  const p0=CF.pos,t0=performance.now(),dur=Math.min(520,220+Math.abs(t-p0)*60);
+  const step=now=>{const k=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-k,3);CF.pos=p0+(t-p0)*e;cfSync();if(k<1)CF.raf=requestAnimationFrame(step)};
+  CF.raf=requestAnimationFrame(step);
+}
+function cfBind(cf){
+  cf.addEventListener("pointerdown",e=>{
+    if(e.button>0)return;cancelAnimationFrame(CF.raf);
+    CF.drag={x:e.clientX,y:e.clientY,p:CF.pos,moved:false,lx:e.clientX,lt:performance.now(),v:0};
+    try{cf.setPointerCapture(e.pointerId)}catch(_){}
   });
-  flush();
+  cf.addEventListener("pointermove",e=>{
+    const D=CF.drag;if(!D)return;
+    const dx=e.clientX-D.x;if(!D.moved&&Math.abs(dx)<6)return;D.moved=true;
+    const now=performance.now(),dt=Math.max(1,now-D.lt);D.v=.8*((e.clientX-D.lx)/dt)+.2*D.v;D.lx=e.clientX;D.lt=now;
+    CF.pos=Math.max(-.45,Math.min(CF.list.length-.55,D.p-dx/(CF.W*.62)));cfSync();
+  });
+  const end=e=>{
+    const D=CF.drag;CF.drag=null;if(!D)return;
+    if(!D.moved){
+      const el=document.elementFromPoint(e.clientX,e.clientY),c=el&&el.closest(".cfc");
+      if(c){const i=+c.dataset.i;if(i===Math.round(CF.pos))openDetail(c.dataset.id);else cfGo(i)}
+      return;
+    }
+    cfGo(Math.round(CF.pos-D.v*160/(CF.W*.62)));
+  };
+  cf.addEventListener("pointerup",end);
+  cf.addEventListener("pointercancel",()=>{CF.drag=null;cfGo(Math.round(CF.pos))});
+  cf.addEventListener("wheel",e=>{
+    const d=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:(e.shiftKey?e.deltaY:0);if(!d)return;
+    e.preventDefault();cancelAnimationFrame(CF.raf);
+    CF.pos=Math.max(0,Math.min(CF.list.length-1,CF.pos+d/(CF.W*.9)));cfSync();
+    clearTimeout(CF.snapT);CF.snapT=setTimeout(()=>cfGo(Math.round(CF.pos)),140);
+  },{passive:false});
+}
+window.addEventListener("resize",()=>{if(viewLayer())viewRefresh(false)});
+
+/* ---------- 겹 화면 (뒤로가기로 닫힘) ---------- */
+const LAYERS=[];
+function openLayer(kind,html,id,root){
+  const el=document.createElement("div");el.className="layer";el.innerHTML=html;
+  $("#layers").appendChild(el);document.documentElement.classList.add("lock");
+  const L={kind,el,id,root:!!root};LAYERS.push(L);
+  if(!EMBED){try{history.pushState({gd:LAYERS.length},"")}catch(e){}}
+  setTimeout(fabLift,0);setTimeout(fabLift,220);reportWhere();camSync();
+  return el;
+}
+function popLayer(){
+  const L=LAYERS.pop();if(!L)return;
+  L.el.remove();if(L.onClose)L.onClose();
+  if(!LAYERS.length)document.documentElement.classList.remove("lock");
+  fabLift();reportWhere();camSync();
+}
+function closeTop(){if(!LAYERS.length)return;if(!EMBED&&history.state&&history.state.gd)history.back();else popLayer()}
+function closeAll(){while(LAYERS.length)popLayer();if(!EMBED&&history.state&&history.state.gd){try{history.replaceState(null,"")}catch(e){}}}
+window.addEventListener("popstate",()=>{if(LAYERS.length)popLayer()});
+function canBack(){if(!db||!LAYERS.length)return false;const t=LAYERS[LAYERS.length-1];return !(t.root&&LAYERS.length===1)}
+function goBack(){if(canBack())closeTop()}
+let toastT=null;
+function toast(msg,undo){
+  const t=$("#toast");t.innerHTML=esc(msg)+(undo?`<button>되돌리기</button>`:"");t.hidden=false;
+  if(undo)t.querySelector("button").onclick=()=>{undo();t.hidden=true};
+  clearTimeout(toastT);toastT=setTimeout(()=>{t.hidden=true},undo?5000:2600);
+}
+
+/* ---------- 사진 읽기: 찍은 시간·위치(EXIF), 줄이기 ---------- */
+function exifRead(buf){
+  try{
+    const v=new DataView(buf);if(v.getUint16(0)!==0xFFD8)return{};
+    let o=2;
+    while(o<v.byteLength-4){
+      const m=v.getUint16(o);
+      if(m===0xFFE1&&v.getUint32(o+4)===0x45786966)return tiffRead(v,o+10);
+      if((m&0xFF00)!==0xFF00||m===0xFFDA)break;
+      o+=2+v.getUint16(o+2);
+    }
+  }catch(e){}
+  return{};
+}
+function tiffRead(v,t){
+  const le=v.getUint16(t)===0x4949,g16=p=>v.getUint16(p,le),g32=p=>v.getUint32(p,le);
+  const ifd=p=>{const n=g16(p),e={};for(let i=0;i<n;i++){const q=p+2+i*12;e[g16(q)]={type:g16(q+2),cnt:g32(q+4),vo:q+8}}return e};
+  const val=en=>{
+    if(!en)return null;const{type,cnt,vo}=en,size=({1:1,2:1,3:2,4:4,5:8,7:1,9:4,10:8})[type]||1,off=size*cnt>4?t+g32(vo):vo;
+    if(type===2){let s="";for(let i=0;i<cnt-1;i++)s+=String.fromCharCode(v.getUint8(off+i));return s}
+    if(type===5){const a=[];for(let i=0;i<cnt;i++)a.push(g32(off+i*8)/(g32(off+i*8+4)||1));return a}
+    if(type===3)return g16(off);if(type===4)return g32(off);return null;
+  };
+  const i0=ifd(t+g32(t+4)),out={};
+  try{if(i0[0x8769]){const ex=ifd(t+val(i0[0x8769]));out.dt=val(ex[0x9003])||val(ex[0x9004])}}catch(e){}
+  if(!out.dt&&i0[0x0132])out.dt=val(i0[0x0132]);
+  try{if(i0[0x8825]){const gp=ifd(t+val(i0[0x8825])),la=val(gp[2]),lo=val(gp[4]);
+    if(la&&lo){const dms=a=>a[0]+a[1]/60+a[2]/3600;let lat=dms(la),lng=dms(lo);if(val(gp[1])==="S")lat=-lat;if(val(gp[3])==="W")lng=-lng;
+      if(isFinite(lat)&&isFinite(lng)&&(lat||lng))out.gps={lat:+lat.toFixed(6),lng:+lng.toFixed(6)}}}}catch(e){}
+  const m=/^(\d{4}):(\d\d):(\d\d)[ T](\d\d):(\d\d)/.exec(out.dt||"");
+  out.date=m?m[1]+"-"+m[2]+"-"+m[3]:"";out.time=m?m[4]+":"+m[5]:"";
   return out;
 }
-
-/* ---------- 화면 ---------- */
-let view="home",limit=30,tripOpen=null;
-const S={q:"",kind:"",min:0,from:"",to:"",tag:""};
-const ICON={
- home:'<svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z"/></svg>',
- find:'<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
- plus:'<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
- trip:'<svg viewBox="0 0 24 24"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>',
- set:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>'
-};
-function renderNav(){
-  const b=(id,l,ic,cls)=>`<button class="${cls||""}${view===id?" on":""}" data-act="tab" data-v="${id}"><span class="ni">${ic}</span><span class="l">${l}</span></button>`;
-  $("#nav").innerHTML=b("home","홈",ICON.home)+b("find","찾기",ICON.find)+
-   `<button class="plus" data-act="new" aria-label="기록하기"><span class="pc">${ICON.plus}</span><span class="l">기록</span></button>`+
-   b("trip","여행",ICON.trip)+b("set","설정",ICON.set);
+async function bitmapOf(blob){
+  try{return await createImageBitmap(blob,{imageOrientation:"from-image"})}catch(e){}
+  return new Promise((res,rej)=>{const u=URL.createObjectURL(blob),im=new Image();im.onload=()=>res(im);im.onerror=()=>rej(new Error("사진을 읽지 못했어요"));im.src=u});
 }
-function render(){
+function shrink(bm,max,q,sq){ // sq: 가운데를 정사각형으로 잘라냄 (카메라로 찍은 사진)
+  let w=bm.width,h=bm.height,sx=0,sy=0;
+  if(sq){const m=Math.min(w,h);sx=(w-m)/2;sy=(h-m)/2;w=h=m}
+  const s=Math.min(1,max/Math.max(w,h)),c=document.createElement("canvas");
+  c.width=Math.round(w*s);c.height=Math.round(h*s);c.getContext("2d").drawImage(bm,sx,sy,w,h,0,0,c.width,c.height);
+  return new Promise(res=>c.toBlob(b=>res(b),"image/jpeg",q));
+}
+const b64=blob=>new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(String(fr.result).split(",")[1]);fr.onerror=rej;fr.readAsDataURL(blob)});
+function here(){ // 지금 위치 (사진에 위치가 없을 때만)
+  return new Promise(res=>{
+    if(!navigator.geolocation)return res(null);
+    navigator.geolocation.getCurrentPosition(p=>res({lat:+p.coords.latitude.toFixed(6),lng:+p.coords.longitude.toFixed(6)}),()=>res(null),{enableHighAccuracy:true,timeout:8000,maximumAge:120000});
+  });
+}
+/* 위치 → 주소: 오픈스트리트맵 Nominatim(키 없음). 보내는 것: 위도·경도뿐. 사진 한 장에 한 번, 1초에 1건 이하. 동 단위 결과를 기록에 저장해 다시 부르지 않음 */
+let nomAt=0;
+async function addrOf(lat,lng){
+  try{
+    const wait=nomAt+1100-Date.now();nomAt=Math.max(Date.now(),nomAt+1100);if(wait>0)await new Promise(r=>setTimeout(r,wait));
+    const r=await fetch("https://nominatim.openstreetmap.org/reverse?"+new URLSearchParams({format:"jsonv2",lat,lon:lng,zoom:"17","accept-language":"ko"}));
+    if(!r.ok)return"";
+    const j=await r.json(),a=j.address||{};
+    const top=a.province||a.state||a.city||"",mid=a.city&&a.city!==top?a.city:"",gu=a.borough||a.county||a.city_district||a.district||"",dong=a.quarter||a.suburb||a.neighbourhood||a.village||a.town||"";
+    const s=[top.replace(/특별시|광역시|특별자치시|특별자치도/,"").replace(/도$/,"")||top,mid,gu,dong].filter(Boolean);
+    const out=[...new Set(s)].join(" ");
+    return(out||String(j.display_name||"").split(",").slice(0,3).reverse().join(" ")).trim().slice(0,60);
+  }catch(e){return""}
+}
+
+/* ---------- 카메라 (촬영 페이지가 보일 때만 켬, 정사각형으로만 찍음) ---------- */
+const cam={stream:null,facing:lsGet("goodday.facing")==="user"?"user":"environment",err:"",busy:false,want:false};
+function camSync(){
+  const want=!!db&&!$("#shoot").hidden&&!LAYERS.length&&!document.hidden;
+  cam.want=want;
+  if(want&&!cam.stream&&!cam.busy)camStart();
+  else if(!want&&cam.stream)camStop();
+}
+async function camStart(){
+  const v=$("#vid"),m=$("#vmsg");
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){cam.err="이 브라우저는 화면 안 카메라를 못 써요.\n가운데 버튼을 누르면 휴대폰 카메라가 열려요.";m.textContent=cam.err;return}
+  cam.busy=true;m.textContent="";
+  try{
+    const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:cam.facing},width:{ideal:1920},height:{ideal:1920}},audio:false});
+    if(!cam.want){s.getTracks().forEach(t=>t.stop());return}
+    cam.stream=s;cam.err="";v.srcObject=s;v.classList.toggle("mir",cam.facing==="user");
+    try{await v.play()}catch(e){}
+  }catch(e){
+    cam.err=e&&e.name==="NotAllowedError"?"카메라 권한이 꺼져 있어요.\n가운데 버튼을 누르면 휴대폰 카메라가 열려요.":"카메라를 켜지 못했어요.\n가운데 버튼을 누르면 휴대폰 카메라가 열려요.";
+    m.textContent=cam.err;
+  }finally{cam.busy=false}
+}
+function camStop(){if(cam.stream){cam.stream.getTracks().forEach(t=>t.stop());cam.stream=null}const v=$("#vid");if(v)v.srcObject=null}
+document.addEventListener("visibilitychange",camSync);
+async function shutter(){
+  const v=$("#vid");
+  if(!cam.stream||!v.videoWidth){$("#fCam").dataset.sq="1";$("#fCam").click();return}
+  const w=v.videoWidth,h=v.videoHeight,s=Math.min(w,h),o=Math.min(s,2048),c=document.createElement("canvas");
+  c.width=c.height=o;const g=c.getContext("2d");
+  if(cam.facing==="user"){g.translate(o,0);g.scale(-1,1)}
+  g.drawImage(v,(w-s)/2,(h-s)/2,s,s,0,0,o,o);
+  const f=$("#flash");f.classList.add("on");setTimeout(()=>f.classList.remove("on"),60);
+  const b=await new Promise(r=>c.toBlob(r,"image/jpeg",.92));
+  if(b)startEntry("shot",new File([b],"shot.jpg",{type:"image/jpeg",lastModified:Date.now()}));
+}
+function flipCam(){cam.facing=cam.facing==="user"?"environment":"user";lsSet("goodday.facing",cam.facing);camStop();camSync()}
+
+/* ---------- 새 기록 · 고치기 ---------- */
+let E=null; // 입력 중인 기록
+const PEND=new Map(); // 아직 드라이브에 못 올린 사진 {full,thumb,ai,prev}
+const BUSY=new Map(); // 기록별 진행 표시
+async function startEntry(src,file){
+  const now=new Date();
+  E={id:null,src,file:null,prev:"",date:today(),time:hm(now),loc:null,locNote:"",note:"",theme:"",exifTime:false};
+  openEntry();
+  if(file)await takeFile(file,src);
+  else{E.locNote="위치 찾는 중";drawEntry();const g=await here();if(!E)return;if(g){E.loc={...g,addr:""};E.locNote="";drawEntry();const a=await addrOf(g.lat,g.lng);if(E&&E.loc&&E.loc.lat===g.lat){E.loc.addr=a;drawEntry()}}else{E.locNote="";drawEntry()}}
+}
+async function takeFile(file,src){
+  if(!E)return;
+  E.file=file;if(E.prev)URL.revokeObjectURL(E.prev);E.prev=URL.createObjectURL(file);E.locNote="사진 읽는 중";drawEntry();
+  let ex={};try{ex=exifRead(await file.slice(0,262144).arrayBuffer())}catch(e){}
+  if(!E||E.file!==file)return;
+  if(ex.date){E.date=ex.date;E.time=ex.time;E.exifTime=true}
+  else if((src==="album"||src==="shot")&&file.lastModified){const d=new Date(file.lastModified);E.date=iso(d);E.time=hm(d)}
+  let g=ex.gps||null,fromPhoto=!!g;
+  if(!g&&(src==="camera"||src==="shot")){E.locNote="위치 찾는 중";drawEntry();g=await here()}
+  if(!E||E.file!==file)return;
+  E.loc=g?{...g,addr:""}:null;E.locSrc=fromPhoto?"사진에서 읽음":g?"지금 위치":"";E.locNote="";drawEntry();
+  if(g){const a=await addrOf(g.lat,g.lng);if(E&&E.loc&&E.loc.lat===g.lat){E.loc.addr=a;drawEntry()}}
+}
+function openEntry(){
+  const el=openLayer("entry",`<div class="lh"><button class="ib" data-act="close" aria-label="닫기">${ico("back")}</button><h2>${E.id?"기록 고치기":"새 기록"}</h2><button class="btn p" data-act="saveEntry">저장</button></div><div class="lb" id="entry"></div>`);
+  LAYERS[LAYERS.length-1].onClose=()=>{if(E&&E.prev&&!E.kept)URL.revokeObjectURL(E.prev);E=null};
+  drawEntry();
+  setTimeout(()=>{const n=$("#enote");if(n&&!E.file&&!E.id&&!E.photo)n.focus()},250);
+}
+/* 입력 페이지: 위에 폴라로이드(사진 + 적는 글이 바로 손글씨로 보임), 아래에 글 칸, 그 밑에 테마 5개 */
+function drawEntry(){
+  const box=$("#entry");if(!box||!E)return;
+  const keepNote=$("#enote")?$("#enote").value:E.note;E.note=keepNote;
+  const hasImg=E.prev||(E.photo&&E.photo.full);
+  box.innerHTML=`
+   <div class="epola"><div class="pola ${thCls(E.theme)}"><div class="ph">${hasImg?`<img alt="" ${E.prev?`src="${esc(E.prev)}"`:`data-dimg="${esc(E.photo.full)}"`}><span class="stamp mono">${esc(E.date.slice(2).replace(/-/g," "))}</span>`:`<div class="emp"><span>사진 없이 쓰면<br>글에 맞는 사진을 찾아 붙여요</span><div class="btnrow"><button class="btn" data-act="eCam">${ico("cam")}찍기</button><button class="btn" data-act="eAlb">${ico("img")}앨범</button></div></div>`}</div><div class="pen" id="epen">${esc(capOf({note:E.note}).slice(0,48))}</div></div></div>
+   ${hasImg?`<div class="eacts"><button class="btn" data-act="${E.id?"eCam":"retake"}">${ico("cam")}다시 찍기</button><button class="btn" data-act="eAlb">${ico("img")}앨범</button><button class="btn" data-act="noPhoto">${ico("x")}사진 빼기</button></div>`:""}
+   <div class="auto">
+     ${ico("clock")}<div class="two"><input type="date" id="edate" value="${esc(E.date)}"><input type="time" id="etime" value="${esc(E.time)}"></div><span class="s">${E.exifTime?"사진에서 읽음":""}</span>
+     ${ico("pin")}<span class="lv">${E.locNote?esc(E.locNote)+"…":E.loc?esc(E.loc.addr||"위치 확인 중"):"위치 없음"}</span>${E.loc?`<button class="btn" style="height:26px;padding:0 8px;font-size:12px" data-act="noLoc">빼기</button>`:`<span class="s">${E.locSrc||""}</span>`}
+   </div>
+   <textarea class="note" id="enote" rows="2" placeholder="한 줄 남기기 (예: 오펜하이머 봤다, 연남동 칼국수)">${esc(E.note)}</textarea>
+   <div class="themes5">${THEMES.map(t=>`<button class="chip pick ${t[0]}${E.theme===t[0]?" on":""}" data-eth="${t[0]}" aria-pressed="${E.theme===t[0]}"><i class="dot"></i>${t[1]}</button>`).join("")}</div>
+   <div class="hint">${E.theme?thName(E.theme)+" 테마로 저장해요. 한 번 더 누르면 자동으로 돌아가요":"테마를 안 고르면 제미나이가 글과 사진을 보고 정해요"}</div>`;
+  loadImgs(box,true);
+}
+async function saveEntry(){
+  if(!E)return;
+  const note=($("#enote").value||"").trim();
+  const date=$("#edate").value||today(),time=$("#etime").value||"";
+  if(!note&&!E.file&&!(E.photo&&E.photo.full)){toast("사진이나 글을 남겨 주세요");return}
+  const now=Date.now(),old=E.id?db.records.find(r=>r.id===E.id):null;
+  let r=old;
+  if(!r){r={id:uid(),theme:"",ts:now,people:[],cands:[]};db.records.push(r)}
+  const changed=!old||old.note!==note||(E.theme&&old.theme!==E.theme)||!!E.file;
+  if(!old||(E.theme&&E.theme!==old.theme))r.theme=E.theme||"";
+  r.note=note;r.date=date;r.time=time;r.loc=E.loc?{...E.loc}:null;r.upd=now;
+  if(!r.title||changed&&!old)r.title=note.split("\n")[0].slice(0,40)||"사진 기록";
+  if(E.dropPhoto&&old&&old.photo){dropPhoto(old);delete r.photo}
+  if(changed){delete r.why;if(!E.theme&&!old)r.theme=""}
+  const file=E.file,id=r.id,themeFixed=!!E.theme,sq=!!E.square;
+  if(file){E.kept=true;PEND.set(id,{prev:E.prev})}
+  save();closeTop();render();
+  if(LAYERS.length&&LAYERS[LAYERS.length-1].kind==="detail")drawDetail();
+  toast(old?"고쳤어요":"저장했어요");
+  if(file)processPhoto(id,file,sq);
+  if(changed)enrich(id,{file,themeFixed,fresh:!old||!!file||old.note!==note||(E&&E.theme)});
+}
+async function processPhoto(id,file,sq){ // 작은 사진(480, 목록용)과 큰 사진(1600, 상세에서만 받음) 두 장을 만들어 올림
+  BUSY.set(id,"사진 올리는 중");refresh(id);
+  try{
+    const bm=await bitmapOf(file),full=await shrink(bm,1600,.86,sq),thumb=await shrink(bm,480,.8,sq),ai=await shrink(bm,768,.8,sq);
+    const pd=PEND.get(id)||{};pd.ai=ai;pd.full=full;pd.thumb=thumb;PEND.set(id,pd);
+    if(DEMO){BUSY.delete(id);refresh(id);return}
+    const r0=db.records.find(r=>r.id===id),base=(r0&&r0.date||today())+"_"+id;
+    const [fid,tid]=await Promise.all([upPhoto(full,base+".jpg"),upPhoto(thumb,base+"_s.jpg")]);
+    const r=db&&db.records.find(x=>x.id===id);if(!r){return}
+    if(r.photo)dropPhoto(r);
+    r.photo={full:fid,thumb:tid};r.upd=Date.now();
+    THUMBS.set(tid,URL.createObjectURL(thumb));THUMBS.set(fid,URL.createObjectURL(full));
+    if(pd.prev)setTimeout(()=>URL.revokeObjectURL(pd.prev),5000);
+    PEND.delete(id);save();
+  }catch(e){
+    const r=db&&db.records.find(x=>x.id===id);if(r){r.why="사진을 드라이브에 올리지 못했어요 ("+String(e.message||e).slice(0,40)+")";}
+    toast("사진을 올리지 못했어요. 상세 화면에서 다시 올릴 수 있어요");
+  }finally{if(BUSY.get(id)==="사진 올리는 중")BUSY.delete(id);refresh(id)}
+}
+async function retryUpload(id){const pd=PEND.get(id);if(!pd||!pd.full){toast("다시 올릴 사진이 없어요. 사진을 다시 골라 주세요");return}
+  BUSY.set(id,"사진 올리는 중");refresh(id);
+  try{const r0=db.records.find(r=>r.id===id),base=(r0.date||today())+"_"+id;const [fid,tid]=await Promise.all([upPhoto(pd.full,base+".jpg"),upPhoto(pd.thumb,base+"_s.jpg")]);
+    r0.photo={full:fid,thumb:tid};delete r0.why;PEND.delete(id);save();toast("사진을 올렸어요")}catch(e){toast("이번에도 못 올렸어요. 인터넷을 확인해 주세요")}
+  finally{BUSY.delete(id);refresh(id)}}
+function refresh(id){ // 촬영 화면 앨범 버튼·보기 카드·상세를 조용히 다시 그림
   if(!db)return;
-  renderNav();
-  const m=$("#main");
-  if(view==="home")m.innerHTML=viewHome();
-  else if(view==="find"){m.innerHTML=viewFind();updateResults()}
-  else if(view==="trip")m.innerHTML=tripOpen?viewTripDetail():viewTrips();
-  else m.innerHTML=viewSet();
-  reportWhere();
-}
-function viewHome(){
-  const all=sortRecs(live().slice()),part=all.slice(0,limit);
-  return inboxCard()+`<div class="card quick"><div class="today"><span class="d">${new Date().getDate()}</span><span class="m">${new Date().getMonth()+1}월 ${WD[new Date().getDay()]}요일 · 오늘 한 줄</span></div><form id="qf" data-form="quick"><input id="qt" placeholder="${qMedia?esc(qMedia)+" 이름으로 검색":"한 줄로 (예: 어제 오펜하이머 봤다)"}" autocomplete="off" maxlength="200"><button class="btn pri" type="submit">${qMedia?"검색·저장":"저장"}</button></form><div class="chips qm">${MEDIA.map(a=>`<button type="button" data-act="qmedia" data-m="${a[0]}" class="${qMedia===a[0]?"on":""}">${a[0]}</button>`).join("")}</div>${qLast&&db.records.some(r=>r.id===qLast.id&&!r.del)?`<div class="note qres"><span>${esc(qLast.msg)}${qLast.info?`<br><b style="font-weight:600;color:var(--t2)">${esc(qLast.info)}</b>`:""}</span> <button class="btn sm" data-act="open" data-id="${qLast.id}">${qLast.info?"자세히":"고치기"}</button></div>`:""}</div>`+
-   (all.length?`<div class="sec" style="margin-top:16px">최근 기록 ${all.length}개</div>`+groupList(part)+(all.length>limit?`<div class="acts"><button class="btn" data-act="more">더 보기</button></div>`:""):
-   `<div class="empty">아직 기록이 없어요.<br>가운데 ＋ 를 눌러 첫 기록을 남겨 보세요.<br>제목만 적어도 저장돼요.</div>`);
-}
-function matchRec(r,q){
-  if(!q)return true;
-  const k=kindOf(r.kind),hay=[r.title,r.note,r.tags.join(" "),k.name,...Object.values(r.x)].join(" ").toLowerCase();
-  return q.toLowerCase().split(/\s+/).filter(Boolean).every(w=>hay.includes(w));
-}
-function viewFind(){
-  const tags=[...new Set(live().flatMap(r=>r.tags))].sort((a,b)=>a.localeCompare(b,"ko")).slice(0,40);
-  const kinds=allKinds().filter(k=>!db.settings.hidden.includes(k.id)||live().some(r=>r.kind===k.id));
-  return`<div class="card"><input id="fq" type="search" placeholder="제목·메모·태그로 찾기" value="${esc(S.q)}" autocomplete="off">
-   <div class="chips" id="fk" style="margin-top:12px"><button data-act="fkind" data-id="" class="${S.kind?"":"on"}">전체</button>${kinds.map(k=>`<button data-act="fkind" data-id="${k.id}" class="${S.kind===k.id?"on":""}">${esc(k.name)}</button>`).join("")}</div>
-   <div class="inl" style="margin-top:4px"><div><label>별점</label><select id="fmin">${[["0","전체"],["4","별 2개 이상"],["6","별 3개 이상"],["8","별 4개 이상"],["10","별 5개"]].map(([v,l])=>`<option value="${v}"${+v===S.min?" selected":""}>${l}</option>`).join("")}</select></div></div>
-   <div class="inl"><div><label>부터</label><input id="ffrom" type="date" value="${esc(S.from)}"></div><div><label>까지</label><input id="fto" type="date" value="${esc(S.to)}"></div></div>
-   ${tags.length?`<label>태그</label><div class="chips" id="ft">${tags.map(t=>`<button data-act="ftag" data-t="${esc(t)}" class="${S.tag===t?"on":""}">#${esc(t)}</button>`).join("")}</div>`:""}
-  </div><div id="fres"></div>`;
-}
-function updateResults(){
-  const el=$("#fres");if(!el)return;
-  const arr=sortRecs(live().filter(r=>matchRec(r,S.q)&&(!S.kind||r.kind===S.kind)&&(!S.min||r.rating>=S.min)&&(!S.tag||r.tags.includes(S.tag))&&(!S.from||(r.date||"")>=S.from)&&(!S.to||(r.date||"")<=S.to)));
-  el.innerHTML=`<div class="sec">${arr.length}개</div>`+(arr.length?groupList(arr.slice(0,200)):`<div class="empty">찾는 기록이 없어요.<br>조건을 줄여 보세요.</div>`);
-  reportWhere();
-}
-/* 여행: 여행 종류 기록 + 그 기간(시작~끝)에 쓴 다른 기록을 날짜별로 자동으로 묶어 보여줌 (직접 연결·묶음 편집은 2단계) */
-function tripRange(t){const s=t.x.start||t.date||"",e=t.x.end||s;return[s,e<s?s:e]}
-function tripRecs(t){const[s,e]=tripRange(t);return s?sortRecs(live().filter(r=>r.kind!=="trip"&&r.date>=s&&r.date<=e)):[]}
-function viewTrips(){
-  const ts=sortRecs(live().filter(r=>r.kind==="trip").map(r=>({...r,date:tripRange(r)[0]})));
-  return ts.length?ts.map(t=>{
-    const[s,e]=tripRange(t),n=tripRecs(t).length;
-    return`<button class="rec" data-act="trip" data-id="${t.id}"><div class="top"><span class="kd">${esc(t.x.region||"여행")}</span><span>${esc(s?s+(e!==s?" ~ "+e:""):"기간 없음")}</span><span class="st">${ratingTxt(t.rating)}</span></div><div class="tt">${esc(t.title)}</div><div class="nt">그동안의 기록 ${n}개</div></button>`;
-  }).join(""):`<div class="empty">아직 여행 기록이 없어요.<br>여행 이름과 기간을 적어 두면, 그 기간의 맛집·장소 기록이 여기에 날짜별로 모여요.</div><div class="acts"><button class="btn pri" data-act="new" data-kind="trip">여행 기록하기</button></div>`;
-}
-function viewTripDetail(){
-  const t=db.records.find(r=>r.id===tripOpen&&!r.del);if(!t){tripOpen=null;return viewTrips()}
-  const[s,e]=tripRange(t),recs=tripRecs(t);
-  return`${EMBED&&tripOpen===rootRec?"":`<button class="back" data-act="tripBack">‹ 여행 목록</button>`}<div class="card"><h3>${esc(t.x.region||"여행")} · ${esc(s?s+(e!==s?" ~ "+e:""):"기간 없음")}</h3><div style="font-size:18px;font-weight:600">${esc(t.title)}</div>${t.note?`<div class="sub" style="margin-top:4px">${esc(t.note)}</div>`:""}<div class="acts"><button class="btn" data-act="open" data-id="${t.id}">여행 정보 보기·수정</button></div></div>`+
-   (recs.length?groupList(recs):`<div class="empty">이 기간에 쓴 다른 기록이 없어요.</div>`);
-}
-function viewSet(){
-  const s=db.settings,trash=db.records.filter(r=>r.del).length;
-  const seg=(act,cur,opts)=>`<div class="seg">${opts.map(([v,l])=>`<button data-act="${act}" data-v="${v}" class="${cur===v?"on":""}">${l}</button>`).join("")}</div>`;
-  return`<div class="card"><h3>계정</h3><div class="row"><span class="t">${esc(me||"–")}</span><span class="r" id="syncRow">${esc($("#sync").textContent||"–")}</span></div>
-   <div class="note" style="margin-top:0">${DEMO?"체험 모드: 이 화면의 기록은 저장되지 않습니다.":"기록은 내 Google Drive의 goodday 폴더에 저장됩니다."}</div></div>
-  <div class="card"><h3>기록 설정</h3>
-   <button class="rowbtn" data-act="kinds"><span>종류 관리</span><span class="r">${visKinds().length}개 사용 중 ›</span></button>
-   <label style="margin-top:8px">별점 방식</label>${seg("stars",s.stars,[["star","별 5개"],["num","10점"]])}
-   ${EMBED?"":`<button class="rowbtn" data-act="dark" role="switch" aria-checked="${s.dark}"><span>다크 모드</span><span class="r">${s.dark?"☑ 켜짐":"☐ 꺼짐"}</span></button>`}</div>
-  <div class="card"><h3>내 기록</h3>
-   <button class="rowbtn" data-act="exp" data-f="json"><span>내보내기 (JSON)</span><span class="r">백업용 ›</span></button>
-   <button class="rowbtn" data-act="exp" data-f="csv"><span>내보내기 (엑셀용 표)</span><span class="r">엑셀에서 열기 ›</span></button>
-   <button class="rowbtn" data-act="inboxOpen"><span>말만해요 받은편지함</span><span class="r">${s.inboxFile?(inbox.length?inbox.length+"통 대기":"연결됨"):"연결 안 됨"} ›</span></button>
-   <button class="rowbtn" data-act="tmdb"><span>영화 포스터 (TMDB 키)</span><span class="r">${hasTmdb()?"연결됨":"키 없음"} ›</span></button>
-   <button class="rowbtn" data-act="trash"><span>휴지통</span><span class="r">${trash}개 ›</span></button></div>
-  <div class="card"><h3>도움</h3>
-   ${EMBED||isStandalone()?"":`<button class="rowbtn" data-act="install"><span>홈 화면에 추가</span><span class="r">${installEv?"앱 설치":"방법 보기"} ›</span></button>`}
-   <button class="rowbtn" data-act="help"><span>사용 설명서</span><span class="r">›</span></button>
-   ${EMBED?"":`<button class="rowbtn" data-act="logout"><span style="color:var(--bad)">로그아웃</span></button>`}</div>
-  <div class="note" style="text-align:center">항상일상 · ${VER}</div>`;
+  renderShoot();
+  const top=LAYERS[LAYERS.length-1];
+  if(top&&top.kind==="detail"&&top.id===id)drawDetail();
+  const el=CF.els.get(id),r=db.records.find(x=>x.id===id);
+  if(el&&r){el.querySelector(".pola").className="pola "+thCls(r.theme);el.querySelector(".pola").innerHTML=polaInner(r);loadImgs(el,true);const m=$("#cfm");if(m)m.dataset.id="";cfMeta()}
+  else if(viewLayer()&&r&&!CF.list.includes(r))viewRefresh(false);
 }
 
-/* ---------- 시트(아래에서 올라오는 창) ---------- */
-function openSheet(html){$("#modal").innerHTML=`<div class="modal" data-act="bg"><div class="sheet">${html}</div></div>`;document.documentElement.classList.add("lock");schedLift();reportWhere()}
-function closeSheet(){$("#modal").innerHTML="";document.documentElement.classList.remove("lock");F=null;curRec=null;fabLift();reportWhere()}
-let toastT=null,toastUndo=null;
-function toast(msg,undo){
-  const el=$("#toast");toastUndo=undo||null;
-  el.innerHTML=`<span>${esc(msg)}</span>${undo?`<button data-act="undo">되돌리기</button>`:""}`;el.hidden=false;
-  clearTimeout(toastT);toastT=setTimeout(()=>{el.hidden=true;toastUndo=null},undo?6000:2200);
-}
-
-/* ---------- 기록 등록·수정 ---------- */
-let F=null; // 입력 중인 기록
-const parseTags=s=>[...new Set(String(s||"").split(/[,\s]+/).map(t=>t.replace(/^#+/,"").trim()).filter(Boolean))].slice(0,12);
-function openForm(rec,kind){
-  const vk=visKinds().map(k=>k.id);
-  let k0=rec?rec.kind:(kind||(vk.includes(db.settings.lastKind)?db.settings.lastKind:vk[0])||"daily");
-  F={id:rec?rec.id:null,kind:k0,v:rec?{title:rec.title,date:rec.date,note:rec.note,rating:rec.rating||0,tags:rec.tags.join(", "),x:{...rec.x}}:{title:"",date:today(),note:"",rating:0,tags:"",x:{}}};
-  drawForm();
-}
-function readForm(){
-  if(!F||!$("#f_title"))return;
-  F.v.title=$("#f_title").value;F.v.date=$("#f_date").value;F.v.note=$("#f_note").value;F.v.tags=$("#f_tags").value;
-  if($("#f_rate"))F.v.rating=+$("#f_rate").value||0;
-  kindOf(F.kind).fields.forEach(f=>{const el=$("#fx_"+f.k);if(el)F.v.x[f.k]=el.value});
-}
-function drawForm(){
-  const k=kindOf(F.kind),vs=visKinds();
-  const kinds=vs.some(x=>x.id===F.kind)?vs:[...vs,k];
-  const rate=db.settings.stars==="num"?
-   `<select id="f_rate"><option value="0">안 매김</option>${Array.from({length:10},(_,i)=>`<option value="${i+1}"${F.v.rating===i+1?" selected":""}>${i+1}점</option>`).join("")}</select>`:
-   `<div class="stars" id="f_stars">${[1,2,3,4,5].map(n=>`<button type="button" data-act="star" data-n="${n}" class="${F.v.rating>=n*2-1&&F.v.rating>0?"on":""}" aria-label="별 ${n}개">★</button>`).join("")}</div>`;
-  const extra=k.fields.map(f=>{
-    const v=F.v.x[f.k]??"",id="fx_"+f.k;
-    if(f.t==="sel")return`<label for="${id}">${f.l}</label><select id="${id}"><option value="">선택 안 함</option>${f.o.map(o=>`<option${o===v?" selected":""}>${esc(o)}</option>`).join("")}</select>`;
-    if(f.t==="area")return`<label for="${id}">${f.l}</label><textarea id="${id}" rows="3">${esc(v)}</textarea>`;
-    return`<label for="${id}">${f.l}</label><input id="${id}" type="${f.t==="num"?"number":f.t==="date"?"date":f.t==="url"?"url":"text"}"${f.t==="num"?' inputmode="numeric" min="0"':""} value="${esc(v)}" placeholder="${esc(f.ph||"")}" autocomplete="off">`;
-  }).join("");
-  openSheet(`<h3>${F.id?"기록 고치기":"기록하기"}</h3>
-   <label>종류</label><div class="chips">${kinds.map(x=>`<button type="button" data-act="fk" data-id="${x.id}" class="${x.id===F.kind?"on":""}">${esc(x.name)}</button>`).join("")}</div>
-   <label for="f_title">제목 (꼭 필요한 칸)</label><input id="f_title" value="${esc(F.v.title)}" maxlength="120" autocomplete="off" placeholder="예: 성수 칼국수집, 오늘의 영화">
-   <label for="f_note">${esc(k.noteLabel)}</label><input id="f_note" value="${esc(F.v.note)}" maxlength="300" autocomplete="off">
-   <label>별점</label>${rate}
-   <label for="f_date">날짜</label><input id="f_date" type="date" value="${esc(F.v.date)}">
-   <label for="f_tags">태그 (쉼표나 띄어쓰기로 구분)</label><input id="f_tags" value="${esc(F.v.tags)}" autocomplete="off" placeholder="예: 가족, 점심">
-   ${extra}
-   <div class="acts stk"><button class="btn" data-act="close">취소</button><button class="btn pri" data-act="saveRec">저장</button></div>`);
-  if(!F.id&&!F.v.title)setTimeout(()=>{const t=$("#f_title");if(t)t.focus()},50);
-}
-function saveRec(){
-  readForm();
-  const t=F.v.title.trim();
-  if(!t){toast("제목을 적어 주세요");const el=$("#f_title");if(el)el.focus();return}
-  const now=Date.now(),k=kindOf(F.kind);
-  let r=F.id&&db.records.find(x=>x.id===F.id);
-  if(!r){r={id:uid(),ts:now};db.records.push(r)}
-  const x={};k.fields.forEach(f=>{const v=String(F.v.x[f.k]??"").trim();if(v)x[f.k]=v});
-  if(r.x&&r.x.poster&&F.kind==="video")x.poster=r.x.poster; // 포스터는 칸에 없으니 고칠 때도 남김
-  Object.assign(r,{kind:F.kind,date:F.v.date||today(),title:t,note:F.v.note.trim(),rating:+F.v.rating||0,tags:parseTags(F.v.tags),x,upd:now});
-  delete r.del;
-  db.settings.lastKind=F.kind;
-  save();closeSheet();render();toast("저장했어요");
-  if(r.kind==="video"&&(wantInfo(r)||wantPoster(r)))autoFill(r.id); // 영상·음악: 정보·포스터·앨범 그림 자동 채움
-}
-async function autoFill(id){
-  const r=db&&db.records.find(x=>x.id===id);if(!r)return;
-  const t=[r.title,r.note,r.x&&r.x.where].filter(Boolean).join(" ");
-  const a=await fillInfo(id,t,true),b=await fillPoster(id,true);
-  if((a||b)&&db&&!$("#modal").firstChild&&(view==="home"||view==="find"))render();
-}
-function openDetail(id){
-  const r=db.records.find(x=>x.id===id);if(!r)return;
-  const k=kindOf(r.kind);curRec=id;reportWhere();
-  const kv=(a,b)=>b?`<div class="kv"><div class="a">${a}</div><div class="b">${b}</div></div>`:"";
-  const pu=posterUrl(r,"w342");
-  openSheet(`${pu?`<img class="pst big${isSq(r)?" sq":""}" src="${pu}" alt="">`:""}<div class="k" style="display:flex;align-items:center;gap:8px"><i class="kdot ${esc(r.kind)}"></i>${esc(k.name)}${r.del?" · 휴지통":""}</div><h3>${esc(r.title)}</h3>
-   <div class="sub">${esc(dlabel(r.date).replace("오늘 · ",""))} <span class="st">${ratingTxt(r.rating)}</span></div>
-   <div style="margin-top:12px">${kv(esc(k.noteLabel),esc(r.note))}${k.fields.map(f=>kv(f.l,fieldVal(f,r.x[f.k]))).join("")}${kv("태그",r.tags.map(t=>"#"+esc(t)).join(" "))}${kv("출처",esc(r.src||""))}</div>
-   <div class="acts">${r.del?`<button class="btn" data-act="close">닫기</button><button class="btn pri" data-act="restore" data-id="${r.id}">되살리기</button>`:
-   `<button class="btn dng" data-act="del" data-id="${r.id}">삭제</button>${wantInfo(r)||wantPoster(r)?`<button class="btn" data-act="findinfo" data-id="${r.id}">정보 검색</button>`:""}<button class="btn" data-act="close">닫기</button><button class="btn pri" data-act="edit" data-id="${r.id}">고치기</button>`}</div>`);
-}
-function delRec(id){
-  const r=db.records.find(x=>x.id===id);if(!r)return;
-  r.del=Date.now();save();closeSheet();render();
-  toast("휴지통으로 옮겼어요 (30일간 보관)",()=>{r.del=null;delete r.del;save();render()});
-}
-
-/* ---------- 설정 안의 창들 ---------- */
-function openKinds(){
-  const hid=db.settings.hidden;
-  openSheet(`<h3>종류 관리</h3><div class="sub">안 쓰는 종류는 숨기고, 책·운동처럼 나만의 종류를 더할 수 있어요. 숨겨도 기존 기록은 그대로 보입니다.</div>
-   <div style="margin-top:8px">${allKinds().map(k=>`<div class="row"><span class="t">${esc(k.name)}${k.custom?' <span class="k">(내가 추가)</span>':""}</span><span>
-     <button class="btn sm" data-act="khide" data-id="${k.id}">${hid.includes(k.id)?"다시 보이기":"숨기기"}</button>${k.custom?` <button class="btn sm dng" data-act="kdel" data-id="${k.id}">삭제</button>`:""}</span></div>`).join("")}</div>
-   <label for="knew">새 종류 이름</label><div class="inl"><input id="knew" maxlength="12" placeholder="예: 책, 운동" autocomplete="off"><button class="btn pri" style="flex:0 0 72px;height:42px" data-act="kadd">추가</button></div>
-   <div class="acts"><button class="btn" data-act="close">닫기</button></div>`);
-}
-function openTrash(){
-  const arr=db.records.filter(r=>r.del).sort((a,b)=>b.del-a.del);
-  openSheet(`<h3>휴지통</h3><div class="sub">지운 기록은 30일 동안 여기 남고, 그 뒤 저절로 정리돼요.</div>
-   <div style="margin-top:12px">${arr.length?arr.map(r=>`<div class="row"><span class="t" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.title)}<br><span class="k">${esc(kindOf(r.kind).name)} · ${esc(r.date)}</span></span><span style="white-space:nowrap"><button class="btn sm" data-act="restore" data-id="${r.id}" data-keep="1">되살리기</button> <button class="btn sm dng" data-act="purge" data-id="${r.id}">완전 삭제</button></span></div>`).join(""):`<div class="empty">휴지통이 비어 있어요.</div>`}</div>
-   <div class="acts"><button class="btn" data-act="close">닫기</button>${arr.length?`<button class="btn dng" data-act="purgeall">모두 비우기</button>`:""}</div>`);
-}
-function openHelp(){
-  openSheet(`<h3>사용 설명서</h3><div class="sub" style="line-height:1.7">
-   <b>기록하기</b><br>아래 가운데 ＋ 를 누르고 종류와 제목만 적으면 저장돼요. 한 줄 메모, 별점, 태그, 종류별 칸은 나중에 기록을 눌러 고치면서 채워도 됩니다.<br><br>
-   <b>찾기</b><br>글자로 찾고, 종류·별점·기간·태그로 좁힐 수 있어요.<br><br>
-   <b>여행</b><br>‘여행’ 종류로 이름과 시작일·끝난 날을 적어 두면, 그 기간에 쓴 기록이 날짜별로 모여 보여요.<br><br>
-   <b>지우기</b><br>지운 기록은 설정의 휴지통에서 30일 동안 되살릴 수 있어요.<br><br>
-   <b>내 기록은 어디에?</b><br>내 Google Drive의 goodday 폴더에 저장되며, 다른 사람은 볼 수 없어요. 이 앱은 앱이 만든 파일만 열 수 있는 권한만 씁니다.<br><br>
-   <b>말만해요에서 바로 찾기</b><br>말만해요에서 "맛집 검색해줘"처럼 말하면 말만해요 화면 안에 항상일상의 찾기 결과가 끼워져 나와요. 말만해요 안에서는 그 화면만 보이고, 뒤로가기는 왼쪽 위 버튼으로 해요. 말만해요의 [앱으로 열기]를 누르면 보던 화면 그대로 항상일상이 열립니다.<br><br>
-   <b>한 줄로 적으면 알아서 분류</b><br>홈의 한 줄 칸에 "어제 오펜하이머 봤는데 좋았다", "성수 칼국수 또 가고 싶다"처럼 적으면 영화·맛집·여행·일상 중 알맞은 종류로 제목·날짜·느낌을 채워 저장해요. 말만해요 설정에 Gemini 키를 넣어 두었다면 Gemini가 해석하고(적은 한 줄과 종류 이름만 보내요. 이메일·긴 숫자는 가려요), 키가 없거나 안 될 때는 낱말로 짐작해요. 영화·드라마는 이름으로 검색해서 연도·감독·출연·줄거리를 '작품 정보'에 함께 넣어요(예: "트라이앵글 티빙에서 봤어"). 설정 › 영화 포스터에 TMDB 무료 키를 넣어 두면 포스터도 찾아서 목록과 기록 화면에 보여 줘요(그림은 TMDB에서 바로 불러 보이고 내 드라이브에는 복사하지 않아요). 음악은 곡명·아티스트·발매연도를 찾아 넣고 앨범 그림도 키 없이 가져와요(애플 음악 검색 사용, 적은 곡 이름만 보내요). 영상·음악 기록은 목록에서 타일로 보여요: 포스터나 앨범 그림 아래에 제목, 연도(음악은 아티스트도), 입력한 날짜가 나와요. ＋ 기록으로 직접 저장해도 자동으로 채워 줘요. 기록을 누르면 그 내용이 나오고, 예전 기록은 열어서 [정보 검색]을 누르면 찾아 넣어요. 한 줄 칸 아래 [영화·음악·책·맛집·멋곳] 중 하나를 고르고 이름만 적어 [검색·저장]을 누르면, 그 종류로 찾아서 연도·소개·사진(표지)·관련 링크를 채워 저장해요(책은 구글 도서, 멋곳 사진은 위키백과를 써요. 맛집은 사진이 없어요). 목록의 사진을 누르면 사진·메모·정보와 관련 링크가 열려요. 고른 종류를 다시 누르면 자동 분류로 돌아가요. 잘못 나뉘었으면 바로 아래 [고치기]나 [되돌리기]를 누르세요. 아래에는 지금까지 적은 기록이 최근순으로 이어져요.<br><br>
-   <b>다크 모드</b><br>처음부터 어두운 화면(다크 모드)으로 열려요. 설정 › 기록 설정 › 다크 모드를 눌러 켜고 끌 수 있고, 로그인 화면에도 같이 적용돼요.<br><br>
-   <b>말만해요가 알아듣게 돕는 목록</b><br>기록을 저장할 때 내 드라이브 goodday/설정 폴더에 기록 제목·종류·날짜·장소 이름·태그만 적은 목록(말만해요_색인.json)을 함께 만들어요. 말만해요가 말을 알아듣는 데만 쓰고, 한 줄 메모·사진·주소·가격은 들어가지 않아요.<br><br>
-   <b>한 번 로그인하면 다른 앱도 함께</b><br>같은 브라우저에서 내 다른 앱(신한FC, 차차차 등)에 로그인했다면 항상일상도 로그인 화면 없이 바로 열려요. 로그아웃하면 모든 앱에서 함께 로그아웃됩니다. 로그인은 한 시간마다 다시 필요할 수 있어요. 아이폰 홈 화면 앱은 앱마다 따로라 서로 나눠 쓰지 못해요.<br><br>
-   <b>함께 쓰려면</b><br>허용된 계정만 로그인할 수 있어요. 쓸 사람을 추가하려면 앱을 관리하는 사람에게 구글 계정(이메일)을 알려 주세요.<br><br>
-   <b>말만해요 받은편지함</b><br>설정에서 받은편지함 파일을 한 번 고르면, 말만해요가 보낸 쪽지가 앱을 열 때 카드로 나타나요. 기록에 넣기를 누르면 기록이 되고 쪽지는 처리 완료로 표시됩니다.<br><br>
-   <b>홈 화면에 설치</b><br>설정의 ‘홈 화면에 추가’에서 방법을 볼 수 있어요. 설치하면 앱처럼 바로 열려요.<br><br>
-   <b>다음에 더해질 기능</b><br>사진 붙이기, 여행 묶음 편집, 지도 보기, 영화·장소 정보 자동 채우기.</div>
-   <div class="acts"><button class="btn" data-act="close">닫기</button></div>`);
-}
-
-/* ---------- 내보내기 ---------- */
-function dl(name,mime,text){
-  const b=new Blob([text],{type:mime}),a=document.createElement("a");
-  a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();
-  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);
-}
-function exportData(f){
-  const stamp=today().replace(/-/g,"");
-  if(f==="json"){dl("항상일상_"+stamp+".json","application/json",JSON.stringify(db,null,1));toast("JSON 파일을 내려받았어요");return}
-  const q=v=>'"'+String(v??"").replace(/"/g,'""')+'"';
-  const rows=[["날짜","종류","제목","한 줄","별점(10점 기준)","태그","자세한 내용"]];
-  sortRecs(live().slice()).forEach(r=>{const k=kindOf(r.kind);rows.push([r.date,k.name,r.title,r.note,r.rating||"",r.tags.join(" "),k.fields.map(fl=>r.x[fl.k]?fl.l+": "+r.x[fl.k]:"").filter(Boolean).join(" / ")])});
-  dl("항상일상_"+stamp+".csv","text/csv;charset=utf-8","﻿"+rows.map(r=>r.map(q).join(",")).join("\r\n"));
-  toast("엑셀용 표(CSV)를 내려받았어요");
-}
-
-/* ---------- 눌렀을 때 ---------- */
-document.addEventListener("click",e=>{
-  const el=e.target.closest("[data-act]");if(!el||!db)return;
-  const a=el.dataset.act,id=el.dataset.id;
-  if(a==="bg"){if(e.target===el)closeSheet();return}
-  if(a==="tab"){view=el.dataset.v;tripOpen=null;render();scrollTo(0,0)}
-  else if(a==="new"){openForm(null,el.dataset.kind)}
-  else if(a==="open")openDetail(id);
-  else if(a==="more"){limit+=30;render()}
-  else if(a==="close")closeSheet();
-  else if(a==="edit"){const r=db.records.find(x=>x.id===id);closeSheet();if(r)openForm(r)}
-  else if(a==="qmedia")setMedia(el.dataset.m);
-  else if(a==="findinfo"){el.disabled=true;el.textContent="찾는 중…";fillErr=[];fillInfo(id,"",true).then(async a=>[a,await fillPoster(id,true)]).then(([a,b])=>{if((a||b)&&curRec===id)openDetail(id);else if(!(a||b)&&el.isConnected){el.disabled=false;el.textContent="정보 검색";toast([...new Set(fillErr)].join(" / ")||"찾지 못했어요")}})}
-  else if(a==="del")delRec(id);
-  else if(a==="restore"){const r=db.records.find(x=>x.id===id);if(r){delete r.del;save();toast("되살렸어요");if(el.dataset.keep)openTrash();else closeSheet();render()}}
-  else if(a==="undo"){if(toastUndo)toastUndo();$("#toast").hidden=true;toastUndo=null}
-  else if(a==="fk"){readForm();F.kind=id;drawForm()}
-  else if(a==="star"){readForm();const n=+el.dataset.n;F.v.rating=F.v.rating===n*2?0:n*2;drawForm()}
-  else if(a==="saveRec")saveRec();
-  else if(a==="fkind"){S.kind=id;$("#fk").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.id===S.kind));updateResults()}
-  else if(a==="ftag"){S.tag=S.tag===el.dataset.t?"":el.dataset.t;$("#ft").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.t===S.tag));updateResults()}
-  else if(a==="trip"){tripOpen=id;render();scrollTo(0,0)}
-  else if(a==="tripBack"){tripOpen=null;render()}
-  else if(a==="stars"){db.settings.stars=el.dataset.v;save();render()}
-  else if(a==="dark"){db.settings.dark=!db.settings.dark;applyTheme();save();render()}
-  else if(a==="kinds")openKinds();
-  else if(a==="khide"){
-    const h=db.settings.hidden,i=h.indexOf(id);
-    if(i>=0)h.splice(i,1);else if(visKinds().length<=1){toast("종류가 하나는 보여야 해요");return}else h.push(id);
-    save();openKinds();render();
-  }
-  else if(a==="kadd"){
-    const n=($("#knew").value||"").trim();if(!n){toast("이름을 적어 주세요");return}
-    if(allKinds().some(k=>k.name===n)){toast("이미 있는 이름이에요");return}
-    db.settings.custom.push({id:"c"+uid(),name:n});save();openKinds();
-  }
-  else if(a==="kdel"){
-    const n=db.records.filter(r=>r.kind===id).length;
-    if(n){toast("기록이 "+n+"개 있어요. 삭제 대신 숨기기를 써 주세요");return}
-    if(confirm("이 종류를 삭제할까요?")){db.settings.custom=db.settings.custom.filter(c=>c.id!==id);db.settings.hidden=db.settings.hidden.filter(x=>x!==id);save();openKinds()}
-  }
-  else if(a==="exp")exportData(el.dataset.f);
-  else if(a==="trash")openTrash();
-  else if(a==="purge"){if(confirm("이 기록을 완전히 지울까요? 되돌릴 수 없어요.")){db.records=db.records.filter(r=>r.id!==id);save();openTrash();render()}}
-  else if(a==="purgeall"){const n=db.records.filter(r=>r.del).length;if(confirm("휴지통의 기록 "+n+"개를 모두 완전히 지울까요? 되돌릴 수 없어요.")){db.records=db.records.filter(r=>!r.del);save();openTrash();render()}}
-  else if(a==="inboxOpen")openInbox();
-  else if(a==="tmdb")openTmdb();
-  else if(a==="tmdbSave")tmdbSave();
-  else if(a==="tmdbOff")tmdbOff();
-  else if(a==="inboxPick")pickInbox();
-  else if(a==="inboxRecheck"){inboxHide=false;inboxCheck().then(()=>{render();openInbox()})}
-  else if(a==="inboxOff"){if(confirm("받은편지함 연결을 끊을까요? 이미 넣은 기록은 그대로예요.")){db.settings.inboxFile=null;inbox=[];inboxMsg="";save();render();openInbox()}}
-  else if(a==="inboxYes")inboxAccept();
-  else if(a==="inboxLater"){inboxHide=true;render()}
-  else if(a==="install")doInstall();
-  else if(a==="help")openHelp();
-  else if(a==="logout")logout();
-});
-/* ---------- 한 줄 → 종류 맞춰 기록 (Gemini 먼저, 안 되면 낱말 규칙) ----------
-   Gemini 키는 말만해요 설정(말만해요_설정.json)의 것을 같이 씀. 메모리에만 두고 어디에도 복사하지 않음(app\_공통\제미나이연결.md).
-   보내는 글: 사용자가 적은 한 줄(이메일·긴 숫자는 가림)과 종류·칸 이름, 오늘 날짜뿐. 기존 기록은 보내지 않음. */
+/* ---------- 제미나이로 찾기 ----------
+   키는 말만해요 설정(말만해요_설정.json, 파일 이름으로 찾음)의 것을 먼저 씀. 메모리에만 두고 복사하지 않음(app\_공통\제미나이연결.md).
+   그 파일을 못 읽을 때만 사용자가 이 앱 설정에 직접 넣은 키(내 드라이브 goodday/설정/goodday_설정.json)를 씀. localStorage·GitHub에는 두지 않음.
+   보내는 것: 사진(긴 변 768로 다시 그린 것이라 EXIF·위치값 없음), 사용자가 적은 글(이메일·긴 숫자는 가림), 찍은 곳의 동 단위 주소 글, 날짜·시간, 테마. 좌표·다른 기록은 보내지 않음. */
 const GEMINI_MODEL_DEFAULT="gemini-2.5-flash";
-let gcfg=null,gcfgAt=0,qBusy=false,qLast=null; // qLast: 방금 저장한 기록 안내 {id,msg}
+let gcfg=null,gcfgAt=0;
 async function loadGemini(){
   const acct=gAcct();
   if(gcfg&&gcfg.acct===acct&&gcfg.geminiKey)return gcfg;
-  if(gcfg&&gcfg.acct===acct&&Date.now()-gcfgAt<300000)return gcfg; // 키 없음/못 읽음: 5분은 다시 찾지 않음
+  if(gcfg&&gcfg.acct===acct&&Date.now()-gcfgAt<300000)return gcfg;
   gcfgAt=Date.now();gcfg={acct,geminiKey:"",model:GEMINI_MODEL_DEFAULT};
   try{
     const q="name='말만해요_설정.json' and trashed=false";
     const d=await gfetch(DAPI+"/files?pageSize=5&orderBy=modifiedTime desc&fields="+encodeURIComponent("files(id)")+"&q="+encodeURIComponent(q));
-    gcfg.why=(d.files||[]).length?"말만해요 설정 파일에 Gemini 키가 비어 있어요":"이 앱이 말만해요 설정 파일을 못 찾았어요(드라이브 권한)";
+    gcfg.why=(d.files||[]).length?"말만해요 설정 파일에 제미나이 키가 비어 있어요":"이 앱이 말만해요 설정 파일을 못 찾았어요(드라이브 권한)";
     for(const f of d.files||[]){
       try{const c=parseDoc(await gfetch(DAPI+"/files/"+f.id+"?alt=media",null,true));
         if(c&&typeof c.geminiKey==="string"&&c.geminiKey.trim()){gcfg.geminiKey=c.geminiKey.trim();gcfg.why="";if(c.model)gcfg.model=String(c.model);break}}catch(e){if(e.message==="GOOGLE_AUTH")throw e}
     }
   }catch(e){gcfg.why="드라이브에서 설정을 읽다 오류가 났어요"}
+  if(gcfg.geminiKey)gcfg.src="말만해요 설정의 키";
+  else{ // 말만해요 키를 못 읽을 때만: 이 앱 설정(내 드라이브 goodday/설정)에 사용자가 직접 넣은 키
+    await appCfgLoad();
+    if(appCfg.geminiKey&&appCfg.acct===acct){gcfg.geminiKey=appCfg.geminiKey;gcfg.src="이 앱 설정의 키";gcfg.why=""}
+  }
   return gcfg;
 }
-const gWhy=()=>(gcfg&&gcfg.why)||"Gemini 키를 못 읽었어요";
+const gWhy=()=>(gcfg&&gcfg.why)||"제미나이 키를 못 읽었어요";
 const maskText=t=>String(t).replace(/[\w.+-]+@[\w-]+(\.[\w-]+)+/g,"[이메일]").replace(/\d[\d\s-]{6,}\d/g,"[번호]");
-function ruleKind(t){ // 규칙으로 짐작
-  const has=re=>re.test(t);
-  if(has(/(^|\s)책|소설|에세이|독서|읽었|읽고/)&&visKinds().some(k=>k.id==="book"))return"book";
-  if(has(/영화|드라마|시리즈|넷플릭스|왓챠|디즈니|티빙|웨이브|극장|영화관|봤|시청|공연|뮤지컬|콘서트|전시|앨범|노래|음악|들었/))return"video";
-  if(has(/맛집|식당|카페|커피|먹었|맛있|맛없|점심|저녁|아침|브런치|칼국수|국밥|고기|파스타|피자|치킨|빵|디저트|술집|레스토랑|웨이팅/))return"place";
-  if(has(/여행|투어|숙소|호텔|펜션|비행기|항공|캠핑|제주|해외|일정/))return"trip";
-  return"daily";
+function ruleTheme(t){ // 키가 없을 때 낱말로 짐작
+  t=String(t||"");
+  if(/미팅|회의|상담|고객|업무|출장|계약|교육|세미나|일정/.test(t))return"work";
+  if(/노래|음악|앨범|들었|듣고|플레이리스트|가수|콘서트/.test(t))return"hear";
+  if(/맛집|식당|카페|커피|먹었|맛있|점심|저녁|아침|브런치|술집|국수|칼국수|국밥|고기|파스타|피자|치킨|빵|디저트|맥주|소주|와인/.test(t))return"eat";
+  if(/영화|드라마|넷플릭스|극장|봤|시청|연극|뮤지컬|공연|전시|책|소설|읽었/.test(t))return"see";
+  if(/여행|산책|공원|바다|산|명소|숙소|호텔|구경|핫플|다녀/.test(t))return"go";
+  return"";
 }
-async function aiParse(text,cfg){
-  const kinds=visKinds().map(k=>({id:k.id,name:k.name,fields:(k.fields||[]).filter(f=>f.t!=="area").map(f=>({k:f.k,label:f.l,type:f.t,options:f.o}))}));
-  const prompt="너는 사용자가 적은 한 줄 일기를 알맞은 기록 종류로 분류하고 칸을 채운다.\n종류 목록(JSON): "+JSON.stringify(kinds)+
-   "\n사용자 한 줄: \""+maskText(text).replace(/"/g,"'")+"\"\n오늘 날짜: "+today()+
-   "\n규칙: 영화·드라마·공연·음악이면 영상·음악 종류, 책·소설을 읽은 말이면 책 종류, 식당·카페·장소면 맛집·장소 종류, 여행이면 여행, 그 밖의 하루 이야기는 일상. 목록에 없는 종류 id는 쓰지 마라."+
-   " title은 작품 이름·가게 이름·여행 이름처럼 짧은 이름(없으면 한 줄 요약), note는 느낌·감상(사용자 말투 유지), date는 말에서 알 수 있는 날짜(어제·지난주 같은 말은 오늘 날짜로 계산, 모르면 오늘), rating은 사용자가 별점·점수를 분명히 말했을 때만 0~10(별 1개=2점), 아니면 0. tags는 짧은 낱말 0~4개. fields는 그 종류의 칸 k 이름에 맞는 값만(select 칸은 options 중 하나, 모르면 빼라)."+
-   "\nJSON으로만 답해라: {\"kind\":id,\"title\":..,\"note\":..,\"date\":\"YYYY-MM-DD\",\"rating\":0,\"tags\":[],\"fields\":{}}";
-  const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(cfg.model||GEMINI_MODEL_DEFAULT)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":cfg.geminiKey},
-    body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:"application/json",temperature:0}})});
-  if(!r.ok)throw new Error("Gemini "+r.status);
-  const j=await r.json(),raw=j.candidates&&j.candidates[0]&&j.candidates[0].content.parts.map(p=>p.text||"").join("");
-  return JSON.parse(String(raw||"").replace(/^```json|```$/g,"").trim());
-}
-function cleanParsed(o,text){ // Gemini 답을 믿지 않고 모양 검사
-  const ks=visKinds();if(!o||typeof o!=="object")return null;
-  const k=ks.find(x=>x.id===o.kind);if(!k)return null;
-  const s=(v,n)=>typeof v==="string"?v.trim().slice(0,n):"";
-  const x={};
-  if(o.fields&&typeof o.fields==="object")(k.fields||[]).forEach(f=>{
-    let v=o.fields[f.k];if(v==null||v==="")return;
-    if(f.t==="sel"){v=String(v);if(!(f.o||[]).includes(v))return}
-    else if(f.t==="num"){v=Number(String(v).replace(/[^\d.]/g,""));if(!isFinite(v)||v<=0)return}
-    else if(f.t==="date"){v=String(v);if(!/^\d{4}-\d{2}-\d{2}$/.test(v))return}
-    else if(f.t==="area")return;
-    else v=s(String(v),100);
-    x[f.k]=v;
-  });
-  const date=/^\d{4}-\d{2}-\d{2}$/.test(String(o.date||""))&&String(o.date)<=iso(new Date(Date.now()+864e5))?o.date:today();
-  const tags=(Array.isArray(o.tags)?o.tags:[]).map(t=>s(String(t).replace(/^#/,""),12)).filter(Boolean).slice(0,4);
-  const rating=Math.max(0,Math.min(10,Math.round(+o.rating||0)));
-  return{kind:k.id,title:s(o.title,200)||text,note:s(o.note,300),date,rating,tags,x};
-}
-/* 영화·드라마는 이름으로 검색(Gemini + 구글 검색)해서 연도·감독·출연·줄거리를 '작품 정보' 칸에 넣음. 보내는 글: 작품 이름과 사용자가 적은 한 줄(가림 처리). */
-const wantInfo=r=>!!r&&!(r.x&&r.x.info)&&((r.kind==="video"&&(!r.x||!r.x.type||["영화","드라마","음악"].includes(r.x.type)))||r.kind==="book"||r.kind==="place");
-async function aiInfo(r,text,cfg){
-  const pl=r.kind==="place",bk=r.kind==="book",kind=(r.x&&r.x.type)||(pl?"맛집":bk?"책":"영화"),mu=kind==="음악";
-  const prompt="웹 검색으로 아래 "+(pl?"장소":bk?"책":mu?"곡·앨범":"작품")+"을 확인해 한국어로 정리해라.\n"+(pl?"장소 이름":bk?"책 이름":mu?"곡·앨범 이름":"작품 이름")+": \""+maskText(r.title).replace(/"/g,"'")+"\" ("+kind+")\n사용자가 적은 말: \""+maskText(text).replace(/"/g,"'")+"\""+
-   "\n같은 이름이 여럿이면 말 속 단서(지역·시기·아티스트 등)로 고르고, 단서가 없으면 가장 알려진 것을 고르되 첫 줄 끝에 (동명이 있을 수 있어요)라고 덧붙여라."+
-   (bk?"\n형식(별표·# 같은 기호 없이 일반 글자로):\n첫 줄: 제목 · 저자 · 출판연도(4자리) · 출판사\n둘째 줄: ISBN: 13자리 숫자(978 또는 979로 시작, 확실할 때만. 모르면 이 줄 생략)\n셋째 줄부터: 책 소개 2~3문장."
-   :pl?"\n형식(별표·# 같은 기호 없이 일반 글자로):\n첫 줄: 이름 · 지역(시·구까지) · "+(kind==="맛집"?"음식 종류 · 개업연도(알면)":"분류 · 개장·건립연도(알면)")+"\n둘째 줄: "+(kind==="맛집"?"대표 메뉴 / 가격대 / 영업시간 중 확실한 것":"볼거리 / 이용 시간·요금 중 확실한 것")+"\n셋째 줄부터: 소개 1~2문장. 연도는 4자리 숫자로만."
-   :mu?"\n형식(별표·# 같은 기호 없이 일반 글자로):\n첫 줄: 곡명(원어·영문 제목) · 아티스트(원어·영문 이름) · 발매연도 · 장르\n둘째 줄: 앨범: … / 작사·작곡 등 알려진 참여자\n셋째 줄부터: 곡·앨범 소개 1~2문장.\n첫 줄의 연도는 이 곡이 처음 나온 해 4자리로 써라."
-   :"\n형식(별표·# 같은 기호 없이 일반 글자로):\n첫 줄: 제목(원제) · 연도 · 장르 · 국가\n둘째 줄: 감독: … / 출연: …\n셋째 줄부터: 줄거리 2~3문장(결말 스포일러 금지).")+
-   "\n확실하지 않은 것은 쓰지 말고, 찾지 못했으면 '찾지 못했어요' 한 줄만 답해라.";
+async function gemini(cfg,parts,search){
   const res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(cfg.model||GEMINI_MODEL_DEFAULT)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":cfg.geminiKey},
-    body:JSON.stringify({contents:[{parts:[{text:prompt}]}],tools:[{google_search:{}}],generationConfig:{temperature:0}})});
-  if(!res.ok)throw new Error("Gemini "+res.status);
-  const j=await res.json(),raw=j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts.map(p=>p.text||"").join("");
-  const t=String(raw||"").replace(/[*#`]/g,"").replace(/\n{3,}/g,"\n\n").trim().slice(0,900);
-  return t.length<20||/^찾지 못했어요/.test(t)?"":t;
+    body:JSON.stringify({contents:[{parts}],...(search?{tools:[{google_search:{}}]}:{}),generationConfig:{temperature:0}})});
+  if(!res.ok)throw new Error("제미나이 "+res.status);
+  const j=await res.json();
+  return String((j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts||[]).map(p=>p.text||"").join(""));
 }
-/* ---------- 내 설정(TMDB 키) — 내 드라이브 goodday/설정/goodday_설정.json, 메모리에만 들고 있음 ---------- */
-const CFG_FILE="goodday_설정.json";
-let appCfg={acct:"",tmdbKey:""},cfgId=null;
-const hasTmdb=()=>!!(appCfg.tmdbKey&&appCfg.acct===gAcct());
-async function cfgDir(){
-  const fo=await dFolder(true);let d=await dFind(fo,IDX_DIR,true);
-  if(!d)d=await gfetch(DAPI+"/files?fields=id",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:IDX_DIR,mimeType:"application/vnd.google-apps.folder",parents:[fo]})});
-  return d.id;
+function askPrompt(r,theme){
+  return"너는 사진 일기 앱의 도우미다. 사용자가 남긴 사진(있으면)과 글, 찍은 곳, 날짜를 보고 구글 검색으로 확인해 기록을 채운다.\n"+
+  "테마: see=보고(영화·드라마·연극·공연·전시·책), hear=듣고(노래·앨범·음악 공연), eat=먹고(식당·카페·술집), go=가고(여행지·명소·핫플레이스), work=일(업무·미팅·사람 만남).\n"+
+  (theme?"테마는 "+theme+"로 정해져 있다.\n":"먼저 글과 사진에 가장 알맞은 테마 하나를 골라라.\n")+
+  "사용자 글: \""+maskText(r.note||"").replace(/"/g,"'")+"\"\n찍은 곳(동 단위): "+(r.loc&&r.loc.addr?r.loc.addr:"모름")+"\n날짜: "+(r.date||today())+" "+(r.time||"")+"\n"+
+  "테마별로 할 일:\n"+
+  "- see: 어떤 작품인지 찾아라. sub는 영화|드라마|연극|공연|전시|책 중 하나. info 첫 줄: 제목(원제) · 연도 · 구분 · 국가 (책이면 제목 · 저자 · 출판연도 · 출판사). 둘째 줄: 감독: … / 출연: … (책이면 생략). 셋째 줄부터 줄거리·소개 2~3문장(결말 스포일러 금지). 책이고 확실하면 isbn에 13자리.\n"+
+  "- hear: 곡·앨범을 찾아라. info 첫 줄: 곡명(원어 제목) · 아티스트(원어 이름) · 발매연도 · 장르. 둘째 줄: 앨범: …. 셋째 줄부터 소개 1~2문장.\n"+
+  "- eat: 찍은 동네 안에서 글·사진에 맞는 식당·카페·술집 후보를 가까운 순으로 최대 3곳 cands에 넣어라(name=가게 이름, what=음식 종류, near=찍은 곳에서 대략 거리나 위치). 가장 맞는 곳을 title로. info 첫 줄: 이름 · 지역(구·동) · 음식 종류. 둘째 줄: 대표 메뉴 / 가격대 / 영업시간 중 확실한 것. 셋째 줄: 소개 1문장.\n"+
+  "- go: 여행지·명소·핫플레이스를 찾아라. info 첫 줄: 이름 · 지역 · 분류. 둘째 줄: 볼거리 / 이용 시간·요금 중 확실한 것. 셋째 줄부터 소개 1~2문장.\n"+
+  "- work: 검색하지 말고 글에서 일의 이름(title, 짧게)과 만난 사람 이름(people)만 뽑아라. info는 빈 글자.\n"+
+  "title은 찾은 정식 이름(못 찾으면 글을 15자 안으로 요약). photo_query는 이 기록에 어울리는 사진을 위키미디어 공용에서 찾을 짧은 영어 검색어(예: kalguksu, Namhansanseong, jazz piano).\n"+
+  "확실하지 않은 것은 쓰지 말고 *, # 같은 기호는 쓰지 마라.\n"+
+  "JSON 하나로만 답해라: {\"theme\":\"\",\"sub\":\"\",\"title\":\"\",\"info\":\"\",\"isbn\":\"\",\"cands\":[{\"name\":\"\",\"what\":\"\",\"near\":\"\"}],\"people\":[],\"photo_query\":\"\"}";
 }
-async function appCfgLoad(){
-  if(DEMO||!db)return;const acct=gAcct();if(appCfg.acct===acct)return;
-  appCfg={acct,tmdbKey:""};cfgId=null;
+function parseAsk(t){
+  const a=t.indexOf("{"),b=t.lastIndexOf("}");if(a<0||b<a)return null;
+  const s=t.slice(a,b+1);
+  try{return JSON.parse(s)}catch(e){}
+  let o="",q=false,bs=false; // 글자 안에 그냥 줄바꿈이 들어온 답도 읽음
+  for(const ch of s){if(q){if(bs){bs=false}else if(ch==="\\")bs=true;else if(ch==='"')q=false;else if(ch==="\n"){o+="\\n";continue}else if(ch==="\r"||ch==="\t"){o+=" ";continue}}else if(ch==='"')q=true;o+=ch}
+  try{return JSON.parse(o)}catch(e){return null}
+}
+const s0=(v,n)=>typeof v==="string"?v.replace(/[*#`]/g,"").trim().slice(0,n):"";
+async function enrich(id,o){
+  o=o||{};
+  const r=db&&db.records.find(x=>x.id===id);if(!r)return;
+  BUSY.set(id,"정보 찾는 중");refresh(id);
+  const why=[];
   try{
-    const dir=await cfgDir(),f=await dFind(dir,CFG_FILE,false);
-    if(f){cfgId=f.id;const c=parseDoc(await gfetch(DAPI+"/files/"+f.id+"?alt=media",null,true));if(c&&typeof c.tmdbKey==="string")appCfg.tmdbKey=c.tmdbKey.trim()}
+    const cfg=DEMO?null:await loadGemini();
+    let a=null;
+    if(cfg&&cfg.geminiKey){
+      const parts=[];
+      let img=PEND.get(id)&&PEND.get(id).ai;
+      if(!img&&o.file){try{img=await shrink(await bitmapOf(o.file),768,.8)}catch(e){}}
+      if(!img&&r.photo&&r.photo.thumb){try{img=await gfetch(DAPI+"/files/"+r.photo.thumb+"?alt=media",null,"blob")}catch(e){}}
+      if(img)parts.push({inline_data:{mime_type:"image/jpeg",data:await b64(img)}});
+      parts.push({text:askPrompt(r,o.themeFixed?r.theme:"")});
+      try{a=parseAsk(await gemini(cfg,parts,true))}catch(e){why.push(String(e.message||e).slice(0,40))}
+      if(!a&&!why.length)why.push("제미나이 답을 읽지 못했어요");
+    }else why.push(DEMO?"체험 모드":gWhy());
+    const r2=db&&db.records.find(x=>x.id===id);if(!r2)return;
+    if(a){
+      if(!o.themeFixed&&TH[a.theme])r2.theme=a.theme;
+      const th=r2.theme;
+      const t=s0(a.title,60);if(t)r2.title=t;
+      r2.sub=s0(a.sub,10);
+      r2.info=s0(a.info,900).replace(/\n{3,}/g,"\n\n");
+      r2.cands=th==="eat"?(Array.isArray(a.cands)?a.cands:[]).map(c=>({name:s0(c&&c.name,40),what:s0(c&&c.what,30),near:s0(c&&c.near,30)})).filter(c=>c.name).slice(0,3):[];
+      r2.pick=r2.cands.length?0:undefined;
+      r2.people=th==="work"?(Array.isArray(a.people)?a.people:[]).map(p=>s0(String(p),20)).filter(Boolean).slice(0,8):[];
+      r2.q=s0(a.photo_query,40);
+      const isbn=String(a.isbn||"").replace(/\D/g,"");r2.isbn=isbn.length===13&&/^97[89]/.test(isbn)?isbn:"";
+      r2.link=linkOf(r2);r2.map=(th==="eat"||th==="go")?mapOf(r2):"";
+      if(!r2.info&&th!=="work")why.push("정보를 찾지 못했어요");
+    }else if(!r2.theme){r2.theme=ruleTheme(r2.note)}
+    r2.upd=Date.now();save();
+    if(r2.theme==="work"&&calOn()){BUSY.set(id,"일정 찾는 중");refresh(id);await calAttach(id)}
+    BUSY.set(id,"사진 찾는 중");refresh(id);
+    await findImages(r2,why);
+    const r3=db&&db.records.find(x=>x.id===id);if(!r3)return;
+    r3.why=why.length?[...new Set(why)].join(" / "):"";if(!r3.why)delete r3.why;
+    r3.upd=Date.now();save();
+  }catch(e){const r4=db&&db.records.find(x=>x.id===id);if(r4){r4.why="찾다가 오류가 났어요 ("+String(e.message||e).slice(0,40)+")";save()}}
+  finally{BUSY.delete(id);refresh(id)}
+}
+function q1(r){return(String(r.info||"").split("\n")[0].split("·")[0]||r.title).replace(/\s*\([^)]*\)/g,"").trim()||r.title}
+function linkOf(r){
+  const n=encodeURIComponent(q1(r));
+  if(r.theme==="see")return r.isbn?"https://search.kyobobook.co.kr/search?keyword="+r.isbn:"https://search.naver.com/search.naver?query="+n;
+  if(r.theme==="hear")return"https://search.naver.com/search.naver?query="+n;
+  if(r.theme==="eat"||r.theme==="go")return"https://search.naver.com/search.naver?query="+n;
+  return"";
+}
+function mapOf(r){const reg=r.loc&&r.loc.addr?" "+shortAddr(r.loc.addr):"";return"https://map.naver.com/p/search/"+encodeURIComponent(q1(r)+(r.theme==="eat"?reg:""))}
+/* 그림 찾기: 보고=포스터(TMDB 키가 있으면)·책 표지·위키백과, 듣고=앨범 표지(iTunes), 가고=위키백과, 그 밖=위키미디어 공용, 마지막=지도 조각 */
+async function findImages(r,why){
+  let art="",link="";
+  try{
+    if(r.theme==="see"){
+      if(r.isbn)art="https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/"+r.isbn+".jpg";
+      else if((r.sub==="영화"||r.sub==="드라마")&&hasTmdb()){const t=await tmdbFind(r);art=t.p;link=t.link}
+      if(!art){const w=await findWiki(q1(r));art=w.p}
+      if(!art&&(r.sub==="영화"||r.sub==="드라마")&&!hasTmdb())why.push("포스터는 설정의 TMDB 키가 있어야 가져와요");
+    }else if(r.theme==="hear"){const t=await findArt(r);art=t.p;link=t.link}
+    else if(r.theme==="go"){const w=await findWiki(q1(r));art=w.p;link=w.link}
   }catch(e){}
+  if(art&&imgOk(art))r.art=art;else delete r.art;
+  if(link&&LINK_RE.test(link))r.link=link;
+  if(r.photo&&r.photo.full||PEND.has(r.id)){delete r.rec;return}
+  let rec=r.art?{url:r.art,src:"작품 정보"}:null;
+  if(!rec&&r.q){try{const c=await findCommons(r.q);if(c)rec={url:c,src:"위키미디어 공용"}}catch(e){}}
+  if(!rec&&r.loc&&r.loc.lat){rec={url:osmTile(r.loc.lat,r.loc.lng,16),src:"지도"}}
+  if(rec&&imgOk(rec.url))r.rec=rec;else{delete r.rec;why.push("어울리는 사진을 못 찾았어요")}
 }
-async function appCfgSave(){
-  const body=JSON.stringify({v:1,tmdbKey:appCfg.tmdbKey}),dir=await cfgDir();
-  if(!cfgId){const f=await dFind(dir,CFG_FILE,false);if(f)cfgId=f.id}
-  if(cfgId){await gfetch(DUP+"/files/"+cfgId+"?uploadType=media&fields=id",{method:"PATCH",headers:{"Content-Type":"application/json"},body});return}
-  const bd="gc"+uid(),mp="--"+bd+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+JSON.stringify({name:CFG_FILE,parents:[dir],mimeType:"application/json"})+"\r\n--"+bd+"\r\nContent-Type: application/json\r\n\r\n"+body+"\r\n--"+bd+"--";
-  const m=await gfetch(DUP+"/files?uploadType=multipart&fields=id",{method:"POST",headers:{"Content-Type":"multipart/related; boundary="+bd},body:mp});cfgId=m.id;
+function osmTile(lat,lng,z){const n=2**z,x=Math.floor((lng+180)/360*n),la=lat*Math.PI/180,y=Math.floor((1-Math.log(Math.tan(la)+1/Math.cos(la))/Math.PI)/2*n);return"https://tile.openstreetmap.org/"+z+"/"+x+"/"+y+".png"}
+async function findCommons(q){
+  const res=await fetch("https://commons.wikimedia.org/w/api.php?"+new URLSearchParams({action:"query",format:"json",origin:"*",generator:"search",gsrsearch:"filetype:bitmap "+q.slice(0,60),gsrnamespace:"6",gsrlimit:"5",prop:"imageinfo",iiprop:"url",iiurlwidth:"640"}));
+  if(!res.ok)return"";
+  const pages=Object.values(((await res.json()).query||{}).pages||{}).sort((a,b)=>a.index-b.index);
+  for(const p of pages){const u=p.imageinfo&&p.imageinfo[0]&&(p.imageinfo[0].thumburl||p.imageinfo[0].url);if(u&&WIKI_RE.test(u)&&/\.(jpe?g|png)(\/|$)/i.test(u))return u}
+  return"";
 }
-/* ---------- 영화 포스터 (TMDB). 포스터 그림 주소 끝부분만 기록에 적고, 그림은 TMDB에서 바로 불러 보임(내 드라이브에 복사 안 함) ---------- */
-const TMDB="https://api.themoviedb.org/3",TMDB_IMG="https://image.tmdb.org/t/p/";
-const tmdbGet=(path,key,params)=>{
-  const u=new URL(TMDB+path);Object.entries(params||{}).forEach(([k,v])=>u.searchParams.set(k,v));
-  const h={};if(/^eyJ/.test(key))h.Authorization="Bearer "+key;else u.searchParams.set("api_key",key);
-  return fetch(u.toString(),{headers:h}).then(r=>{if(!r.ok)throw new Error("TMDB "+r.status);return r.json()});
-};
-const wantPoster=r=>!!r&&!(r.x&&r.x.poster)&&((r.kind==="video"&&(isMusic(r)||(hasTmdb()&&(!r.x||!r.x.type||r.x.type==="영화"||r.x.type==="드라마"))))||(r.kind==="place"&&!!r.x&&r.x.type==="멋곳"));
-/* 음악 앨범 그림: 애플 iTunes 검색(키 필요 없음). 그림 주소만 기록에 적음 */
-const ART_RE=/^https:\/\/is\d*-ssl\.mzstatic\.com\/image\/[\w\/.\-]+\/\d+x\d+bb\.jpg$/;
-async function findArt(r){
-  const yr=infoYear(r),first=String((r.x&&r.x.info)||"").split("\n")[0].split("·").map(s=>s.trim());
-  const orig=s=>{const m=/\(([^)]+)\)/.exec(s||"");return m?m[1]:(s||"")},strip=s=>(s||"").replace(/\s*\([^)]*\)/g,"").trim();
-  const t0=first[0]||r.title,a0=first[1]&&!/^(19|20)\d{2}$/.test(first[1])?first[1]:"";
-  const terms=[...new Set([(orig(t0)+" "+orig(a0)).trim(),(strip(t0)+" "+strip(a0)).trim(),(strip(t0)+" "+orig(a0)).trim(),a0?"":r.title])].filter(Boolean);
-  const names=a0?[orig(a0),strip(a0)].filter(Boolean).map(s=>s.toLowerCase()):[];
-  for(const term of terms){
-    const res=await fetch("https://itunes.apple.com/search?"+new URLSearchParams({term:term.slice(0,100),media:"music",entity:"song",limit:"10"}));
-    if(!res.ok)throw new Error("iTunes "+res.status);
-    const list=((await res.json()).results||[]).filter(x=>ART_RE.test(x.artworkUrl100||""));
-    let best=null,bs=0;
-    list.forEach(x=>{const an=String(x.artistName||"").toLowerCase(),am=names.some(n=>an.includes(n)||n.includes(an));
-      const s=(am?2:0)+(yr&&String(x.releaseDate||"").startsWith(yr)?1:0);if(s>bs){bs=s;best=x}});
-    if(!best&&!names.length&&list[0])best=list[0];
-    if(best)return{p:best.artworkUrl100,link:/^https:\/\/music\.apple\.com\//.test(best.trackViewUrl||"")?best.trackViewUrl:""};
-  }
-  return{p:"",link:""};
-}
-/* 멋진 곳 사진·설명 링크: 한국어 위키백과(키 필요 없음). 문서 제목이 찾는 이름과 맞을 때만 씀 */
-const WIKI_RE=/^https:\/\/upload\.wikimedia\.org\/wikipedia\/[\w\/.%\-,()]+$/,WIKIPAGE_RE=/^https:\/\/ko\.wikipedia\.org\/wiki\/[^\s"<>]+$/;
-async function findWiki(r){
-  const nm=(String((r.x&&r.x.info)||"").split("\n")[0].split("·")[0]||r.title).replace(/\s*\([^)]*\)/g,"").trim()||r.title,key=s=>String(s).replace(/\s+/g,"").toLowerCase();
-  const res=await fetch("https://ko.wikipedia.org/w/api.php?"+new URLSearchParams({action:"query",format:"json",origin:"*",generator:"search",gsrsearch:nm.slice(0,80),gsrlimit:"3",prop:"pageimages|info",piprop:"thumbnail",pithumbsize:"400",inprop:"url"}));
-  if(!res.ok)throw new Error("wiki "+res.status);
+const WIKIPAGE_RE=/^https:\/\/ko\.wikipedia\.org\/wiki\/[^\s"<>]+$/;
+async function findWiki(nm){
+  const key=s=>String(s).replace(/\s+/g,"").toLowerCase();
+  const res=await fetch("https://ko.wikipedia.org/w/api.php?"+new URLSearchParams({action:"query",format:"json",origin:"*",generator:"search",gsrsearch:nm.slice(0,80),gsrlimit:"3",prop:"pageimages|info",piprop:"thumbnail",pithumbsize:"600",inprop:"url"}));
+  if(!res.ok)return{p:"",link:""};
   const pages=Object.values(((await res.json()).query||{}).pages||{}).sort((a,b)=>a.index-b.index);
   const pg=pages.find(x=>{const a=key(x.title),b=key(nm);return a.includes(b)||b.includes(a)});
   if(!pg)return{p:"",link:""};
   const th=pg.thumbnail&&pg.thumbnail.source;
   return{p:WIKI_RE.test(th||"")?th:"",link:WIKIPAGE_RE.test(pg.fullurl||"")?pg.fullurl:""};
 }
-async function findPoster(r){ // 반환: {p: 포스터 경로("/abc.jpg") 또는 그림 주소, link: 관련 정보 링크}
-  if(isMusic(r))return findArt(r);
-  if(r.kind==="place")return findWiki(r);
-  const tv=r.x&&r.x.type==="드라마",yr=infoYear(r);
-  const d=await tmdbGet(tv?"/search/tv":"/search/movie",appCfg.tmdbKey,{query:r.title.slice(0,80),language:"ko-KR",include_adult:"false"});
+async function findArt(r){ // 음악 앨범 그림: 애플 iTunes 검색(키 필요 없음)
+  const first=String(r.info||"").split("\n")[0].split("·").map(s=>s.trim()),yr=(String(r.info||"").split("\n")[0].match(/\b(19|20)\d{2}\b/)||[""])[0];
+  const orig=s=>{const m=/\(([^)]+)\)/.exec(s||"");return m?m[1]:(s||"")},strip=s=>(s||"").replace(/\s*\([^)]*\)/g,"").trim();
+  const t0=first[0]||r.title,a0=first[1]&&!/^(19|20)\d{2}$/.test(first[1])?first[1]:"";
+  const terms=[...new Set([(orig(t0)+" "+orig(a0)).trim(),(strip(t0)+" "+strip(a0)).trim(),a0?"":r.title])].filter(Boolean);
+  const names=a0?[orig(a0),strip(a0)].filter(Boolean).map(s=>s.toLowerCase()):[];
+  for(const term of terms){
+    const res=await fetch("https://itunes.apple.com/search?"+new URLSearchParams({term:term.slice(0,100),media:"music",entity:"song",limit:"10"}));
+    if(!res.ok)break;
+    const list=((await res.json()).results||[]).filter(x=>ART_RE.test(x.artworkUrl100||""));
+    let best=null,bs=0;
+    list.forEach(x=>{const an=String(x.artistName||"").toLowerCase(),am=names.some(n=>an.includes(n)||n.includes(an));const s=(am?2:0)+(yr&&String(x.releaseDate||"").startsWith(yr)?1:0);if(s>bs){bs=s;best=x}});
+    if(!best&&!names.length&&list[0])best=list[0];
+    if(best)return{p:best.artworkUrl100.replace(/\d+x\d+bb\.jpg$/,"600x600bb.jpg"),link:/^https:\/\/music\.apple\.com\//.test(best.trackViewUrl||"")?best.trackViewUrl:""};
+  }
+  return{p:"",link:""};
+}
+/* ---------- '일' 테마 캘린더 연결: 로그인 때 묻지 않고, 사용자가 켤 때만 가장 좁은 권한(일정 읽기)을 요청.
+   공통 출입증에 이미 캘린더 권한이 있으면 그대로 씀. 읽기만 하고, 그 기록에 붙인 일정 이름·시간·장소·참석자 이름만 저장 ---------- */
+const CALSCOPE="https://www.googleapis.com/auth/calendar.events.readonly";
+const CAL_OK=[CALSCOPE,"https://www.googleapis.com/auth/calendar.readonly","https://www.googleapis.com/auth/calendar.events","https://www.googleapis.com/auth/calendar"];
+const hasCal=()=>{if(DEMO)return true;const g=readGa();return !!g&&g.scopes.some(s=>CAL_OK.includes(s))};
+const calOn=()=>!!db&&db.settings.cal===true&&hasCal();
+async function calToggle(){
+  if(db.settings.cal===true&&hasCal()){db.settings.cal=false;save();drawSettings();drawDetail();toast("캘린더 연결을 껐어요");return}
+  if(!hasCal()){
+    try{await requestTok("",false,CALSCOPE);
+      if(!(pend&&pend.scopes.some(s=>CAL_OK.includes(s)))){toast("캘린더 권한에 체크해야 연결돼요");return}
+      writeGa(gTok,pend.exp,pend.scopes,me||gAcct());
+    }catch(e){toast(String(e.message||"캘린더를 연결하지 못했어요").slice(0,60));return}
+  }
+  db.settings.cal=true;save();drawSettings();toast("캘린더를 연결했어요");
+  const top=LAYERS[LAYERS.length-1];if(top&&top.kind==="detail"){const r=db.records.find(x=>x.id===top.id);if(r&&r.theme==="work")calAttach(r.id,true)}
+}
+async function calAttach(id,manual){
+  const r=db&&db.records.find(x=>x.id===id);if(!r||!calOn())return false;
+  const d=/^(\d{4})-(\d\d)-(\d\d)$/.exec(r.date||"");if(!d)return false;
+  const tm=/^(\d\d):(\d\d)$/.exec(r.time||""),at=tm?new Date(+d[1],+d[2]-1,+d[3],+tm[1],+tm[2]):null;
+  const min=at?new Date(at-3*36e5):new Date(+d[1],+d[2]-1,+d[3]),max=at?new Date(+at+3*36e5):new Date(+d[1],+d[2]-1,+d[3]+1);
+  if(manual){BUSY.set(id,"일정 찾는 중");refresh(id)}
+  try{
+    const j=DEMO?{items:[{summary:"1팀 정기 미팅",location:"영등포 본사 4층",start:{dateTime:new Date(+d[1],+d[2]-1,+d[3],14,0).toISOString()},end:{dateTime:new Date(+d[1],+d[2]-1,+d[3],15,30).toISOString()},attendees:[{displayName:"최수진"},{displayName:"박상선"},{self:true,displayName:"나"}]}]}
+      :await gfetch("https://www.googleapis.com/calendar/v3/calendars/primary/events?"+new URLSearchParams({singleEvents:"true",orderBy:"startTime",maxResults:"20",timeMin:min.toISOString(),timeMax:max.toISOString(),fields:"items(summary,location,start,end,attendees(displayName,self,resource))"}));
+    const ev=(j.items||[]).filter(e=>e.start&&e.start.dateTime);
+    const t0=at?+at:+min+12*36e5,score=e=>{const s=+new Date(e.start.dateTime),en=+new Date(e.end&&e.end.dateTime||s);return s<=t0&&t0<=en?0:Math.min(Math.abs(s-t0),Math.abs(en-t0))};
+    const e=ev.sort((a,b)=>score(a)-score(b))[0];
+    const r2=db.records.find(x=>x.id===id);if(!r2)return false;
+    if(!e){if(manual)toast("그 시간 앞뒤 3시간에 일정이 없어요");return false}
+    const h=x=>hm(new Date(x));
+    r2.ev={title:s0(e.summary,60),where:s0(e.location,80),start:h(e.start.dateTime),end:e.end&&e.end.dateTime?h(e.end.dateTime):""};
+    const names=(e.attendees||[]).filter(a=>!a.self&&!a.resource&&a.displayName).map(a=>s0(a.displayName,20));
+    r2.people=[...new Set([...(r2.people||[]),...names])].slice(0,12);
+    if(r2.ev.title)r2.title=r2.ev.title;
+    r2.upd=Date.now();save();if(manual)toast("일정을 붙였어요");return true;
+  }catch(err){
+    const r2=db.records.find(x=>x.id===id);
+    if(/ 403/.test(String(err.message))){if(r2)r2.why="캘린더 권한이 없어요. 설정에서 캘린더 연결을 다시 켜 주세요";db.settings.cal=false;save()}
+    else if(manual)toast("일정을 불러오지 못했어요");
+    return false;
+  }finally{if(manual){BUSY.delete(id);refresh(id)}}
+}
+/* ---------- 영화 포스터 (TMDB, 사용자가 발급한 키를 내 드라이브 goodday/설정/goodday_설정.json에 저장) ---------- */
+const TMDB="https://api.themoviedb.org/3",CFG_FILE="goodday_설정.json";
+let appCfg={acct:"",tmdbKey:"",geminiKey:""},cfgId=null,cfgLoading=null;
+const hasTmdb=()=>!!(appCfg.tmdbKey&&appCfg.acct===gAcct());
+const tmdbGet=(path,key,params)=>{
+  const u=new URL(TMDB+path);Object.entries(params||{}).forEach(([k,v])=>u.searchParams.set(k,v));
+  const h={};if(/^eyJ/.test(key))h.Authorization="Bearer "+key;else u.searchParams.set("api_key",key);
+  return fetch(u.toString(),{headers:h}).then(r=>{if(!r.ok)throw new Error("TMDB "+r.status);return r.json()});
+};
+async function tmdbFind(r){
+  const tv=r.sub==="드라마",yr=(String(r.info||"").split("\n")[0].match(/\b(19|20)\d{2}\b/)||[""])[0];
+  const d=await tmdbGet(tv?"/search/tv":"/search/movie",appCfg.tmdbKey,{query:q1(r).slice(0,80),language:"ko-KR",include_adult:"false"});
   const list=(d.results||[]).filter(x=>x.poster_path);
   const pick=(yr&&list.find(x=>String(x.release_date||x.first_air_date||"").startsWith(yr)))||list[0];
-  return pick?{p:pick.poster_path,link:"https://www.themoviedb.org/"+(tv?"tv":"movie")+"/"+(+pick.id||"")}:{p:"",link:""};
+  return pick?{p:TMDB_IMG+"w342"+pick.poster_path,link:"https://www.themoviedb.org/"+(tv?"tv":"movie")+"/"+(+pick.id||"")}:{p:"",link:""};
 }
-async function fillPoster(id,quiet){
-  const r=db&&db.records.find(x=>x.id===id);if(!r||!wantPoster(r))return false;
-  try{
-    const f=await findPoster(r);const r2=db&&db.records.find(x=>x.id===id);if(!r2)return false;
-    if(!f.p&&!f.link){fillErr.push("그림을 못 찾았어요");if(!quiet)toast("그림을 찾지 못했어요");return false}
-    r2.x=r2.x||{};if(f.p)r2.x.poster=f.p;if(f.link&&!r2.x.link)r2.x.link=f.link;r2.upd=Date.now();save();return !!f.p;
-  }catch(e){fillErr.push("그림 검색 오류("+String(e&&e.message||e).slice(0,30)+")");if(!quiet)toast("그림을 못 불러왔어요");return false}
+function appCfgLoad(){
+  if(DEMO||!db)return Promise.resolve();const acct=gAcct();if(appCfg.acct===acct)return cfgLoading||Promise.resolve();
+  appCfg={acct,tmdbKey:"",geminiKey:""};cfgId=null;
+  return cfgLoading=(async()=>{try{const dir=await subDir(IDX_DIR),f=await dFind(dir,CFG_FILE,false);
+    if(f){cfgId=f.id;const c=parseDoc(await gfetch(DAPI+"/files/"+f.id+"?alt=media",null,true));
+      if(c&&typeof c.tmdbKey==="string")appCfg.tmdbKey=c.tmdbKey.trim();if(c&&typeof c.geminiKey==="string")appCfg.geminiKey=c.geminiKey.trim()}}catch(e){}
+    finally{cfgLoading=null}})();
 }
-const BOOK_RE=/^https:\/\/books\.google\.com\/books\/content\?[\w=&%.\-]+$/;
-const posterUrl=(r,w)=>{
-  const p=(r.x&&r.x.poster)||"";
-  if(/^\/[\w.-]+$/.test(p))return TMDB_IMG+w+p;
-  if(ART_RE.test(p))return p.replace(/\d+x\d+bb\.jpg$/,(w==="w154"?"200":"400")+"x"+(w==="w154"?"200":"400")+"bb.jpg");
-  if(BOOK_RE.test(p)||WIKI_RE.test(p)||KYOBO_RE.test(p))return p;
-  return"";
-};
-/* 책: 구글 도서 검색(키 필요 없음)으로 저자·출판사·출판연도·소개·표지·링크를 채움 */
-let fillErr=[]; // 채우기가 안 됐을 때 이유를 모아 화면에 보임
-const KYOBO_RE=/^https:\/\/contents\.kyobobook\.co\.kr\/sih\/fit-in\/\d+x0\/pdt\/97[89]\d{10}\.jpg$/;
-async function fillBook(id,text,quiet){
-  if(await fillBookGB(id,text,true))return true; // 구글 도서(무료 한도가 차면 안 됨) → 안 되면 Gemini 검색 + 교보문고 표지
-  const r=db&&db.records.find(x=>x.id===id);if(!r||(r.x&&r.x.info))return false;
-  try{
-    const cfg=await loadGemini();if(!cfg||!cfg.geminiKey){fillErr.push("구글 도서는 오늘 한도가 찼고, "+gWhy());if(!quiet)toast("책 정보를 찾지 못했어요");return false}
-    let t=await aiInfo(r,text||r.title,cfg);
-    const r2=db&&db.records.find(x=>x.id===id);if(!r2)return false;
-    if(!t){fillErr.push("Gemini가 책을 못 찾았어요");if(!quiet)toast("책 정보를 찾지 못했어요");return false}
-    const m=/ISBN[^0-9]{0,6}(97[89][\d\- ]{10,16})/i.exec(t),isbn=m?m[1].replace(/\D/g,""):"";
-    t=t.split("\n").filter(l=>!/^\s*ISBN/i.test(l)).join("\n").replace(/\n{3,}/g,"\n\n").trim();
-    const p=t.split("\n")[0].split("·").map(s=>s.trim());
-    r2.x=r2.x||{};r2.x.info=t;if(p[1])r2.x.author=p[1].slice(0,100);if(p[3]&&!/^\d{4}$/.test(p[3]))r2.x.publisher=p[3].slice(0,100);
-    if(isbn.length===13){r2.x.poster="https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/"+isbn+".jpg";r2.x.link="https://search.kyobobook.co.kr/search?keyword="+isbn}
-    else r2.x.link="https://search.naver.com/search.naver?where=book&query="+encodeURIComponent(p[0]||r2.title);
-    r2.upd=Date.now();save();return true;
-  }catch(e){fillErr.push("Gemini 오류("+String(e&&e.message||e).slice(0,40)+")");if(!quiet)toast("책 정보를 못 불러왔어요");return false}
+async function appCfgSave(){
+  const body=JSON.stringify({v:1,tmdbKey:appCfg.tmdbKey||"",geminiKey:appCfg.geminiKey||""}),dir=await subDir(IDX_DIR);
+  if(!cfgId){const f=await dFind(dir,CFG_FILE,false);if(f)cfgId=f.id}
+  if(cfgId){await gfetch(DUP+"/files/"+cfgId+"?uploadType=media&fields=id",{method:"PATCH",headers:{"Content-Type":"application/json"},body});return}
+  const bd="gc"+uid(),mp="--"+bd+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+JSON.stringify({name:CFG_FILE,parents:[dir],mimeType:"application/json"})+"\r\n--"+bd+"\r\nContent-Type: application/json\r\n\r\n"+body+"\r\n--"+bd+"--";
+  cfgId=(await gfetch(DUP+"/files?uploadType=multipart&fields=id",{method:"POST",headers:{"Content-Type":"multipart/related; boundary="+bd},body:mp})).id;
 }
-async function fillBookGB(id,text,quiet){
-  const r=db&&db.records.find(x=>x.id===id);if(!r)return false;
-  try{
-    let it=null;
-    for(const lang of ["ko",""]){
-      const q=new URLSearchParams({q:String(text||r.title).slice(0,100),maxResults:"5",printType:"books"});if(lang)q.set("langRestrict",lang);
-      const res=await fetch("https://www.googleapis.com/books/v1/volumes?"+q);if(!res.ok)throw new Error("books "+res.status);
-      it=((await res.json()).items||[]).find(x=>x.volumeInfo&&x.volumeInfo.title);if(it)break;
-    }
-    const r2=db&&db.records.find(x=>x.id===id);if(!r2)return false;
-    if(!it){if(!quiet)toast("책 정보를 찾지 못했어요");return false}
-    const v=it.volumeInfo,au=(v.authors||[]).join(", "),yr=(String(v.publishedDate||"").match(/^\d{4}/)||[""])[0];
-    const ttl=String(v.title+(v.subtitle?" "+v.subtitle:"")).replace(/·/g,",").replace(/\s+/g," ").trim().slice(0,200);
-    const desc=String(v.description||"").replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim().slice(0,400);
-    r2.x=r2.x||{};
-    r2.x.info=[ttl,au.replace(/·/g,","),yr,String(v.publisher||"").replace(/·/g,",")].filter(Boolean).join(" · ")+(desc?"\n\n"+desc:"");
-    if(au)r2.x.author=au.slice(0,100);if(v.publisher)r2.x.publisher=String(v.publisher).slice(0,100);
-    const th=String((v.imageLinks&&(v.imageLinks.thumbnail||v.imageLinks.smallThumbnail))||"").replace(/^http:/,"https:").replace(/&edge=curl/,"");
-    if(BOOK_RE.test(th))r2.x.poster=th;
-    const lk=String(v.infoLink||"").replace(/^http:/,"https:");if(/^https:\/\/(books|play)\.google\.[\w.]+\//.test(lk))r2.x.link=lk;
-    r2.upd=Date.now();save();return true;
-  }catch(e){if(!quiet)toast("책 정보를 못 불러왔어요");return false}
+
+/* ---------- 상세 ---------- */
+function openDetail(id,root){
+  const r=db.records.find(x=>x.id===id);if(!r)return;
+  openLayer("detail",`<div class="lh"><button class="ib" data-act="close" aria-label="뒤로">${ico("back")}</button><h2 class="sm" id="dhd"></h2></div><div class="lb" id="detail"></div>`,id,root);
+  drawDetail();
 }
+function infoBlock(r){
+  const lines=String(r.info||"").split("\n").map(s=>s.trim()).filter(Boolean);
+  if(!lines.length)return"";
+  const l1=lines[0],l2=lines.length>2||/[:：]/.test(lines[1]||"")?lines[1]:"",rest=lines.slice(l2?2:1).join("\n");
+  const po=r.art&&imgOk(r.art)&&(r.theme==="see"||r.theme==="hear")&&(r.photo||PEND.has(r.id)||!r.rec||r.rec.url!==r.art);
+  return`<div class="inf">${po?`<div class="po"><img alt="" src="${esc(r.art)}" referrerpolicy="no-referrer"></div>`:""}<div style="min-width:0"><div class="l1">${esc(l1)}</div>${l2?`<div class="l2">${esc(l2)}</div>`:""}</div></div>${rest?`<div class="sum">${esc(rest)}</div>`:""}`;
+}
+const LABS={see:"작품 정보",hear:"음악 정보",eat:"가게 정보",go:"장소 정보",work:"만난 사람"};
+function drawDetail(){
+  const top=LAYERS[LAYERS.length-1];if(!top||top.kind!=="detail")return;
+  const r=db.records.find(x=>x.id===top.id),box=top.el.querySelector("#detail");if(!r||!box){return}
+  top.el.querySelector("#dhd").textContent=dayHead(r.date)+(r.time?" "+r.time:"");
+  const p=photoOf(r),c=thCls(r.theme),busy=BUSY.get(r.id);
+  // 위: 폴라로이드 (작은 사진을 먼저 보이고, 큰 사진은 받는 대로 바꿔 끼움)
+  let img="";
+  if(p.kind==="mine")img=`<img alt="" src="${esc(p.src)}">`;
+  else if(p.kind==="drive")img=`<img alt="" data-dimg="${esc(p.id)}" data-hi="${esc(p.full||"")}">`;
+  else if(p.kind==="rec")img=`<div class="txt">${esc(capOf(r).slice(0,90))}</div><img alt="" src="${esc(p.src)}" referrerpolicy="no-referrer" onerror="this.remove()">`;
+  const stamp=p.kind==="rec"?`<span class="rec">추천 사진${r.rec.src?" · "+esc(r.rec.src):""}</span>`:p.kind==="text"?"":`<span class="stamp mono">${esc(stampOf(r))}  ${esc(r.time)}</span>`;
+  const ph=`<div class="dpola"><div class="pola ${c}"><div class="ph">${p.kind==="text"?`<div class="txt">${esc(capOf(r).slice(0,90))}</div>`:img}${stamp}</div><div class="pen">${esc(capOf(r))}</div></div></div>`;
+  let sec="";
+  if(busy)sec=`<div class="sec"><div class="lab">${ico("gem")}${esc(busy)}…</div></div>`;
+  else if(r.theme==="eat"&&r.cands&&r.cands.length){
+    sec=`<div class="sec"><div class="lab">${ico("gem")}사진 위치 근처에서 찾은 곳</div><div class="cand">${r.cands.map((x,i)=>`<button data-pick="${i}">${i===r.pick?ico("check","color:var(--accent)"):`<span style="width:18px"></span>`}<span>${esc(x.name)}</span><span class="w">${esc([x.what,x.near].filter(Boolean).join(" · "))}</span></button>`).join("")}</div>${infoBlock(r)?`<div style="margin-top:12px">${infoBlock(r)}</div>`:""}`;
+  }else if(r.theme==="work"){
+    const ev=r.ev?`<div class="lab">${ico("cal")}캘린더 일정</div><div class="l1">${esc(r.ev.title||"일정")}</div><div class="l2"><span class="mono">${esc(r.ev.start)}${r.ev.end?"–"+esc(r.ev.end):""}</span>${r.ev.where?" · "+esc(r.ev.where):""}</div>`:"";
+    const ppl=r.people&&r.people.length?`<div class="lab"${ev?' style="margin-top:16px"':""}>${ico("user")}만난 사람</div><div class="ppl">${r.people.map(n=>`<span class="pp"><b>${esc(n.slice(0,1))}</b>${esc(n)}</span>`).join("")}</div>`:"";
+    const cb=calOn()?(r.ev?"":`<button class="btn" data-act="calFind">${ico("cal")}일정 찾기</button>`):`<button class="btn" data-act="cal">${ico("cal")}캘린더 연결</button>`;
+    sec=`<div class="sec">${ev}${ppl}${cb?`<div class="btnrow"${ev||ppl?"":' style="margin-top:0"'}>${cb}</div>`:""}`;
+  }else if(r.info){sec=`<div class="sec"><div class="lab">${ico("gem")}${esc(LABS[r.theme]||"정보")}</div>${infoBlock(r)}`}
+  const btns=[r.map&&LINK_RE.test(r.map)?`<a class="btn" href="${esc(r.map)}" target="_blank" rel="noopener">${ico("pin")}지도 열기</a>`:"",r.link&&LINK_RE.test(r.link)?`<a class="btn" href="${esc(r.link)}" target="_blank" rel="noopener">${ico("link")}관련 정보 보기</a>`:""].filter(Boolean).join("");
+  if(sec&&!busy)sec+=(btns?`<div class="btnrow">${btns}</div>`:"")+"</div>";
+  else if(!busy&&btns)sec=`<div class="sec"><div class="btnrow" style="margin-top:0">${btns}</div></div>`;
+  const why=r.why&&!busy?`<div class="why">${esc(r.why)}${PEND.has(r.id)&&PEND.get(r.id).full&&!r.photo?` · <button class="btn" style="height:24px;font-size:12px" data-act="reup">다시 올리기</button>`:""}</div>`:"";
+  box.innerHTML=`${ph}
+   <div class="dt">${esc(r.title||"기록")}</div>
+   <div class="meta ${c}"><span><i class="dot"></i>${esc(r.theme?thName(r.theme):(r.sub||"기타"))}${r.sub&&r.theme?" · "+esc(r.sub):""}</span>${r.time?`<span class="mono">${ico("clock")}${esc(r.time)}</span>`:""}${r.loc&&r.loc.addr?`<span>${ico("pin")}${esc(r.loc.addr)}</span>`:""}</div>
+   ${sec}${why}
+   <div class="foot"><button class="btn" data-act="edit">${ico("pen")}고치기</button><button class="btn" data-act="refind"${busy?" disabled":""}>${ico("redo")}다시 찾기</button><span class="sp"></span><button class="btn dng" data-act="del" aria-label="지우기">${ico("trash")}</button></div>`;
+  loadImgs(box,true);
+  box.querySelectorAll("img[data-hi]").forEach(im=>{const hi=im.dataset.hi;if(hi)photoUrl(hi).then(u=>{if(u&&im.isConnected)im.src=u})});
+  setTimeout(fabLift,0);
+}
+function editRec(id){
+  const r=db.records.find(x=>x.id===id);if(!r)return;
+  E={id,src:"edit",file:null,prev:"",photo:r.photo||null,date:r.date||today(),time:r.time||"",loc:r.loc?{...r.loc}:null,locNote:"",note:r.note,theme:r.theme,exifTime:false};
+  openEntry();
+}
+function delRec(id){
+  const r=db.records.find(x=>x.id===id);if(!r)return;
+  r.del=Date.now();save();closeTop();render();
+  toast("휴지통으로 옮겼어요",()=>{delete r.del;save();render()});
+}
+
+/* ---------- 설정 (작은 톱니바퀴) ---------- */
+function openSettings(root){openLayer("set",`<div class="lh"><button class="ib" data-act="close" aria-label="뒤로">${ico("back")}</button><h2>설정</h2></div><div class="lb" id="set"></div>`,null,root);drawSettings();loadGemini().then(()=>drawSettings())}
+function drawSettings(){
+  const box=$("#set");if(!box)return;
+  const dk=db.settings.dark!==false,tr=db.records.filter(r=>r.del).length,gk=gcfg&&gcfg.acct===gAcct()?gcfg:null;
+  box.innerHTML=`
+   <div class="grp">
+     ${EMBED?"":`<button class="rowbtn" data-act="dark" role="switch" aria-checked="${dk}"><span>다크 모드</span><span class="sw${dk?" on":""}"></span></button>`}
+     <button class="rowbtn" data-act="gemInfo"><span>제미나이 (AI)</span><span class="r${gk&&gk.geminiKey?" ok":""}">${gk?(gk.geminiKey?"연결됨":"연결 안 됨"):"확인 중"}</span></button>
+     <button class="rowbtn" data-act="cal" role="switch" aria-checked="${calOn()}"><span>캘린더 연결 <span style="font-size:12px;color:var(--t3)">일 테마</span></span><span class="sw${calOn()?" on":""}"></span></button>
+     <button class="rowbtn" data-act="tmdb"><span>영화 포스터 (TMDB)</span><span class="r${hasTmdb()?" ok":""}">${hasTmdb()?"연결됨":"키 없음"}</span></button>
+   </div>
+   <div class="hint" style="margin:8px 4px 0">사진과 글이 구글 Gemini로 전송됩니다 (작게 줄이고 위치값을 뺀 사진, 동 단위 주소)</div>
+   <div class="grp">
+     <button class="rowbtn" data-act="trash"><span>휴지통</span><span class="r mono">${tr}</span></button>
+     <button class="rowbtn" data-act="backup"><span>백업 내려받기</span><span class="r">JSON</span></button>
+     ${isStandalone()?"":`<button class="rowbtn" data-act="install"><span>홈 화면에 추가</span><span class="r"></span></button>`}
+     <button class="rowbtn" data-act="help"><span>사용 설명</span><span class="r"></span></button>
+   </div>
+   <div class="grp">
+     <div class="rowbtn" style="cursor:default"><span>계정</span><span class="r">${esc(me||"")}</span></div>
+     <div class="rowbtn" style="cursor:default"><span>버전</span><span class="r">${esc(VER)}</span></div>
+     ${EMBED?"":`<button class="rowbtn" data-act="logout"><span style="color:var(--bad)">로그아웃</span><span class="r"></span></button>`}
+   </div>`;
+}
+function openGem(){
+  const g=gcfg||{},mine=g.src==="이 앱 설정의 키",fromMal=g.src==="말만해요 설정의 키";
+  openLayer("sub",`<div class="lh"><button class="ib" data-act="close" aria-label="뒤로">${ico("back")}</button><h2>제미나이 (AI)</h2></div><div class="lb help">
+   <p><b>상태</b> · ${g.geminiKey?"연결됨 · "+esc(g.src||"")+" ("+esc(g.model||GEMINI_MODEL_DEFAULT)+")":"연결 안 됨 · "+esc(gWhy())}</p>
+   <p>사진과 글이 구글 Gemini로 전송됩니다. 보내는 것은 그 기록의 사진(작게 다시 그려 위치값을 뺀 것), 적은 글, 동 단위 주소, 날짜뿐이에요. 키가 없거나 실패해도 기록은 저장돼요.</p>
+   <p>키는 말만해요 설정에 넣은 키를 먼저 씁니다.${fromMal?"":" 그 키를 못 읽을 때만 아래에 직접 넣은 키를 쓰고, 내 드라이브 goodday/설정 폴더에만 저장해요."}</p>
+   ${fromMal?"":`<input class="fld" id="gemk" type="password" autocomplete="off" placeholder="${mine?"새 키로 바꾸려면 붙여 넣기":"제미나이 API 키 붙여 넣기"}"><p id="gemm" style="font-size:12px">발급: aistudio.google.com → Get API key</p>`}
+   <div class="btnrow">${fromMal?"":`<button class="btn p" data-act="gemSave">저장</button>`}${mine?`<button class="btn dng" data-act="gemOff">키 지우기</button>`:""}<button class="btn" data-act="gemRetry">${ico("redo")}다시 확인</button></div></div>`);
+}
+async function gemSave(){
+  const k=($("#gemk").value||"").trim(),m=$("#gemm");if(!k){m.textContent="키를 붙여 넣어 주세요";return}
+  m.style.color="";m.textContent="확인하는 중…";
+  try{const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+GEMINI_MODEL_DEFAULT,{headers:{"x-goog-api-key":k}});if(!r.ok)throw new Error(r.status)}
+  catch(e){m.style.color="var(--bad)";m.textContent="이 키로는 제미나이에 연결되지 않아요. 키를 다시 확인해 주세요.";return}
+  try{await appCfgLoad();appCfg.acct=gAcct();appCfg.geminiKey=k;await appCfgSave();gcfg=null;await loadGemini();toast("제미나이 키를 저장했어요");closeTop();drawSettings()}
+  catch(e){m.style.color="var(--bad)";m.textContent="키는 맞지만 저장하지 못했어요. 다시 시도해 주세요."}
+}
+async function gemOff(){try{appCfg.acct=gAcct();appCfg.geminiKey="";await appCfgSave();gcfg=null;await loadGemini();toast("키를 지웠어요");closeTop();drawSettings()}catch(e){toast("지우지 못했어요")}}
 function openTmdb(){
-  openSheet(`<h3>영화 포스터 (TMDB)</h3>
-   <div class="sub" style="margin-top:4px">영화·드라마를 적으면 포스터를 찾아 기록에 보여 줘요. TMDB 무료 키가 있어야 해요.</div>
-   <div class="kv" style="margin-top:16px"><div class="a">상태</div><div class="b">${hasTmdb()?"연결됨":"키 없음"}</div></div>
-   <label for="tmdbk">TMDB API 키 (직접 발급)</label><input id="tmdbk" type="password" autocomplete="off" placeholder="${hasTmdb()?"새 키로 바꾸려면 여기에 붙여 넣기":"키를 붙여 넣기"}">
-   <div class="note" id="tmdbm">발급: themoviedb.org 가입 → 설정 → API → 'API 키' 또는 'API 읽기 액세스 토큰'을 복사해 넣어요. 키는 내 드라이브 goodday/설정 폴더에만 저장돼요.</div>
-   <div class="acts"><button class="btn" data-act="close">닫기</button>${hasTmdb()?`<button class="btn dng" data-act="tmdbOff">키 지우기</button>`:""}<button class="btn pri" data-act="tmdbSave">저장</button></div>`);
+  openLayer("sub",`<div class="lh"><button class="ib" data-act="close" aria-label="뒤로">${ico("back")}</button><h2>영화 포스터 (TMDB)</h2></div><div class="lb help">
+   <p>영화·드라마를 기록하면 포스터를 찾아 붙여요. TMDB 무료 키가 있어야 해요. 상태: <b>${hasTmdb()?"연결됨":"키 없음"}</b></p>
+   <input class="fld" id="tmdbk" type="password" autocomplete="off" placeholder="${hasTmdb()?"새 키로 바꾸려면 붙여 넣기":"TMDB API 키 붙여 넣기"}">
+   <p id="tmdbm" style="font-size:12px">발급: themoviedb.org 가입 → 설정 → API → 'API 키' 또는 'API 읽기 액세스 토큰'. 키는 내 드라이브 goodday/설정 폴더에만 저장돼요.</p>
+   <div class="btnrow"><button class="btn p" data-act="tmdbSave">저장</button>${hasTmdb()?`<button class="btn dng" data-act="tmdbOff">키 지우기</button>`:""}</div></div>`);
 }
 async function tmdbSave(){
   const k=($("#tmdbk").value||"").trim(),m=$("#tmdbm");if(!k){m.textContent="키를 붙여 넣어 주세요";return}
   m.textContent="확인하는 중…";
   try{await tmdbGet("/configuration",k)}catch(e){m.style.color="var(--bad)";m.textContent="이 키로는 TMDB에 연결되지 않아요. 키를 다시 확인해 주세요.";return}
-  try{appCfg={acct:gAcct(),tmdbKey:k};await appCfgSave();toast("포스터 연결을 저장했어요");closeSheet();if(view==="set")render()}
+  try{appCfg.acct=gAcct();appCfg.tmdbKey=k;await appCfgSave();toast("포스터 연결을 저장했어요");closeTop();drawSettings()}
   catch(e){m.style.color="var(--bad)";m.textContent="키는 맞지만 저장하지 못했어요. 다시 시도해 주세요."}
 }
-async function tmdbOff(){try{appCfg={acct:gAcct(),tmdbKey:""};await appCfgSave();toast("키를 지웠어요");closeSheet();if(view==="set")render()}catch(e){toast("지우지 못했어요")}}
-async function fillInfo(id,text,quiet){ // 기록 하나에 작품 정보 채우기. 반환: 넣었으면 true
-  const r=db&&db.records.find(x=>x.id===id);if(!r||!wantInfo(r))return false;
-  if(r.kind==="book")return fillBook(id,text||r.title,quiet);
-  try{
-    const cfg=await loadGemini();if(!cfg||!cfg.geminiKey){fillErr.push(gWhy());if(!quiet)toast("말만해요 설정에 Gemini 키가 있어야 작품을 검색해요");return false}
-    const t=await aiInfo(r,text||r.title,cfg);
-    const r2=db&&db.records.find(x=>x.id===id);if(!r2)return false;
-    if(!t){fillErr.push("Gemini가 정보를 못 찾았어요");if(!quiet)toast("작품 정보를 찾지 못했어요");return false}
-    r2.x=r2.x||{};r2.x.info=t;r2.upd=Date.now();
-    if(r2.kind==="place"){const nm=encodeURIComponent((t.split("\n")[0].split("·")[0]||r2.title).replace(/\s*\([^)]*\)/g,"").trim()||r2.title);
-      if(!r2.x.map)r2.x.map="https://map.naver.com/p/search/"+nm;if(!r2.x.link&&r2.x.type!=="멋곳")r2.x.link="https://search.naver.com/search.naver?query="+nm}
-    save();return true;
-  }catch(e){fillErr.push("Gemini 오류("+String(e&&e.message||e).slice(0,40)+")");if(!quiet)toast("작품 정보를 못 불러왔어요");return false}
+async function tmdbOff(){try{appCfg.acct=gAcct();appCfg.tmdbKey="";await appCfgSave();toast("키를 지웠어요");closeTop();drawSettings()}catch(e){toast("지우지 못했어요")}}
+function openTrash(){
+  const el=openLayer("sub",`<div class="lh"><button class="ib" data-act="close" aria-label="뒤로">${ico("back")}</button><h2>휴지통</h2></div><div class="lb" id="trash"></div>`);
+  drawTrash();
 }
-async function quickSave(text){
-  if(qBusy)return;qBusy=true;
-  const btn=document.querySelector("#qf .btn");if(btn){btn.disabled=true;btn.textContent="해석 중…"}
-  let p=null,how="rule",why="";
-  try{
-    const cfg=DEMO?null:await loadGemini();
-    if(cfg&&cfg.geminiKey){try{p=cleanParsed(await aiParse(text,cfg),text);if(p)how="ai";else why="AI 답이 이상해서 규칙으로 짐작했어요"}catch(e){why="AI를 못 불러서 규칙으로 짐작했어요"}}
-    else why="말만해요 설정에 Gemini 키를 넣으면 한 줄을 AI가 해석해요";
-  }finally{qBusy=false}
-  if(!p){const kid=ruleKind(text),ks=visKinds();p={kind:ks.some(k=>k.id===kid)?kid:ks[0].id,title:text,note:"",date:today(),rating:0,tags:[],x:{}}}
-  if(!db)return;
-  const now=Date.now(),rec={id:uid(),kind:p.kind,date:p.date,title:p.title,note:p.note,rating:p.rating,tags:p.tags,x:p.x,ts:now,upd:now};
-  db.records.push(rec);save();
-  qLast={id:rec.id,msg:kindOf(rec.kind).name+"으로 저장했어요"+(how==="ai"?"":" · "+why)};
-  render();toast(kindOf(rec.kind).name+"으로 저장했어요",()=>{db.records=db.records.filter(r=>r.id!==rec.id);qLast=null;save();render()});
-  if(how==="ai"&&rec.kind!=="place"&&(wantInfo(rec)||wantPoster(rec))){ // 영화·드라마: 작품 검색해서 정보·포스터 채움
-    const q=qLast,base=q.msg;q.msg+=" · 작품 정보 찾는 중…";render();
-    const okI=await fillInfo(rec.id,text,true),okP=await fillPoster(rec.id,true); // 정보 먼저(연도로 같은 이름 작품 구분)
-    if(qLast===q){const r=db&&db.records.find(x=>x.id===rec.id);
-      if(okI&&r){q.msg=base;q.info=String(r.x.info).split("\n")[0]}else q.msg=base+(okP?"":" · 작품 정보는 찾지 못했어요");
-      if(okP&&!okI)q.msg=base+" · 포스터를 넣었어요";
-      if(view==="home"&&!$("#modal").firstChild)render()}
-  }
+function drawTrash(){
+  const box=$("#trash");if(!box)return;
+  const rs=db.records.filter(r=>r.del).sort((a,b)=>b.del-a.del);
+  box.innerHTML=rs.length?`<div class="hint" style="margin:0 0 8px">30일이 지나면 저절로 지워져요</div><div class="grp">${rs.map(r=>`<div class="trow"><i class="dot ${thCls(r.theme)}"></i><span class="t">${esc(r.title||r.note||"기록")}</span><button class="btn" data-restore="${esc(r.id)}">되살리기</button><button class="btn dng" data-purge="${esc(r.id)}">지우기</button></div>`).join("")}</div>`:`<div class="empty">비어 있어요</div>`;
 }
-/* 종류를 골라 검색해서 저장: 영화·음악·책·맛집·멋곳 중 하나를 고르고 이름을 적으면, 그 종류로 찾아 연도·소개·그림·링크를 채워 저장 */
-const MEDIA=[["영화","video","영화"],["음악","video","음악"],["책","book",""],["맛집","place","맛집"],["멋곳","place","멋곳"]];
-let qMedia=lsGet("goodday.qmedia")||"";if(!MEDIA.some(m=>m[0]===qMedia))qMedia="";
-function setMedia(m){
-  const t=$("#qt"),v=t?t.value:"";qMedia=qMedia===m?"":m;lsSet("goodday.qmedia",qMedia);
-  render();const t2=$("#qt");if(t2){t2.value=v;t2.focus()}
+function openHelp(){
+  openLayer("sub",`<div class="lh"><button class="ib" data-act="close" aria-label="뒤로">${ico("back")}</button><h2>사용 설명</h2></div><div class="lb help">
+   <p><b>테마 5개</b> · 보고(영화·드라마·연극·공연·책), 듣고(음악), 먹고(식당·카페·술집), 가고(여행지·핫플레이스), 일(미팅·만난 사람).</p>
+   <p><b>페이지 4개</b> · 촬영(첫 화면) → 입력 → 보기 → 설정.</p>
+   <p><b>촬영</b> · 앱을 열면 카메라 화면이에요. 가운데 버튼을 누르면 정사각형으로 찍혀요. 위 왼쪽 앨범은 휴대폰 사진첩에서 고르기, 글은 사진 없이 글만 쓰기, 오른쪽 위는 앞뒤 카메라 바꾸기와 설정이에요. 아래 왼쪽 작은 사진을 누르면 보기로 가요.</p>
+   <p><b>입력</b> · 찍거나 고른 사진이 폴라로이드로 올라오고, 아래 칸에 글을 쓰면 폴라로이드 흰 칸에 손글씨처럼 바로 보여요. 그 밑에서 테마 5개 중 하나를 고르고(안 고르면 자동) 저장해요. 사진 속 날짜·시간과 위치를 자동으로 읽고, 위치가 없으면 지금 위치를 써요. 사진과 글은 따로 저장되고 보일 때만 합쳐져요.</p>
+   <p><b>보기</b> · 폴라로이드가 가로로 늘어서요. 좌우로 밀어 넘기고, 가운데 사진을 누르면 상세가 열려요. 아래 막대로 빨리 넘길 수 있어요. 목록에는 작은 사진을 먼저 받아 빠르게 보이고, 상세에서 큰 사진을 받아요.</p>
+   <p><b>AI가 채우는 것</b> · 테마를 고르지 않으면(자동) 제미나이가 글과 사진을 보고 테마를 정해요. 보고는 작품 정보(연도·감독·출연·줄거리), 듣고는 곡 정보, 먹고는 사진 위치 근처 식당·술집 후보 3곳, 가고는 장소 소개, 일은 만난 사람을 남겨요(설정에서 캘린더를 연결하면 그 시간 앞뒤 3시간의 일정 이름·장소·참석자를 붙여요. 캘린더는 읽기만 해요). 먹고 후보는 상세 화면에서 눌러서 맞는 곳으로 바꿀 수 있어요.</p>
+   <p><b>추천 사진</b> · 글만 남기면 글에 맞는 사진(포스터·앨범 표지·장소 사진, 없으면 지도)을 찾아 붙이고 왼쪽 위에 "추천 사진"이라고 표시해요. 고치기에서 내 사진으로 바꿀 수 있어요.</p>
+   <p><b>찾기</b> · 보기 위 검색 칸에 낱말을 넣고, 일·월·년으로 기간을 바꾼 뒤 ‹ › 로 넘겨요. 테마 칩으로 한 가지 테마만 볼 수 있어요.</p>
+   <p><b>상세</b> · 위에 폴라로이드(사진과 적은 글), 아래에 찾은 정보와 링크가 나와요. 사진을 누르면 크게 보여요. 다시 찾기는 AI 검색을 한 번 더 해요.</p>
+   <p><b>저장 위치</b> · 기록은 내 구글 드라이브 goodday/goodday_기록.json, 사진은 goodday/사진 폴더에 저장돼요. 이 앱은 자기가 만든 파일만 볼 수 있어요.</p>
+   <p><b>설정</b> · 촬영·보기 화면 오른쪽 위 작은 톱니바퀴. 다크 모드(기본 켬), 제미나이 상태, 캘린더 연결, 영화 포스터 키, 휴지통, 백업이 있어요.</p>
+   <p><b>AI로 보내는 것</b> · 사진과 글이 구글 Gemini로 전송돼요. 사진은 작게 다시 그려 위치값을 뺀 것이고, 위치는 동 단위 주소 글만 보내요. 제미나이 키는 말만해요 설정의 키를 먼저 쓰고, 그걸 못 읽을 때만 설정에 직접 넣은 키를 써요. 키가 없거나 실패해도 기록은 저장돼요.</p></div>`);
 }
-function titleFromInfo(r){ // 정보 첫 줄의 첫 칸을 제목으로 (찾은 정식 이름)
-  const f=String((r.x&&r.x.info)||"").split("\n")[0].split("·")[0].replace(/\s*\([^)]*\)/g,"").trim();
-  return f&&f.length<=60?f:"";
+function backup(){
+  const b=new Blob([JSON.stringify(db,null,1)],{type:"application/json"}),a=document.createElement("a");
+  a.href=URL.createObjectURL(b);a.download="항상일상_백업_"+today()+".json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),3000);
 }
-async function mediaSave(m,text){
-  if(qBusy||!db)return;
-  const def=MEDIA.find(a=>a[0]===m);if(!def)return;
-  qBusy=true;const btn=document.querySelector("#qf .btn");if(btn){btn.disabled=true;btn.textContent="찾는 중…"}
-  const now=Date.now(),x={};if(def[2])x.type=def[2];
-  const rec={id:uid(),kind:def[1],date:today(),title:text.slice(0,200),note:"",rating:0,tags:[],x,ts:now,upd:now};
-  db.records.push(rec);save();
-  const q=qLast={id:rec.id,msg:m+(m==="영화"?"로":"으로")+" 저장했어요 · 정보 찾는 중…"};render();
-  let ok=false;fillErr=[];
-  try{
-    if(def[1]==="book")ok=await fillBook(rec.id,text,true);
-    else{ok=await fillInfo(rec.id,text,true);await fillPoster(rec.id,true)}
-    if(m==="영화"&&!hasTmdb())fillErr.push("포스터는 설정의 TMDB 키가 있어야 가져와요");
-    const r=db&&db.records.find(a=>a.id===rec.id);
-    if(r){
-      if(def[1]!=="book"&&ok){const t=titleFromInfo(r);if(t)r.title=t}
-      if(def[1]==="book"&&ok){const t=titleFromInfo(r);if(t)r.title=t}
-      if(def[1]==="place"&&!r.x.map)r.x.map="https://map.naver.com/p/search/"+encodeURIComponent(text);
-      r.upd=Date.now();save();
-      const why=[...new Set(fillErr)].join(" / ");
-      if(qLast===q)q.msg=m+(m==="영화"?"로":"으로")+" 저장했어요"+(ok?"":" · 정보를 못 찾아 이름만 저장했어요")+(why?" ("+why+")":""),q.info=ok?String(r.x.info).split("\n")[0]:"";
-    }
-  }catch(e){}
-  qBusy=false;
-  if(view==="home"&&!$("#modal").firstChild)render();
-}
-document.addEventListener("submit",e=>{
-  if(e.target.dataset.form==="quick"){
-    e.preventDefault();
-    const t=$("#qt").value.trim();if(!t){toast("한 줄을 적어 주세요");return}
-    if(qMedia)mediaSave(qMedia,t);else quickSave(t);
-  }
-});
-document.addEventListener("input",e=>{
-  const id=e.target.id;
-  if(id==="fq"){S.q=e.target.value;updateResults()}
-  else if(id==="fmin"){S.min=+e.target.value;updateResults()}
-  else if(id==="ffrom"){S.from=e.target.value;updateResults()}
-  else if(id==="fto"){S.to=e.target.value;updateResults()}
-});
-document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#modal").firstChild)closeSheet()});
-/* ---------- 앱 설치(홈 화면에 추가) ---------- */
 let installEv=null;
 const isStandalone=()=>{try{return window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true}catch(e){return false}};
-window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installEv=e;if(db&&view==="set"&&!$("#modal").firstChild)render()});
-window.addEventListener("appinstalled",()=>{installEv=null;if(db&&view==="set"&&!$("#modal").firstChild)render()});
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installEv=e});
+window.addEventListener("appinstalled",()=>{installEv=null;drawSettings()});
 async function doInstall(){
-  if(installEv){try{installEv.prompt();await installEv.userChoice}catch(e){}installEv=null;render();return}
-  openSheet(`<h3>홈 화면에 추가</h3><div class="sub" style="line-height:1.7;margin-top:8px">
-   <b>안드로이드(크롬)</b><br>오른쪽 위 ⋮ 메뉴 → ‘앱 설치’ 또는 ‘홈 화면에 추가’<br><br>
-   <b>아이폰(사파리)</b><br>아래 공유 버튼 → ‘홈 화면에 추가’</div>
-   <div class="acts"><button class="btn" data-act="close">닫기</button></div>`);
+  if(installEv){try{installEv.prompt();await installEv.userChoice}catch(e){}installEv=null;drawSettings();return}
+  openLayer("sub",`<div class="lh"><button class="ib" data-act="close" aria-label="뒤로">${ico("back")}</button><h2>홈 화면에 추가</h2></div><div class="lb help">
+   <p><b>안드로이드(크롬)</b><br>오른쪽 위 ⋮ 메뉴 → '앱 설치' 또는 '홈 화면에 추가'</p><p><b>아이폰(사파리)</b><br>아래 공유 버튼 → '홈 화면에 추가'</p></div>`);
 }
+
+/* ---------- 누르기 ---------- */
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-act],[data-open],[data-th],[data-mode],[data-eth],[data-pick],[data-restore],[data-purge],.dpola img");
+  if(!t||!db)return;
+  if(t.matches(".dpola img")){if(!t.src)return;const el=document.createElement("div");el.className="full";el.innerHTML=`<img alt="" src="${esc(t.src)}">`;el.onclick=()=>el.remove();document.body.appendChild(el);return}
+  if(t.dataset.open){openDetail(t.dataset.open);return}
+  if(t.dataset.th!==undefined){F.th=t.dataset.th;render();return}
+  if(t.dataset.mode){const m=t.dataset.mode;if(m!==F.mode){F.mode=m;if(m!=="all"&&!live().some(inPeriod))F.at=new Date()}render();return}
+  if(t.dataset.eth!==undefined){if(E){E.note=$("#enote").value;E.theme=E.theme===t.dataset.eth?"":t.dataset.eth;drawEntry()}return}
+  if(t.dataset.pick!==undefined){const top=LAYERS[LAYERS.length-1],r=db.records.find(x=>x.id===top.id),i=+t.dataset.pick,c=r&&r.cands[i];
+    if(c){const was=r.pick;r.pick=i;r.title=c.name;if(was!==i){r.info=[c.name,r.loc&&r.loc.addr?shortAddr(r.loc.addr):"",c.what].filter(Boolean).join(" · ")}r.map=mapOf(r);r.link=linkOf(r);r.upd=Date.now();save();drawDetail();renderList()}return}
+  if(t.dataset.restore){const r=db.records.find(x=>x.id===t.dataset.restore);if(r){delete r.del;save();drawTrash();renderList();drawSettings()}return}
+  if(t.dataset.purge){const r=db.records.find(x=>x.id===t.dataset.purge);if(r&&confirm("완전히 지울까요? 사진 파일도 함께 지워지고 되살릴 수 없어요.")){dropPhoto(r);db.records=db.records.filter(x=>x!==r);save();drawTrash();drawSettings()}return}
+  const a=t.dataset.act,top=LAYERS[LAYERS.length-1];
+  if(a==="shutter")shutter();
+  else if(a==="flip")flipCam();
+  else if(a==="view")openView();
+  else if(a==="retake")closeTop();
+  else if(a==="album")$("#fAlb").click();
+  else if(a==="write")startEntry("write");
+  else if(a==="eCam"){$("#fCam").dataset.into="1";$("#fCam").dataset.sq="1";$("#fCam").click()}
+  else if(a==="eAlb"){$("#fAlb").dataset.into="1";$("#fAlb").click()}
+  else if(a==="noPhoto"){if(E){if(E.prev)URL.revokeObjectURL(E.prev);E.prev="";E.file=null;if(E.photo){E.photo=null;E.dropPhoto=true}E.exifTime=false;drawEntry()}}
+  else if(a==="noLoc"){if(E){E.loc=null;E.locSrc="";drawEntry()}}
+  else if(a==="saveEntry")saveEntry();
+  else if(a==="close")closeTop();
+  else if(a==="settings")openSettings();
+  else if(a==="prev"||a==="next"){const d=a==="next"?1:-1,x=new Date(F.at);if(F.mode==="day")x.setDate(x.getDate()+d);else if(F.mode==="month")x.setMonth(x.getMonth()+d,1);else x.setFullYear(x.getFullYear()+d);F.at=x;render()}
+  else if(a==="edit")editRec(top.id);
+  else if(a==="refind"){const r=db.records.find(x=>x.id===top.id);if(r){r.info="";r.cands=[];enrich(r.id,{themeFixed:!!r.theme})}}
+  else if(a==="reup")retryUpload(top.id);
+  else if(a==="del")delRec(top.id);
+  else if(a==="dark"){db.settings.dark=db.settings.dark===false;applyTheme();save();drawSettings()}
+  else if(a==="gemInfo")openGem();
+  else if(a==="gemSave")gemSave();
+  else if(a==="gemOff")gemOff();
+  else if(a==="cal")calToggle();
+  else if(a==="calFind"){const r=db.records.find(x=>x.id===top.id);if(r)calAttach(r.id,true)}
+  else if(a==="gemRetry"){gcfg=null;loadGemini().then(()=>{closeTop();openGem();drawSettings()})}
+  else if(a==="tmdb")openTmdb();
+  else if(a==="tmdbSave")tmdbSave();
+  else if(a==="tmdbOff")tmdbOff();
+  else if(a==="trash")openTrash();
+  else if(a==="backup")backup();
+  else if(a==="install")doInstall();
+  else if(a==="help")openHelp();
+  else if(a==="logout")logout();
+});
+["fCam","fAlb"].forEach(id=>$("#"+id).addEventListener("change",e=>{
+  const inp=e.target,f=inp.files&&inp.files[0],into=inp.dataset.into==="1",sq=inp.dataset.sq==="1";inp.dataset.into="";inp.dataset.sq="";
+  inp.value="";if(!f||!db)return;
+  const src=id==="fCam"?"camera":"album";
+  if(into&&E){E.square=sq;takeFile(f,src)}else{startEntry(src,f);if(E)E.square=sq}
+}));
+let qT=null;
+document.addEventListener("input",e=>{
+  if(e.target.id==="enote"){const p=$("#epen");if(p)p.textContent=capOf({note:e.target.value}).slice(0,48);return}
+  if(e.target.id==="cfs"){cancelAnimationFrame(CF.raf);CF.pos=+e.target.value;cfSync();return}
+  if(e.target.id==="q"){F.q=e.target.value;clearTimeout(qT);qT=setTimeout(()=>{renderList();reportWhere()},120)}});
+document.addEventListener("keydown",e=>{
+  const top=LAYERS[LAYERS.length-1];
+  if(top&&top.kind==="view"&&(e.key==="ArrowLeft"||e.key==="ArrowRight")&&e.target.tagName!=="INPUT"){e.preventDefault();cfGo(Math.round(CF.pos)+(e.key==="ArrowRight"?1:-1));return}
+  if(top&&top.kind==="view"&&e.key==="Enter"&&e.target.tagName!=="INPUT"){const r=CF.list[Math.round(CF.pos)];if(r)openDetail(r.id);return}
+  if(!top&&db&&!$("#shoot").hidden&&(e.key===" "||e.key==="Enter")&&e.target===document.body){e.preventDefault();shutter();return}
+  if(e.key==="Escape"){const f=document.querySelector(".full");if(f){f.remove();return}if(LAYERS.length)closeTop()}});
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 boot();
 </script>
