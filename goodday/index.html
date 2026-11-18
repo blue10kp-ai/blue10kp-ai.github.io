@@ -341,7 +341,7 @@ const ALLOWED=["blue10kp@gmail.com"]; // 로그인을 허용할 구글 계정 (�
 const GCLIENT="482206908404-5sdbvetcrc8j7ctrhe6aa23ccmd3d05d.apps.googleusercontent.com"; // 구글 로그인 클라이언트 ID (차차차와 같은 값, 공개되어도 되는 값)
 const GSCOPE="openid email https://www.googleapis.com/auth/drive.file"; // 이 앱이 만든 파일만 접근 (Drive 전체 권한 아님)
 const DRIVE_PATH=["goodday"],DRIVE_FILE="goodday_기록.json",PHOTO_DIR="사진"; // 각자의 내 드라이브 안 저장 위치
-const VER="2단계 · 나무위키 먼저 (2026-11-19)";
+const VER="2단계 · 왓챠피디아·나무위키 (2026-11-19)";
 /* ===== 끝 ===== */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -1225,7 +1225,8 @@ function askPrompt(r,theme){
   return"너는 사진 일기 앱의 도우미다. 사용자가 남긴 사진(있으면)과 글, 찍은 곳, 날짜를 보고 구글 검색으로 확인해 기록을 채운다.\n"+
   "테마: see=보고(영화·드라마·연극·공연·전시·책), hear=듣고(노래·앨범·음악 공연), eat=먹고(식당·카페·술집), go=가고(여행지·명소·핫플레이스), work=일(업무·미팅·사람 만남).\n"+
   (theme?"테마는 "+theme+"로 정해져 있다.\n":"먼저 글과 사진에 가장 알맞은 테마 하나를 골라라.\n")+
-  "검색은 항상 나무위키(namu.wiki)에서 먼저 해라: '이름 site:namu.wiki'로 검색해 나무위키 문서 내용을 근거로 채우고, 나무위키에 문서가 없을 때만 다른 검색 결과를 써라. 근거로 쓴 나무위키 문서 제목을 namu에 그대로 적어라(없으면 빈 글자).\n"+
+  "see(보고)는 왓챠피디아(pedia.watcha.com)에서 가장 먼저 검색해라: '제목 site:pedia.watcha.com'으로 찾아 작품·연도·감독·출연·줄거리를 왓챠피디아 기준으로 채우고, 모자란 것은 나무위키에서 채워라.\n"+
+  "검색은 항상 나무위키(namu.wiki)에서 먼저 해라(see는 왓챠피디아 다음): '이름 site:namu.wiki'로 검색해 나무위키 문서 내용을 근거로 채우고, 나무위키에 문서가 없을 때만 다른 검색 결과를 써라. 근거로 쓴 나무위키 문서 제목을 namu에 그대로 적어라(없으면 빈 글자).\n"+
   "사용자 글: \""+maskText(r.note||"").replace(/"/g,"'")+"\"\n찍은 곳(동 단위): "+(r.loc&&r.loc.addr?r.loc.addr:"모름")+"\n날짜: "+(r.date||today())+" "+(r.time||"")+"\n"+
   "테마별로 할 일:\n"+
   "- see: 어떤 작품인지 찾아라. sub는 영화|드라마|연극|공연|전시|책 중 하나. info 첫 줄: 제목(원제) · 연도 · 구분 · 국가 (책이면 제목 · 저자 · 출판연도 · 출판사).\n"+
@@ -1304,6 +1305,7 @@ function linkOf(r){
   if(r.theme==="eat"||r.theme==="go")return"https://search.naver.com/search.naver?query="+n;
   return"";
 }
+const watchaOf=r=>"https://pedia.watcha.com/ko/search?query="+encodeURIComponent(q1(r));
 function mapOf(r){const reg=r.loc&&r.loc.addr?" "+shortAddr(r.loc.addr):"";return"https://map.naver.com/p/search/"+encodeURIComponent(q1(r)+(r.theme==="eat"?reg:""))}
 /* 그림 찾기: 보고=포스터(TMDB 키가 있으면)·책 표지·위키백과, 듣고=앨범 표지(iTunes), 가고=위키백과, 그 밖=위키미디어 공용, 마지막=지도 조각 */
 async function findImages(r,why){
@@ -1547,7 +1549,7 @@ function drawDetail(){
     const cb=calOn()?(r.ev?"":`<button class="btn" data-act="calFind">${ico("cal")}일정 찾기</button>`):`<button class="btn" data-act="cal">${ico("cal")}캘린더 연결</button>`;
     sec=`<div class="sec">${ev}${ppl}${cb?`<div class="btnrow"${ev||ppl?"":' style="margin-top:0"'}>${cb}</div>`:""}`;
   }else if(r.info){sec=`<div class="sec"><div class="lab">${ico("gem")}${esc(LABS[r.theme]||"정보")}</div>${infoBlock(r)}`}
-  const btns=[r.map&&LINK_RE.test(r.map)?`<a class="btn" href="${esc(r.map)}" target="_blank" rel="noopener">${ico("pin")}지도 열기</a>`:"",r.link&&LINK_RE.test(r.link)?`<a class="btn" href="${esc(r.link)}" target="_blank" rel="noopener">${ico("link")}${/^https:\/\/namu\.wiki\//.test(r.link)?"나무위키 보기":"관련 정보 보기"}</a>`:""].filter(Boolean).join("");
+  const btns=[r.map&&LINK_RE.test(r.map)?`<a class="btn" href="${esc(r.map)}" target="_blank" rel="noopener">${ico("pin")}지도 열기</a>`:"",r.link&&LINK_RE.test(r.link)?`<a class="btn" href="${esc(r.link)}" target="_blank" rel="noopener">${ico("link")}${/^https:\/\/namu\.wiki\//.test(r.link)?"나무위키 보기":"관련 정보 보기"}</a>`:"",r.theme==="see"&&q1(r)?`<a class="btn" href="${esc(watchaOf(r))}" target="_blank" rel="noopener">${ico("link")}왓챠피디아 보기</a>`:""].filter(Boolean).join("");
   if(sec&&!busy)sec+=(btns?`<div class="btnrow">${btns}</div>`:"")+"</div>";
   else if(!busy&&btns)sec=`<div class="sec"><div class="btnrow" style="margin-top:0">${btns}</div></div>`;
   const why=r.why&&!busy?`<div class="why">${esc(r.why)}${PEND.has(r.id)&&PEND.get(r.id).full&&!r.photo?` · <button class="btn" style="height:24px;font-size:12px" data-act="reup">다시 올리기</button>`:""}</div>`:"";
@@ -1647,7 +1649,8 @@ function openHelp(){
    <p><b>보기</b> · 폴라로이드가 가로로 늘어서요. 좌우로 밀어 넘기고, 가운데 사진을 누르면 상세가 열려요. 아래 막대로 빨리 넘길 수 있어요. 목록에는 작은 사진을 먼저 받아 빠르게 보이고, 상세에서 큰 사진을 받아요.</p>
    <p><b>AI가 채우는 것</b> · 테마를 고르지 않으면(자동) 제미나이가 글과 사진을 보고 테마를 정해요. 보고는 작품 정보(연도·감독·출연·줄거리), 듣고는 곡 정보, 먹고는 사진 위치 근처 식당·술집 후보 3곳, 가고는 장소 소개, 일은 만난 사람을 남겨요(설정에서 캘린더를 연결하면 그 시간 앞뒤 3시간의 일정 이름·장소·참석자를 붙여요. 캘린더는 읽기만 해요). 먹고 후보는 상세 화면에서 눌러서 맞는 곳으로 바꿀 수 있어요.</p>
    <p><b>영화·드라마</b> · 보고를 고르고 사진 없이 "아마겟돈"처럼 제목만 써도, 위키백과에서 그 작품을 찾아 포스터를 사진 자리에 넣고, 아래에 감독·출연·개봉·상영 시간·흥행 수익·소개를 보여 줘요(키 필요 없음). 제미나이가 연결돼 있으면 한국 개봉일·줄거리까지 더 자세히 채워요.</p>
-   <p><b>나무위키 먼저</b> · 제미나이가 정보를 찾을 때는 항상 나무위키를 먼저 검색해 그 문서 내용으로 채우고, 나무위키에 없을 때만 다른 검색 결과를 써요. 상세 화면의 "나무위키 보기"로 그 문서를 바로 열 수 있어요. 포스터 그림은 위키백과에서 가져와요.</p>
+   <p><b>보고는 왓챠피디아 먼저</b> · 보고 테마는 제미나이가 왓챠피디아를 가장 먼저 검색해 작품 정보를 채우고, 모자란 것은 나무위키에서 채워요. 상세 화면의 "왓챠피디아 보기"로 왓챠피디아에서 그 작품을 바로 찾아볼 수 있어요.</p>
+   <p><b>나무위키 먼저</b> · 다른 테마는 제미나이가 정보를 찾을 때 항상 나무위키를 먼저 검색해 그 문서 내용으로 채우고, 나무위키에 없을 때만 다른 검색 결과를 써요. 상세 화면의 "나무위키 보기"로 그 문서를 바로 열 수 있어요. 포스터 그림은 위키백과에서 가져와요.</p>
    <p><b>추천 사진</b> · 글만 남기면 글에 맞는 사진(포스터·앨범 표지·장소 사진, 없으면 지도)을 찾아 붙이고 왼쪽 위에 "추천 사진"이라고 표시해요. 고치기에서 내 사진으로 바꿀 수 있어요.</p>
    <p><b>기록 보기</b> · 촬영 화면 왼쪽 아래 [기록 보기]를 눌러요. 처음엔 이번 달(기록이 없으면 가장 최근 달)이 나와요. 일·월·년을 고르고 ‹ › 로 앞뒤 기간을 넘겨요. 검색 칸에 낱말을 넣으면 기간과 상관없이 모든 기록에서 찾아요. 테마 칩으로 한 가지 테마만 볼 수 있어요.</p>
    <p><b>상세</b> · 위에 폴라로이드(사진과 적은 글), 아래에 찾은 정보와 링크가 나와요. 사진을 누르면 크게 보여요. 다시 찾기는 AI 검색을 한 번 더 해요.</p>
