@@ -3,9 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#171B22" media="(prefers-color-scheme: dark)">
-<meta name="color-scheme" content="light dark">
+<meta name="theme-color" id="tcolor" content="#171B22">
+<meta name="color-scheme" content="dark light">
+<script>/* 기본은 다크. 저장해 둔 값이 "light"일 때만 라이트 (깜빡임 막으려고 화면 그리기 전에 먼저 적용) */
+(function(){var t="dark";try{if(localStorage.getItem("chacha.theme")==="light")t="light"}catch(e){}try{var q=location.search.match(/[?&]theme=(dark|light)/);if(/[?&]embed=1/.test(location.search)&&q){window.__forceTheme=t=q[1]}}catch(e){}document.documentElement.setAttribute("data-theme",t);document.getElementById("tcolor").setAttribute("content",t==="light"?"#ffffff":"#171B22")})();</script>
 <meta name="robots" content="noindex,nofollow">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="favicon.png">
@@ -23,20 +24,22 @@
 <style>
 /* 신한FC m과 같은 디자인 기준(tokens.css·design.css)을 이 파일 안에 옮겨 둔 것. 신한FC 파일은 링크하지 않음 */
 :root{
-  color-scheme:light dark;
-  --bg:#F4F5F7;--surface:#FFFFFF;--raised:#F0F2F5;--line:rgba(20,30,50,.10);
-  --t1:#151A22;--t2:#4B5361;--t3:#6B7382;
-  --accent:#1F4E8C;--accent-ink:#FFFFFF;--accent-weak:rgba(31,78,140,.08);
-  --ok:#1D7A46;--warn:#A8620B;--bad:#C0392B;
+  color-scheme:dark;
+  --bg:#0F1217;--surface:#171B22;--raised:#1E232B;--line:rgba(255,255,255,.09);
+  --t1:#E8EBF0;--t2:#A5ADBA;--t3:#747C8A;
+  --accent:#7FAEF0;--accent-ink:#0F1217;--accent-weak:rgba(127,174,240,.12);
+  --ok:#4CC282;--warn:#E0A04A;--bad:#EF7A6C;
   --font:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;
   --r-ctl:8px;--r-card:12px;--r-panel:16px;
   --ease:cubic-bezier(.2,.8,.2,1);--t-fast:120ms;--t-in:200ms;--navh:60px
 }
-@media (prefers-color-scheme:dark){:root{
-  --bg:#0F1217;--surface:#171B22;--raised:#1E232B;--line:rgba(255,255,255,.09);
-  --t1:#E8EBF0;--t2:#A5ADBA;--t3:#747C8A;
-  --accent:#7FAEF0;--accent-ink:#0F1217;--accent-weak:rgba(127,174,240,.12);
-  --ok:#4CC282;--warn:#E0A04A;--bad:#EF7A6C}}
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#F4F5F7;--surface:#FFFFFF;--raised:#F0F2F5;--line:rgba(20,30,50,.10);
+  --t1:#151A22;--t2:#4B5361;--t3:#6B7382;
+  --accent:#1F4E8C;--accent-ink:#FFFFFF;--accent-weak:rgba(31,78,140,.08);
+  --ok:#1D7A46;--warn:#A8620B;--bad:#C0392B
+}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{overscroll-behavior-y:none}
 html.lock{overflow:hidden;overscroll-behavior-y:contain}
@@ -106,7 +109,7 @@ nav .ni{display:block;line-height:0}
 nav .ni svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 nav button.on{color:var(--accent)}
 nav button.on::before{content:"";position:absolute;top:-1px;left:28%;right:28%;height:2px;background:var(--accent);border-radius:0 0 2px 2px}
-@media (prefers-color-scheme:dark){nav{background:var(--bg)}}
+:root:not([data-theme="light"]) nav{background:var(--bg)}
 /* 입력 창(시트) */
 .modal{position:fixed;inset:0;background:rgba(10,15,25,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center}
 .sheet{background:var(--surface);color:var(--t1);border-radius:20px 20px 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.18);width:100%;max-width:640px;max-height:90vh;overflow:auto;padding:8px 16px 16px;animation:up var(--t-in) var(--ease)}
@@ -180,7 +183,7 @@ const fuelDef=()=>({comp:COMPS[0][0],kmL:11.0,price:1840,kmkWh:5.0,kwh:319});
 
 let tiresMigrated=false;
 function norm(d){ // 옛 파일·새 파일 모두 같은 모양으로 맞춤
-  d.events??=[];d.inboxDone??=[];
+  d.events??=[];d.inboxDone??=[];d.prefs??={};if(typeof d.prefs.dark!=="boolean")d.prefs.dark=true; // 다크 모드 기본 켬
   d.cars.forEach(c=>{c.photo??="";c.photoCredit??="";c.startKm??=0;c.plate??="";c.notes??="";c.fuel??=fuelDef();
     ["odo","maint","ins","plans"].forEach(k=>{c[k]??=[]})});
   if(!d.tires){ // 옛 모양(차마다 따로)의 타이어·장착 이력을 모두 공용 목록으로 옮김
@@ -198,6 +201,7 @@ function seed(){ // 처음 쓰는 계정의 빈 시작 상태 (개인 정보 없
   return norm({cars:[{id:uid(),nick:"내 차",model:"Tesla Model 3",trim:"",year:new Date().getFullYear(),color:"흰색",colorHex:"#f1f1f1",wheel:"",delivered:"",tireSpec:"",tireAlt:""}]});
 }
 let db=null,dirty=false; // db는 로그인 뒤에야 채워짐
+function applyTheme(dark){const t=dark?"dark":"light";document.documentElement.setAttribute("data-theme",t);const m=document.getElementById("tcolor");if(m)m.setAttribute("content",dark?"#171B22":"#ffffff");if(!window.__forceTheme){try{localStorage.setItem("chacha.theme",t)}catch(e){}}}
 const legacyRaw=()=>{try{for(const k of [KEY,...OLDKEYS]){const r=localStorage.getItem(k);if(r)return r}}catch(e){}return null};
 
 /* ---------- 구글 로그인 (신한FC m과 같은 방식: Google Identity Services 토큰) ---------- */
@@ -384,7 +388,7 @@ async function startApp(pre){
       db=mig||seed();dirty=true;await driveSave(true);
     }
   }
-  setShell(true);setSync("ok");render();scrollTo(0,0);
+  applyTheme(window.__forceTheme?window.__forceTheme==="dark":db.prefs.dark);setShell(true);setSync("ok");render();scrollTo(0,0);
   if(pendingAdds.length){const q=pendingAdds;pendingAdds=[];q.forEach(addFromParent)}
   if(tiresMigrated){tiresMigrated=false;save()} // 옛 모양에서 공용 타이어로 옮긴 결과를 저장
   applyGo();
@@ -567,6 +571,7 @@ window.addEventListener("message",e=>{
   if(e.origin!==location.origin||!e.data||typeof e.data!=="object")return;
   if(e.data.type==="blue10kp-go")window.blue10kpGo(e.data);
   else if(e.data.type==="blue10kp-back"){goBack();notifyWhere()}
+  else if(e.data.type==="blue10kp-theme"&&(e.data.theme==="dark"||e.data.theme==="light")){window.__forceTheme=e.data.theme;applyTheme(e.data.theme==="dark");if(db)render()}
   else if(e.data.type==="blue10kp-add"){if(db)addFromParent(e.data);else pendingAdds.push(e.data)}
 });
 window.addEventListener("hashchange",()=>{const g=parseGo(location.hash);if(g)applyGo(g)});
@@ -736,6 +741,7 @@ function vHome(c){
   if(!ev.length)h+=`<div class="empty">아직 기록이 없습니다</div>`;
   ev.forEach(e=>{h+=`<div class="row"><div class="l"><span class="ic">${e.ic}</span><div><div class="t">${esc(e.t)}</div><div class="sub">${esc(e.d)}</div></div></div>${e.r?`<div class="r">${e.r}</div>`:""}</div>`});
   h+=`</div>`;
+  h+=window.__forceTheme?"":`<div class="card"><label class="row" style="cursor:pointer;margin:0"><div class="t">다크 모드</div><input type="checkbox" data-act="dark" ${db.prefs.dark?"checked":""} style="width:20px;height:20px"></label></div>`;
   h+=`<div class="card"><h3>기록 파일 (JSON)</h3><div class="sub">이 앱의 기록은 JSON 파일로 저장해 두었다가 언제든 다시 불러올 수 있어요. 두 대 이상 모든 차 기록이 한 파일에 들어갑니다.</div><div class="acts"><button class="btn pri" data-act="export">기록 저장</button><button class="btn" data-act="import">기록 불러오기</button></div><input type="file" accept="application/json" id="impIn" hidden><div class="note">기록은 내 Google Drive(Claude/app/차차차/설정)에 자동으로 저장돼요. 파일로 따로 보관하려면 기록 저장을 누르세요.</div><div class="note">한 번 로그인하면 같은 브라우저에서 다른 앱도 함께 열려요. 로그아웃은 모든 앱에서 됩니다.</div>${installHtml()}<div class="acts"><button class="btn" data-act="logout">로그아웃</button>${legacyRaw()?`<button class="btn dng" data-act="clearLegacy">이 기기에 남은 옛 기록 지우기</button>`:""}</div></div>`;
   return h;
 }
@@ -903,6 +909,7 @@ document.addEventListener("click",e=>{
   else if(a==="logout")logout();
   else if(a==="install"){const d=deferredInstall;if(d){deferredInstall=null;d.prompt();Promise.resolve(d.userChoice).catch(()=>{}).then(()=>render())}}
   else if(a==="clearLegacy"){if(confirm("이 기기(브라우저)에 남아 있는 옛 기록을 지울까요? 드라이브에 저장된 기록은 그대로 남아요.")){try{[KEY,...OLDKEYS].forEach(k=>localStorage.removeItem(k))}catch(e){}render()}}
+  else if(a==="dark"){db.prefs.dark=!!b.checked;applyTheme(db.prefs.dark);save()}
   else if(a==="view"){
     if(view===id&&db.cars.length>1){const i=db.cars.findIndex(x=>x.id===db.sel);db.sel=db.cars[(i+1)%db.cars.length].id;save();render();scrollTo(0,0)} // 이미 그 페이지에서 다시 누르면 차 바꾸기(하양이↔빨강이)
     else{if(view!==id)navStack.push({view,sumYm});view=id;render();scrollTo(0,0)}}
