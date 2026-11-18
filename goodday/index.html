@@ -202,6 +202,10 @@ input.fld{width:100%;height:40px;border:1px solid var(--line);border-radius:8px;
 .toast button{margin-left:auto;border:0;background:none;color:var(--bg);font-weight:600;font-size:14px;text-decoration:underline}
 html.embed .toast{bottom:calc(88px + env(safe-area-inset-bottom))}
 .demo{font-size:11px;color:var(--c-eat);margin-left:6px;font-weight:400}
+.fit{position:absolute;inset:0;overflow:hidden;background:#1A1D22}
+.ph .fit img{position:absolute;inset:0;width:100%;height:100%}
+.ph .fit .fbg{object-fit:cover;filter:blur(14px) brightness(.7);transform:scale(1.15)}
+.ph .fit .ffg{object-fit:contain}
 /* 손글씨 캡션 */
 .pen{font-family:"Nanum Pen Script","Pretendard Variable",cursive;color:#2E2C28;font-size:21px;line-height:1.1;padding:8px 4px 10px;min-height:52px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:keep-all;overflow-wrap:anywhere}
 .pola{display:block;background:var(--pframe);border-radius:3px;padding:8px 8px 0;box-shadow:var(--pshadow)}
@@ -791,9 +795,11 @@ function phHtml(r){
   const p=photoOf(r);
   const busy=BUSY.has(r.id)?`<span class="busy">${BUSY.get(r.id)}</span>`:"";
   if(p.kind==="text")return`<div class="ph"><div class="txt">${esc((r.note||r.title).slice(0,90))}</div>${busy}</div>`;
-  const img=p.kind==="drive"?`<img alt="" data-dimg="${esc(p.id)}">`:`<img alt="" src="${esc(p.src)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`;
+  const img=p.kind==="drive"?`<img alt="" data-dimg="${esc(p.id)}">`:p.kind==="rec"?recImg(p.src,true):`<img alt="" src="${esc(p.src)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`;
   return`<div class="ph">${p.kind==="rec"?`<div class="txt">${esc((r.note||r.title).slice(0,90))}</div>`:""}${img}${p.kind==="rec"?`<span class="rec">추천 사진</span>`:`<span class="stamp mono">${esc(stampOf(r))}</span>`}${busy}</div>`;
 }
+/* 불러온 사진(포스터·앨범 표지 등): 정사각형 안에 잘리지 않게 줄여 넣고, 빈 곳은 같은 그림을 흐리게 깔아 채움 */
+const recImg=(src,lazy)=>`<span class="fit"><img class="fbg" alt="" src="${esc(src)}"${lazy?" loading=\"lazy\"":""} referrerpolicy="no-referrer" aria-hidden="true"><img class="ffg" alt="" src="${esc(src)}"${lazy?" loading=\"lazy\"":""} referrerpolicy="no-referrer" onerror="this.parentNode.remove()"></span>`;
 const capOf=r=>String(r.note||r.title||"").replace(/\s+/g," ").trim();
 function polaInner(r){ // 폴라로이드: 위 사진, 아래 흰 칸에 손글씨처럼 적은 글 (사진과 글은 따로 저장, 보일 때만 합침)
   return`${phHtml(r)}<div class="pen">${esc(capOf(r).slice(0,48))}</div>`;
@@ -1523,7 +1529,7 @@ function drawDetail(){
   let img="";
   if(p.kind==="mine")img=`<img alt="" src="${esc(p.src)}">`;
   else if(p.kind==="drive")img=`<img alt="" data-dimg="${esc(p.id)}" data-hi="${esc(p.full||"")}">`;
-  else if(p.kind==="rec")img=`<div class="txt">${esc(capOf(r).slice(0,90))}</div><img alt="" src="${esc(p.src)}" referrerpolicy="no-referrer" onerror="this.remove()">`;
+  else if(p.kind==="rec")img=`<div class="txt">${esc(capOf(r).slice(0,90))}</div>`+recImg(p.src);
   const stamp=p.kind==="rec"?`<span class="rec">추천 사진${r.rec.src?" · "+esc(r.rec.src):""}</span>`:p.kind==="text"?"":`<span class="stamp mono">${esc(stampOf(r))}  ${esc(r.time)}</span>`;
   const ph=`<div class="dpola"><div class="pola ${c}"><div class="ph">${p.kind==="text"?`<div class="txt">${esc(capOf(r).slice(0,90))}</div>`:img}${stamp}</div><div class="pen">${esc(capOf(r))}</div></div></div>`;
   let sec="";
