@@ -268,6 +268,26 @@ html.embed .vtop{padding-top:56px}
 .epola .pen:empty::before{content:"여기에 글이 적혀요";color:#A39E93}
 .eacts{display:flex;justify-content:center;gap:8px;margin-top:10px}
 .eacts .btn{height:28px;font-size:12px}
+.csec{margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}
+.clab{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--t2)}
+.clab svg{width:16px;height:16px}
+.clist{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.citem{display:flex;align-items:center;gap:10px;width:100%;padding:8px;border:1px solid var(--line);border-radius:12px;background:var(--surface);text-align:left;color:var(--t1)}
+.citem.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.citem>svg{width:18px;height:18px;color:var(--accent);flex:none}
+.cimg{position:relative;flex:none;width:48px;height:48px;border-radius:8px;background:var(--raised);overflow:hidden}
+.cimg img{width:100%;height:100%;object-fit:cover}
+.cimg .dot{position:absolute;left:4px;bottom:4px}
+.citem.none{padding:8px 12px}
+.ctx{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.ctx b{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ctx .cm{font-size:12px;color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ctx .cd{font-size:12px;color:var(--t3);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.cbusy{display:flex;gap:6px;margin:12px 0}
+.cbusy i{width:6px;height:6px;border-radius:50%;background:var(--t3);animation:cb 1s infinite ease-in-out}
+.cbusy i:nth-child(2){animation-delay:.15s}.cbusy i:nth-child(3){animation-delay:.3s}
+@keyframes cb{0%,80%,100%{opacity:.25}40%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.cbusy i{animation:none;opacity:.6}}
 .themes5{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:10px}
 .themes5 .chip{justify-content:center;padding:0 4px;height:36px;border-radius:var(--r-ctl)}
 /* 상세: 위는 폴라로이드 */
@@ -341,7 +361,7 @@ const ALLOWED=["blue10kp@gmail.com"]; // 로그인을 허용할 구글 계정 (�
 const GCLIENT="482206908404-5sdbvetcrc8j7ctrhe6aa23ccmd3d05d.apps.googleusercontent.com"; // 구글 로그인 클라이언트 ID (차차차와 같은 값, 공개되어도 되는 값)
 const GSCOPE="openid email https://www.googleapis.com/auth/drive.file"; // 이 앱이 만든 파일만 접근 (Drive 전체 권한 아님)
 const DRIVE_PATH=["goodday"],DRIVE_FILE="goodday_기록.json",PHOTO_DIR="사진"; // 각자의 내 드라이브 안 저장 위치
-const VER="2단계 · 왓챠피디아·나무위키 (2026-11-19)";
+const VER="2단계 · 찾고 골라 저장 (2026-11-19)";
 /* ===== 끝 ===== */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -1117,14 +1137,109 @@ function drawEntry(){
    </div>
    <textarea class="note" id="enote" rows="2" placeholder="한 줄 남기기 (예: 오펜하이머 봤다, 연남동 칼국수)">${esc(E.note)}</textarea>
    <div class="themes5">${THEMES.map(t=>`<button class="chip pick ${t[0]}${E.theme===t[0]?" on":""}" data-eth="${t[0]}" aria-pressed="${E.theme===t[0]}"><i class="dot"></i>${t[1]}</button>`).join("")}</div>
-   <div class="hint">${E.theme?thName(E.theme)+" 테마로 저장해요. 한 번 더 누르면 자동으로 돌아가요":"테마를 안 고르면 제미나이가 글과 사진을 보고 정해요"}</div>`;
-  loadImgs(box,true);
+   <div class="hint">${E.theme?thName(E.theme)+" 테마로 저장해요. 한 번 더 누르면 자동으로 돌아가요":"테마를 안 고르면 제미나이가 글과 사진을 보고 정해요"}</div>
+   <div id="ecand">${candHtml()}</div>`;
+  loadImgs(box,true);entryBtn();
 }
-async function saveEntry(){
+/* 저장 전에 먼저 찾아서 후보를 보여 주고, 맞는 것을 고른 뒤 저장 */
+const sKey=()=>E?[($("#enote")?$("#enote").value:E.note).trim(),E.theme,E.file?E.file.name+E.file.size:"",E.photo&&!E.dropPhoto?E.photo.full:""].join("|"):"";
+function needFind(){
+  if(!E||E.theme==="work")return false;
+  const note=($("#enote")?$("#enote").value:E.note).trim(),hasImg=!!(E.file||(E.photo&&E.photo.full&&!E.dropPhoto));
+  if(!note&&!hasImg)return false;
+  if(E.id){const o=db.records.find(r=>r.id===E.id);if(o&&o.note===note&&(!E.theme||o.theme===E.theme)&&!E.file)return false}
+  return true;
+}
+function entryBtn(){
+  const b=document.querySelector('.layer [data-act="saveEntry"]');if(!b||!E)return;
+  if(E.search&&E.search.key!==sKey())E.search=null;
+  const S=E.search;
+  b.textContent=!needFind()||S&&(S.st!=="busy")&&(S.pick!==undefined||!S.list.length)?"저장":S&&S.st==="busy"?"찾는 중":S?"고르기":"찾기";
+}
+function candHtml(){
+  const S=E&&E.search;if(!S)return"";
+  if(S.st==="busy")return`<div class="csec"><div class="clab">${ico("gem")}맞는 것을 찾는 중…</div><div class="cbusy"><i></i><i></i><i></i></div><button class="btn" data-act="cSkip">찾지 않고 저장</button></div>`;
+  if(!S.list.length)return`<div class="csec"><div class="clab">${ico("gem")}${esc(S.why||"후보를 찾지 못했어요")}</div><div class="hint">저장을 누르면 글 그대로 저장해요</div></div>`;
+  return`<div class="csec"><div class="clab">${ico("gem")}이 중에 맞는 게 있나요?</div><div class="clist">${S.list.map((c,i)=>`<button class="citem${S.pick===i?" on":""}" data-cpick="${i}" aria-pressed="${S.pick===i}"><span class="cimg">${c.img?`<img alt="" src="${esc(c.img)}" referrerpolicy="no-referrer" onerror="this.remove()">`:""}<i class="dot ${thCls(c.theme||E.theme)}"></i></span><span class="ctx"><b>${esc(c.title)}</b><span class="cm">${esc([c.orig&&c.orig!==c.title?c.orig:"",c.year,c.sub,c.who].filter(Boolean).join(" · "))}</span>${c.desc?`<span class="cd">${esc(c.desc)}</span>`:""}</span>${S.pick===i?ico("check"):""}</button>`).join("")}
+    <button class="citem none${S.pick===-1?" on":""}" data-cpick="-1" aria-pressed="${S.pick===-1}"><span class="ctx"><b>맞는 게 없어요</b><span class="cm">찾은 정보 없이 글 그대로 저장</span></span>${S.pick===-1?ico("check"):""}</button></div>
+    <div class="hint">${S.pick===undefined?"하나를 고른 뒤 저장을 눌러 주세요":"저장을 누르면 고른 것으로 저장해요"}</div></div>`;
+}
+function drawCand(){const b=$("#ecand");if(b)b.innerHTML=candHtml();entryBtn()}
+async function runFind(){
+  const key=sKey(),S={key,st:"busy",list:[]};E.search=S;E.note=$("#enote").value;drawCand();
+  setTimeout(()=>{const b=$("#ecand");if(b)b.scrollIntoView({block:"nearest",behavior:"smooth"})},50);
+  try{S.list=await findCands(E.note.trim(),E.theme,E.file,E.photo&&!E.dropPhoto?E.photo:null,E.loc,E.square,S)}catch(e){S.why="찾다가 오류가 났어요"}
+  if(!E||E.search!==S)return;
+  S.st="done";if(S.list.length===1)S.pick=0;drawCand();
+  candImgs(S);
+}
+function candPrompt(note,theme,loc){
+  return"너는 사진 일기 앱의 도우미다. 사용자가 남긴 글(과 사진)이 무엇을 가리키는지 구글 검색으로 찾아, 맞을 만한 후보를 가능성 높은 순으로 최대 5개 보여 줘라. 사용자가 그중 하나를 고른다.\n"+
+  "테마: see=보고(영화·드라마·연극·공연·전시·책), hear=듣고(노래·앨범), eat=먹고(식당·카페·술집), go=가고(여행지·명소·핫플레이스).\n"+
+  (theme?"테마는 "+theme+"로 정해져 있다. 모든 후보는 이 테마다.\n":"후보마다 알맞은 테마를 정해라(work는 쓰지 마라).\n")+
+  "검색 순서: see는 왓챠피디아(site:pedia.watcha.com)를 가장 먼저, 그다음 나무위키(site:namu.wiki). 다른 테마는 나무위키를 먼저 검색해라. eat은 찍은 동네 안의 가게를 가까운 순으로.\n"+
+  "이름이 같거나 비슷한 다른 작품(리메이크, 같은 제목의 영화·드라마·노래)도 각각 후보로 넣어라. 확실하지 않은 것은 지어내지 마라.\n"+
+  "사용자 글: \""+maskText(note||"").replace(/"/g,"'")+"\"\n찍은 곳(동 단위): "+(loc&&loc.addr?loc.addr:"모름")+"\n"+
+  "필드: title=한국어 정식 이름, orig=원제(영어 등, 없으면 빈 글자), year=연도 4자리, sub=see면 영화|드라마|연극|공연|전시|책, hear면 곡|앨범, eat이면 음식 종류, go면 분류, who=see는 감독·주연 1~2명(책은 저자), hear는 아티스트, eat·go는 지역(구·동), desc=한 줄 설명 40자 안, namu=나무위키 문서 제목(없으면 빈 글자).\n"+
+  "*, # 같은 기호는 쓰지 마라. JSON 하나로만 답해라: {\"cands\":[{\"theme\":\"\",\"title\":\"\",\"orig\":\"\",\"year\":\"\",\"sub\":\"\",\"who\":\"\",\"desc\":\"\",\"namu\":\"\"}]}";
+}
+async function findCands(note,theme,file,photo,loc,sq,S){
+  const cfg=DEMO?null:await loadGemini();
+  let list=[];
+  if(cfg&&cfg.geminiKey){
+    const parts=[];let img=null;
+    if(file){try{img=await shrink(await bitmapOf(file),768,.8,sq)}catch(e){}}
+    else if(photo&&photo.thumb){try{img=await gfetch(DAPI+"/files/"+photo.thumb+"?alt=media",null,"blob")}catch(e){}}
+    if(img)parts.push({inline_data:{mime_type:"image/jpeg",data:await b64(img)}});
+    parts.push({text:candPrompt(note,theme,loc)});
+    try{const a=parseAsk(await gemini(cfg,parts,true));
+      list=(a&&Array.isArray(a.cands)?a.cands:[]).map(c=>({theme:theme||(TH[c&&c.theme]&&c.theme!=="work"?c.theme:""),title:s0(c&&c.title,60),orig:s0(c&&c.orig,60),year:(String(c&&c.year||"").match(/\d{4}/)||[""])[0],sub:s0(c&&c.sub,12),who:s0(c&&c.who,40),desc:s0(c&&c.desc,60),namu:typeof(c&&c.namu)==="string"?c.namu.split(/[#?]/)[0].trim().slice(0,80):""})).filter(c=>c.title);
+    }catch(e){S.why="제미나이로 찾지 못해 위키백과에서 찾았어요"}
+  }
+  if(!list.length&&note){try{list=await keylessCands(note,theme||ruleTheme(note))}catch(e){}}
+  if(!list.length&&!S.why)S.why=cfg&&cfg.geminiKey?"후보를 찾지 못했어요":"후보를 찾지 못했어요 (제미나이 키가 없으면 보고·듣고·가고만 위키백과·iTunes에서 찾아요)";
+  return list.slice(0,5);
+}
+async function keylessCands(note,th){ // 키 없이: 보고·가고=위키백과, 듣고=iTunes
+  const q=note.replace(/\s*(봤다|봤어|봄|보고|들었다|들음|다녀옴|다녀왔다|갔다|감)\s*$/,"").slice(0,60);
+  if(th==="hear"){
+    const res=await fetch("https://itunes.apple.com/search?"+new URLSearchParams({term:q,media:"music",entity:"song",limit:"5"}));if(!res.ok)return[];
+    return((await res.json()).results||[]).map(x=>({theme:"hear",title:s0(x.trackName,60),orig:"",year:String(x.releaseDate||"").slice(0,4),sub:"곡",who:s0(x.artistName,40),desc:s0(x.collectionName,60),img:ART_RE.test(x.artworkUrl100||"")?x.artworkUrl100:""})).filter(c=>c.title);
+  }
+  if(th!=="see"&&th!=="go")return[];
+  const ps=await wq("ko.wikipedia.org",{generator:"search",gsrsearch:q+(th==="see"?" 영화":""),gsrlimit:"6",prop:"pageimages|extracts|langlinks|info",piprop:"thumbnail",pithumbsize:"200",exintro:"1",explaintext:"1",exsentences:"1",exlimit:"6",lllang:"en",inprop:"url"});
+  const born=/\d{4}년 \d{1,2}월 \d{1,2}일\s*[~–-]|\d{4}년 \d{1,2}월 \d{1,2}일 출생|[(（]\d{4}년 \d{1,2}월 \d{1,2}일/; // 사람 문서는 빼기
+  return ps.filter(p=>{const ex=String(p.extract||"").slice(0,160);return!/동음이의|목록/.test(p.title)&&!born.test(ex)&&(th!=="see"||/영화|드라마|시리즈|소설|연극|뮤지컬|애니메이션|작품|공연|전시/.test(p.title+" "+ex))}).map(p=>{const ex=String(p.extract||"").replace(/\s+/g," ").trim(),t=noQ(p.thumbnail&&p.thumbnail.source);
+    return{theme:th,title:p.title.replace(/\s*\([^)]*\)\s*$/,""),label:p.title,orig:"",year:(p.title.match(/(?:19|20)\d{2}/)||ex.match(/((?:19|20)\d{2})년/)||[""]).pop()||"",sub:th==="see"?(/드라마|시리즈/.test(p.title+ex.slice(0,60))?"드라마":/소설|책/.test(p.title+ex.slice(0,60))?"책":"영화"):"",who:"",desc:ex.slice(0,60),img:WIKI_RE.test(t)?t:"",en:p.langlinks&&p.langlinks[0]&&p.langlinks[0]["*"]||""}}).slice(0,5);
+}
+async function candImgs(S){ // 후보 그림을 뒤에서 채움(포스터·앨범·명소)
+  await Promise.all(S.list.map(async c=>{
+    if(c.img)return;
+    try{
+      if(c.theme==="hear"){const t=await findArt({info:c.title+(c.orig?"("+c.orig+")":"")+" · "+c.who+(c.year?" · "+c.year:""),title:c.title});c.img=t.p}
+      else if(c.theme==="see"&&c.sub!=="책"){
+        if(c.en){c.img=(await enPoster(c.en)).p}
+        else if(c.orig&&/[A-Za-z]/.test(c.orig)){const es=await wq("en.wikipedia.org",{generator:"search",gsrsearch:c.orig+" "+c.year+" "+(c.sub==="드라마"?"TV series":"film"),gsrlimit:"2",prop:"pageimages",piprop:"thumbnail",pithumbsize:"300",pilicense:"any"});const e=es.find(x=>x.thumbnail);const u=noQ(e&&e.thumbnail.source);if(WIKI_RE.test(u))c.img=u}
+        if(!c.img){const w=await findWiki(c.title);c.img=w.p}
+      }else if(c.theme==="go"){const w=await findWiki(c.title);c.img=w.p}
+    }catch(e){}
+    if(c.img&&!imgOk(c.img))c.img="";
+  }));
+  if(E&&E.search===S)drawCand();
+}
+async function saveEntry(skip){
   if(!E)return;
   const note=($("#enote").value||"").trim();
   const date=$("#edate").value||today(),time=$("#etime").value||"";
   if(!note&&!E.file&&!(E.photo&&E.photo.full)){toast("사진이나 글을 남겨 주세요");return}
+  if(E.search&&E.search.key!==sKey())E.search=null;
+  const S=E.search;
+  if(needFind()&&!skip){
+    if(!S){runFind();return}
+    if(S.st==="busy"){toast("찾는 중이에요. 잠깐만요");return}
+    if(S.list.length&&S.pick===undefined){toast("맞는 것을 골라 주세요");const b=$("#ecand");if(b)b.scrollIntoView({block:"nearest",behavior:"smooth"});return}
+  }
+  const C=!skip&&S&&S.st==="done"&&S.pick>=0?S.list[S.pick]:null,none=!skip&&S&&S.pick===-1;
   const now=Date.now(),old=E.id?db.records.find(r=>r.id===E.id):null;
   let r=old;
   if(!r){r={id:uid(),theme:"",ts:now,people:[],cands:[]};db.records.push(r)}
@@ -1134,13 +1249,22 @@ async function saveEntry(){
   if(!r.title||changed&&!old)r.title=note.split("\n")[0].slice(0,40)||"사진 기록";
   if(E.dropPhoto&&old&&old.photo){dropPhoto(old);delete r.photo}
   if(changed){delete r.why;if(!E.theme&&!old)r.theme=""}
-  const file=E.file,id=r.id,themeFixed=!!E.theme,sq=!!E.square;
+  delete r.chosen;
+  if(C){ // 고른 후보로 정함
+    if(C.theme)r.theme=C.theme;
+    r.title=C.title;r.chosen={title:C.title,orig:C.orig||"",year:C.year||"",sub:C.sub||"",who:C.who||"",en:C.en||"",label:C.label||"",img:C.img&&imgOk(C.img)?C.img:""};r.prov=true;
+    if(C.namu)r.namu=C.namu;else delete r.namu;
+    if(r.theme==="see"&&C.sub)r.sub=C.sub;
+    if(C.img&&imgOk(C.img)&&!E.file&&!(r.photo&&r.photo.full)){r.art=C.img;r.rec={url:C.img,src:"작품 정보"}}
+    r.info=[C.title+(C.orig&&C.orig!==C.title?"("+C.orig+")":""),C.year,C.sub,C.who].filter(Boolean).join(" · ")+(C.desc?"\n"+C.desc:"");
+  }else if(none){delete r.prov;r.theme=E.theme||r.theme||ruleTheme(note);r.info="";r.cands=[];delete r.namu;delete r.art;delete r.rec;r.link=linkOf(r)}
+  const file=E.file,id=r.id,themeFixed=!!(E.theme||C&&C.theme),sq=!!E.square;
   if(file){E.kept=true;PEND.set(id,{prev:E.prev})}
   save();closeTop();render();
   if(LAYERS.length&&LAYERS[LAYERS.length-1].kind==="detail")drawDetail();
   toast(old?"고쳤어요":"저장했어요");
   if(file)processPhoto(id,file,sq);
-  if(changed)enrich(id,{file,themeFixed,fresh:!old||!!file||old.note!==note||(E&&E.theme)});
+  if(changed&&!none)enrich(id,{file,themeFixed,fresh:!old||!!file||old.note!==note||(E&&E.theme)});
 }
 async function processPhoto(id,file,sq){ // 작은 사진(480, 목록용)과 큰 사진(1600, 상세에서만 받음) 두 장을 만들어 올림
   BUSY.set(id,"사진 올리는 중");refresh(id);
@@ -1227,6 +1351,7 @@ function askPrompt(r,theme){
   (theme?"테마는 "+theme+"로 정해져 있다.\n":"먼저 글과 사진에 가장 알맞은 테마 하나를 골라라.\n")+
   "see(보고)는 왓챠피디아(pedia.watcha.com)에서 가장 먼저 검색해라: '제목 site:pedia.watcha.com'으로 찾아 작품·연도·감독·출연·줄거리를 왓챠피디아 기준으로 채우고, 모자란 것은 나무위키에서 채워라.\n"+
   "검색은 항상 나무위키(namu.wiki)에서 먼저 해라(see는 왓챠피디아 다음): '이름 site:namu.wiki'로 검색해 나무위키 문서 내용을 근거로 채우고, 나무위키에 문서가 없을 때만 다른 검색 결과를 써라. 근거로 쓴 나무위키 문서 제목을 namu에 그대로 적어라(없으면 빈 글자).\n"+
+  (r.chosen?"사용자가 후보 중에서 고른 것: "+[r.chosen.title+(r.chosen.orig?"("+r.chosen.orig+")":""),r.chosen.year,r.chosen.sub,r.chosen.who].filter(Boolean).join(" · ")+". 반드시 이것으로 채워라(다른 작품·가게로 바꾸지 마라).\n":"")+
   "사용자 글: \""+maskText(r.note||"").replace(/"/g,"'")+"\"\n찍은 곳(동 단위): "+(r.loc&&r.loc.addr?r.loc.addr:"모름")+"\n날짜: "+(r.date||today())+" "+(r.time||"")+"\n"+
   "테마별로 할 일:\n"+
   "- see: 어떤 작품인지 찾아라. sub는 영화|드라마|연극|공연|전시|책 중 하나. info 첫 줄: 제목(원제) · 연도 · 구분 · 국가 (책이면 제목 · 저자 · 출판연도 · 출판사).\n"+
@@ -1281,7 +1406,8 @@ async function enrich(id,o){
       const isbn=String(a.isbn||"").replace(/\D/g,"");r2.isbn=isbn.length===13&&/^97[89]/.test(isbn)?isbn:"";
       let nm=th!=="work"&&typeof a.namu==="string"?a.namu.trim().replace(/^https?:\/\/(www\.)?namu\.wiki\/w\//,"").split(/[#?]/)[0]:"";
       try{nm=decodeURIComponent(nm)}catch(e){}
-      nm=nm.replace(/[*`<>"]/g,"").trim().slice(0,80);if(nm)r2.namu=nm;else delete r2.namu;
+      nm=nm.replace(/[*`<>"]/g,"").trim().slice(0,80);if(nm)r2.namu=nm;else if(!r2.chosen)delete r2.namu;
+      delete r2.prov;
       r2.link=linkOf(r2);r2.map=(th==="eat"||th==="go")?mapOf(r2):"";
       if(!r2.info&&th!=="work")why.push("정보를 찾지 못했어요");
     }else if(!r2.theme){r2.theme=ruleTheme(r2.note)}
@@ -1317,13 +1443,14 @@ async function findImages(r,why){
       else if((r.sub==="영화"||r.sub==="드라마")&&hasTmdb()){try{const t=await tmdbFind(r);art=t.p;link=t.link}catch(e){}}
       if(!art&&!book){ // 키 없이: 위키백과에서 영화·드라마 포스터와 소개 찾기
         const f=await findFilm(r);art=f.p;if(f.link)link=link||f.link;
-        if(!r.info&&(f.info||f.ext)){r.info=f.info||f.title+"\n"+f.ext;if(!r.sub)r.sub=f.kind||""}
+        if((!r.info||r.prov)&&(f.info||f.ext)){r.info=f.info||f.title+"\n"+f.ext;if(!r.sub)r.sub=f.kind||"";delete r.prov}
       }
       if(!art){const w=await findWiki(q1(r));art=w.p}
       if(!art)why.push("포스터를 못 찾았어요");
     }else if(r.theme==="hear"){const t=await findArt(r);art=t.p;link=t.link}
     else if(r.theme==="go"){const w=await findWiki(q1(r));art=w.p;link=w.link}
   }catch(e){}
+  if(!art&&r.chosen&&r.chosen.img)art=r.chosen.img; // 고른 후보의 그림
   if(art&&imgOk(art))r.art=art;else delete r.art;
   if(link&&LINK_RE.test(link)&&!r.namu)r.link=link; // 나무위키 문서가 있으면 그 링크를 그대로 둠
   if(r.photo&&r.photo.full||PEND.has(r.id)){delete r.rec;return}
@@ -1361,20 +1488,20 @@ async function wdFacts(qid){ // 위키데이터(키 없음)에서 영화 사실�
   return{dir:nm(dir),cast:nm(cast),country:nm(ctry),rel:rel?(rel.p>=11?rel.d:rel.d.slice(0,4)):"",kr:!!(rel&&rel.kr),bo,du};
 }
 async function findFilm(r){
-  const first=String(r.info||"").split("\n")[0],head=first.split("·")[0];
-  const orig=(/\(([^)]+)\)/.exec(head)||[])[1]||"",yr=(first.match(/\b(19|20)\d{2}\b/)||[""])[0],tv=r.sub==="드라마";
+  const ch=r.chosen||{},first=String(r.info||"").split("\n")[0],head=first.split("·")[0];
+  const orig=ch.orig||(/\(([^)]+)\)/.exec(head)||[])[1]||"",yr=ch.year||(first.match(/\b(19|20)\d{2}\b/)||[""])[0],tv=r.sub==="드라마";
   const name=q1(r),key=s=>String(s).replace(/\s+|\(.*?\)/g,"").toLowerCase();
   let out={p:"",link:"",ext:"",title:"",kind:""};
   try{
     // ① 한국어 위키백과: 작품 문서(제목이 이름을 품고, 영화·드라마 문서) → 소개 글 + 영어 문서 이름
-    const ps=await wq("ko.wikipedia.org",{generator:"search",gsrsearch:name+" "+(tv?"드라마":"영화"),gsrlimit:"5",prop:"langlinks|extracts|info|pageprops",lllang:"en",exintro:"1",explaintext:"1",exlimit:"5",inprop:"url",ppprop:"wikibase_item"});
+    const ps=await wq("ko.wikipedia.org",{generator:"search",gsrsearch:ch.label?ch.label:name+" "+(tv?"드라마":"영화"),gsrlimit:"5",prop:"langlinks|extracts|info|pageprops",lllang:"en",exintro:"1",explaintext:"1",exlimit:"5",inprop:"url",ppprop:"wikibase_item"});
     const pg=ps.find(x=>key(x.title).includes(key(name))&&/영화|드라마|시리즈|애니메이션/.test(x.title+" "+(x.extract||"").slice(0,120)))||ps.find(x=>key(x.title).includes(key(name)));
     let en="";
     if(pg){
       out.title=pg.title;out.link=WIKIPAGE_RE.test(pg.fullurl||"")?pg.fullurl:"";
       out.ext=String(pg.extract||"").replace(/\s+/g," ").trim().slice(0,700);
       out.kind=/드라마|시리즈/.test(pg.title+out.ext.slice(0,80))?"드라마":"영화";
-      en=pg.langlinks&&pg.langlinks[0]&&pg.langlinks[0]["*"]||"";
+      en=ch.en||pg.langlinks&&pg.langlinks[0]&&pg.langlinks[0]["*"]||"";
       // ③ 위키데이터: 감독·출연·개봉일·상영 시간·흥행 수익·나라
       const qid=pg.pageprops&&pg.pageprops.wikibase_item;
       let w=null;if(/^Q\d+$/.test(qid||"")){try{w=await wdFacts(qid)}catch(e){}}
@@ -1645,7 +1772,7 @@ function openHelp(){
    <p><b>테마 5개</b> · 보고(영화·드라마·연극·공연·책), 듣고(음악), 먹고(식당·카페·술집), 가고(여행지·핫플레이스), 일(미팅·만난 사람).</p>
    <p><b>페이지 4개</b> · 촬영(첫 화면) → 입력 → 보기 → 설정.</p>
    <p><b>촬영</b> · 앱을 열면 가운데에 카메라 버튼이 있어요. 누르면 카메라가 켜지고, 아래 둥근 버튼을 누르면 정사각형으로 찍혀요. 찍지 않고 올리려면 그 위의 [앨범에서 고르기](휴대폰 사진첩) 또는 [글만 쓰기](사진 없이 글만)를 눌러요. 오른쪽 위는 앞뒤 카메라 바꾸기와 설정이에요. 왼쪽 아래 [기록 보기]를 누르면 보기로 가요.</p>
-   <p><b>입력</b> · 찍거나 고른 사진이 폴라로이드로 올라오고, 아래 칸에 글을 쓰면 폴라로이드 흰 칸에 손글씨처럼 바로 보여요. 그 밑에서 테마 5개 중 하나를 고르고(안 고르면 자동) 저장해요. 사진 속 날짜·시간과 위치를 자동으로 읽고, 위치가 없으면 지금 위치를 써요. 사진과 글은 따로 저장되고 보일 때만 합쳐져요.</p>
+   <p><b>입력</b> · 찍거나 고른 사진이 폴라로이드로 올라오고, 아래 칸에 글을 쓰면 폴라로이드 흰 칸에 손글씨처럼 바로 보여요. 그 밑에서 테마 5개 중 하나를 고르고(안 고르면 자동) 오른쪽 위 <b>찾기</b>를 눌러요. 먼저 검색해서 맞을 만한 후보(포스터·앨범·사진과 한 줄 설명)를 보여 주니, 맞는 것을 고르고 <b>저장</b>을 누르면 고른 것으로 정보를 채워요. 맞는 게 없으면 "맞는 게 없어요"를 고르면 글 그대로 저장해요. 찾는 중에 "찾지 않고 저장"을 눌러도 돼요. 일 테마는 찾지 않고 바로 저장해요. 사진 속 날짜·시간과 위치를 자동으로 읽고, 위치가 없으면 지금 위치를 써요. 사진과 글은 따로 저장되고 보일 때만 합쳐져요.</p>
    <p><b>보기</b> · 폴라로이드가 가로로 늘어서요. 좌우로 밀어 넘기고, 가운데 사진을 누르면 상세가 열려요. 아래 막대로 빨리 넘길 수 있어요. 목록에는 작은 사진을 먼저 받아 빠르게 보이고, 상세에서 큰 사진을 받아요.</p>
    <p><b>AI가 채우는 것</b> · 테마를 고르지 않으면(자동) 제미나이가 글과 사진을 보고 테마를 정해요. 보고는 작품 정보(연도·감독·출연·줄거리), 듣고는 곡 정보, 먹고는 사진 위치 근처 식당·술집 후보 3곳, 가고는 장소 소개, 일은 만난 사람을 남겨요(설정에서 캘린더를 연결하면 그 시간 앞뒤 3시간의 일정 이름·장소·참석자를 붙여요. 캘린더는 읽기만 해요). 먹고 후보는 상세 화면에서 눌러서 맞는 곳으로 바꿀 수 있어요.</p>
    <p><b>영화·드라마</b> · 보고를 고르고 사진 없이 "아마겟돈"처럼 제목만 써도, 위키백과에서 그 작품을 찾아 포스터를 사진 자리에 넣고, 아래에 감독·출연·개봉·상영 시간·흥행 수익·소개를 보여 줘요(키 필요 없음). 제미나이가 연결돼 있으면 한국 개봉일·줄거리까지 더 자세히 채워요.</p>
@@ -1674,12 +1801,13 @@ async function doInstall(){
 
 /* ---------- 누르기 ---------- */
 document.addEventListener("click",e=>{
-  const t=e.target.closest("[data-act],[data-open],[data-th],[data-mode],[data-eth],[data-pick],[data-restore],[data-purge],.dpola img");
+  const t=e.target.closest("[data-act],[data-open],[data-th],[data-mode],[data-eth],[data-cpick],[data-pick],[data-restore],[data-purge],.dpola img");
   if(!t||!db)return;
   if(t.matches(".dpola img")){if(!t.src)return;const el=document.createElement("div");el.className="full";el.innerHTML=`<img alt="" src="${esc(t.src)}">`;el.onclick=()=>el.remove();document.body.appendChild(el);return}
   if(t.dataset.open){openDetail(t.dataset.open);return}
   if(t.dataset.th!==undefined){F.th=t.dataset.th;render();return}
   if(t.dataset.mode){F.mode=t.dataset.mode;F.q="";if(!live().some(inPeriod))jumpLatest();CF.pos=0;render();return}
+  if(t.dataset.cpick!==undefined){if(E&&E.search){E.search.pick=+t.dataset.cpick;drawCand()}return}
   if(t.dataset.eth!==undefined){if(E){E.note=$("#enote").value;E.theme=E.theme===t.dataset.eth?"":t.dataset.eth;drawEntry()}return}
   if(t.dataset.pick!==undefined){const top=LAYERS[LAYERS.length-1],r=db.records.find(x=>x.id===top.id),i=+t.dataset.pick,c=r&&r.cands[i];
     if(c){const was=r.pick;r.pick=i;r.title=c.name;if(was!==i){r.info=[c.name,r.loc&&r.loc.addr?shortAddr(r.loc.addr):"",c.what].filter(Boolean).join(" · ")}r.map=mapOf(r);r.link=linkOf(r);r.upd=Date.now();save();drawDetail();renderList()}return}
@@ -1698,6 +1826,7 @@ document.addEventListener("click",e=>{
   else if(a==="noPhoto"){if(E){if(E.prev)URL.revokeObjectURL(E.prev);E.prev="";E.file=null;if(E.photo){E.photo=null;E.dropPhoto=true}E.exifTime=false;drawEntry()}}
   else if(a==="noLoc"){if(E){E.loc=null;E.locSrc="";drawEntry()}}
   else if(a==="saveEntry")saveEntry();
+  else if(a==="cSkip")saveEntry(true);
   else if(a==="close")closeTop();
   else if(a==="settings")openSettings();
   else if(a==="prev"||a==="next"){const d=a==="next"?1:-1,x=new Date(F.at);if(F.mode==="day")x.setDate(x.getDate()+d);else if(F.mode==="month")x.setMonth(x.getMonth()+d,1);else x.setFullYear(x.getFullYear()+d);F.at=x;render()}
@@ -1729,7 +1858,7 @@ document.addEventListener("click",e=>{
 }));
 let qT=null;
 document.addEventListener("input",e=>{
-  if(e.target.id==="enote"){const p=$("#epen");if(p)p.textContent=capOf({note:e.target.value}).slice(0,48);return}
+  if(e.target.id==="enote"){const p=$("#epen");if(p)p.textContent=capOf({note:e.target.value}).slice(0,48);if(E&&E.search&&E.search.key!==sKey()){E.search=null;drawCand()}else entryBtn();return}
   if(e.target.id==="cfs"){cancelAnimationFrame(CF.raf);CF.pos=+e.target.value;cfSync();return}
   if(e.target.id==="q"){F.q=e.target.value;clearTimeout(qT);qT=setTimeout(()=>{CF.pos=0;render()},150)}});
 document.addEventListener("keydown",e=>{
