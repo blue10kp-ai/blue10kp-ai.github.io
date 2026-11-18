@@ -206,7 +206,7 @@ html.embed .toast{bottom:calc(88px + env(safe-area-inset-bottom))}
 .sbtn{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 10px;border:0;border-radius:10px;background:none;color:#C9CED6;font-size:13px}
 .sbtn:active{background:rgba(255,255,255,.08)}
 .shoot #sync{color:#8A919C}
-.vf{position:relative;width:min(100vw,calc(100dvh - 240px),560px);aspect-ratio:1/1;margin:auto 0;background:#15171B;overflow:hidden}
+.vf{position:relative;width:min(100vw,calc(100dvh - 300px),560px);aspect-ratio:1/1;margin:auto 0;background:#15171B;overflow:hidden}
 .vf video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .vf video.mir{transform:scaleX(-1)}
 .vgrid{position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,transparent calc(33.33% - .5px),rgba(255,255,255,.14) calc(33.33% - .5px),rgba(255,255,255,.14) calc(33.33% + .5px),transparent calc(33.33% + .5px),transparent calc(66.66% - .5px),rgba(255,255,255,.14) calc(66.66% - .5px),rgba(255,255,255,.14) calc(66.66% + .5px),transparent calc(66.66% + .5px)),linear-gradient(180deg,transparent calc(33.33% - .5px),rgba(255,255,255,.14) calc(33.33% - .5px),rgba(255,255,255,.14) calc(33.33% + .5px),transparent calc(33.33% + .5px),transparent calc(66.66% - .5px),rgba(255,255,255,.14) calc(66.66% - .5px),rgba(255,255,255,.14) calc(66.66% + .5px),transparent calc(66.66% + .5px))}
@@ -218,10 +218,16 @@ html.embed .toast{bottom:calc(88px + env(safe-area-inset-bottom))}
 .shoot.idle .vgrid,.shoot.idle .sbar .shutter,.shoot.idle #flipBtn{visibility:hidden}
 .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .25s ease}
 .flash.on{opacity:.85;transition:none}
-.sbar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;width:100%;max-width:560px;padding:20px 28px 28px}
+.sbar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;width:100%;max-width:560px;padding:12px 28px 24px}
+.brand{font-size:15px;font-weight:500;color:#E9ECF1;padding-left:4px}
+.smodes{display:flex;justify-content:center;gap:8px;width:100%;padding:16px 16px 0}
+.smode{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:20px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);color:#E9ECF1;font-size:14px;transition:background-color .12s var(--ease)}
+.smode:active{background:rgba(255,255,255,.14)}
+.smode svg.i{width:18px;height:18px;color:#C9CED6}
 .shutter{width:76px;height:76px;border-radius:50%;border:4px solid #E9ECF1;background:#E9ECF1;box-shadow:inset 0 0 0 3px #0A0B0D;transition:transform .1s var(--ease)}
 .shutter:active{transform:scale(.93)}
-.gal{justify-self:start;width:52px;height:52px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:#15171B;color:#C9CED6;display:grid;place-items:center;padding:0;overflow:hidden;position:relative}
+.galw{justify-self:start;display:flex;flex-direction:column;align-items:center;gap:6px;border:0;background:none;padding:0;color:#C9CED6;font-size:11px}
+.gal{width:52px;height:52px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:#15171B;color:#C9CED6;display:grid;place-items:center;padding:0;overflow:hidden;position:relative}
 .gal .gp{display:block;width:100%;height:100%}
 .gal .ph{aspect-ratio:auto;width:100%;height:100%;border-radius:0}
 .gal .ph .stamp,.gal .ph .rec,.gal .ph .busy{display:none}
@@ -295,15 +301,17 @@ html.embed .vtop{padding-top:56px}
 </section>
 <section id="shoot" class="shoot" hidden>
   <div class="stop">
-    <button class="sbtn" data-act="album" aria-label="휴대폰 앨범에서 고르기"><svg class="i"><use href="#i-img"/></svg><span>앨범</span></button>
-    <button class="sbtn" data-act="write" aria-label="글만 쓰기"><svg class="i"><use href="#i-pen"/></svg><span>글</span></button>
-    <span class="sp"></span><span id="sync"></span>
+    <span class="brand">항상일상</span><span class="sp"></span><span id="sync"></span>
     <button class="sbtn" data-act="flip" id="flipBtn" aria-label="앞뒤 카메라 바꾸기"><svg class="i"><use href="#i-redo"/></svg></button>
     <button class="sbtn" data-act="settings" aria-label="설정"><svg class="i"><use href="#i-gear"/></svg></button>
   </div>
   <div class="vf" id="vf"><video id="vid" playsinline muted autoplay></video><div class="vgrid"></div><div class="vmsg" id="vmsg"></div><div class="flash" id="flash"></div></div>
+  <div class="smodes">
+    <button class="smode" data-act="album"><svg class="i"><use href="#i-img"/></svg>앨범에서 고르기</button>
+    <button class="smode" data-act="write"><svg class="i"><use href="#i-pen"/></svg>글만 쓰기</button>
+  </div>
   <div class="sbar">
-    <button class="gal" data-act="view" id="galBtn" aria-label="보기"></button>
+    <button class="galw" data-act="view" aria-label="기록 보기"><span class="gal" id="galBtn"></span><span class="gl2">기록 보기</span></button>
     <button class="shutter" data-act="shutter" aria-label="찍기"></button>
     <span class="gsp"></span>
   </div>
@@ -426,7 +434,7 @@ window.blue10kpGo=function(o){
   o=o||{};
   if(!db){pendingGo={go:o.go,q:o.q||"",kind:o.kind||"",id:o.id||""};return}
   closeAll();
-  if(o.go==="search"){F.q=String(o.q||"");F.th=themeFrom(o.kind);F.mode="all";render();openView(true)}
+  if(o.go==="search"){F.q=String(o.q||"");F.th=themeFrom(o.kind);render();openView(true)}
   else if(o.go==="record"){const r=db.records.find(x=>x.id===String(o.id||""));render();if(r)openDetail(r.id,true);else{toast("기록을 찾지 못했어요");if(EMBED)openView(true)}}
   else if(o.go==="settings"){render();openSettings(true)}
   else if(o.go==="shoot"||o.go==="camera"){render()}
@@ -736,16 +744,17 @@ const imgOk=u=>[ART_RE,WIKI_RE,KYOBO_RE,BOOK_RE,TMDB_RE,OSM_RE].some(re=>re.test
 const LINK_RE=/^https:\/\/([\w-]+\.)*(naver\.com|themoviedb\.org|apple\.com|wikipedia\.org|kyobobook\.co\.kr|google\.com|openstreetmap\.org)\//;
 
 /* ---------- 보여주기 ---------- */
-const F={q:"",th:"",mode:"all",at:new Date()}; // 찾기: 글자, 테마, 기간(all·day·month·year)
+const F={q:"",th:"",mode:"month",at:new Date()}; // 찾기: 글자, 테마, 기간(day·month·year). 검색 글자가 있으면 기간 없이 모든 기록에서 찾음
 function periodLabel(){
   const a=F.at;
+  if(F.q.trim())return"검색 결과";
   if(F.mode==="day")return(a.getMonth()+1)+"월 "+a.getDate()+"일 "+WD[a.getDay()];
   if(F.mode==="month")return a.getFullYear()+"년 "+(a.getMonth()+1)+"월";
   if(F.mode==="year")return a.getFullYear()+"년";
   return"항상일상";
 }
 function inPeriod(r){
-  if(F.mode==="all")return true;
+  if(F.mode==="all"||F.q.trim())return true;
   const a=F.at,d=r.date||"";
   if(F.mode==="day")return d===iso(a);
   if(F.mode==="month")return d.slice(0,7)===iso(a).slice(0,7);
@@ -781,9 +790,9 @@ function polaInner(r){ // 폴라로이드: 위 사진, 아래 흰 칸에 손글�
 }
 const shortAddr=a=>{const p=String(a||"").split(/\s+/).filter(Boolean);return(p.find(x=>/[구군시]$/.test(x)&&!/특별시|광역시/.test(x))||p[1]||p[0]||"")};
 function header(){
-  const n=shown().length,nav=F.mode!=="all";
-  return`<div class="hrow"><button class="ib" data-act="close" aria-label="촬영으로">${ico("cam")}</button>${nav?`<button class="ib nv" data-act="prev" aria-label="이전">${ico("l")}</button>`:""}<h1>${esc(F.mode==="all"?"보기":periodLabel())}<span class="cnt mono">${n}</span></h1>${nav?`<button class="ib nv" data-act="next" aria-label="다음">${ico("r")}</button>`:""}<button class="ib" data-act="settings" aria-label="설정">${ico("gear")}</button></div>
-  <div class="srow">${ico("search")}<input id="q" type="search" placeholder="검색" value="${esc(F.q)}" autocomplete="off"><div class="seg">${[["all","전체"],["day","일"],["month","월"],["year","년"]].map(m=>`<button data-mode="${m[0]}" class="${F.mode===m[0]?"on":""}">${m[1]}</button>`).join("")}</div></div>
+  const n=shown().length,srch=!!F.q.trim(),nav=!srch&&F.mode!=="all";
+  return`<div class="hrow"><button class="ib" data-act="close" aria-label="촬영으로">${ico("cam")}</button><button class="ib nv" data-act="prev" aria-label="이전"${nav?"":" hidden"}>${ico("l")}</button><h1 class="plab">${esc(periodLabel())}<span class="cnt mono">${n}</span></h1><button class="ib nv" data-act="next" aria-label="다음"${nav?"":" hidden"}>${ico("r")}</button><span class="sp" style="flex:1"></span><button class="ib" data-act="settings" aria-label="설정">${ico("gear")}</button></div>
+  <div class="srow">${ico("search")}<input id="q" type="search" placeholder="모든 기록에서 검색" value="${esc(F.q)}" autocomplete="off"><div class="seg">${[["day","일"],["month","월"],["year","년"]].map(m=>`<button data-mode="${m[0]}" class="${!srch&&F.mode===m[0]?"on":""}">${m[1]}</button>`).join("")}</div></div>
   <div class="chips"><button class="chip${F.th?"":" on"}" data-th="">전체</button>${THEMES.map(t=>`<button class="chip ${t[0]}${F.th===t[0]?" on":""}" data-th="${t[0]}"><i class="dot"></i>${t[1]}</button>`).join("")}</div>`;
 }
 /* ---------- 촬영 페이지 (첫 화면) ---------- */
@@ -806,8 +815,14 @@ function loadImgs(root,now){ // 드라이브 사진은 화면에 보일 때 불�
 
 /* ---------- 보기 페이지: 아이튠즈 앨범 넘기기처럼 가로로 늘어선 폴라로이드, 좌우로 밀어 넘김 ---------- */
 const CF={pos:0,list:[],els:new Map(),W:220,drag:null,raf:0,snapT:0};
+function jumpLatest(){ // 이 기간에 기록이 없으면 가장 최근 기록이 있는 날·달·해로
+  const r=sortRecs(live()).find(x=>x.date);
+  if(r){const m=/^(\d{4})-(\d\d)-(\d\d)$/.exec(r.date);F.at=new Date(+m[1],+m[2]-1,+m[3])}else F.at=new Date();
+}
 function openView(root){
   openLayer("view",`<div class="vtop" id="vtop"></div><div id="vbody"></div>`,null,root);
+  if(F.mode==="all")F.mode="month";
+  if(!F.q.trim()&&!F.th&&!live().some(inPeriod))jumpLatest();
   CF.pos=0;drawView(true);
 }
 const viewLayer=()=>LAYERS.find(l=>l.kind==="view");
@@ -1529,12 +1544,12 @@ function openHelp(){
   openLayer("sub",`<div class="lh"><button class="ib" data-act="close" aria-label="뒤로">${ico("back")}</button><h2>사용 설명</h2></div><div class="lb help">
    <p><b>테마 5개</b> · 보고(영화·드라마·연극·공연·책), 듣고(음악), 먹고(식당·카페·술집), 가고(여행지·핫플레이스), 일(미팅·만난 사람).</p>
    <p><b>페이지 4개</b> · 촬영(첫 화면) → 입력 → 보기 → 설정.</p>
-   <p><b>촬영</b> · 앱을 열면 가운데에 카메라 버튼이 있어요. 누르면 카메라가 켜지고, 아래 둥근 버튼을 누르면 정사각형으로 찍혀요. 위 왼쪽 앨범은 휴대폰 사진첩에서 고르기, 글은 사진 없이 글만 쓰기, 오른쪽 위는 앞뒤 카메라 바꾸기와 설정이에요. 아래 왼쪽 작은 사진을 누르면 보기로 가요.</p>
+   <p><b>촬영</b> · 앱을 열면 가운데에 카메라 버튼이 있어요. 누르면 카메라가 켜지고, 아래 둥근 버튼을 누르면 정사각형으로 찍혀요. 찍지 않고 올리려면 그 위의 [앨범에서 고르기](휴대폰 사진첩) 또는 [글만 쓰기](사진 없이 글만)를 눌러요. 오른쪽 위는 앞뒤 카메라 바꾸기와 설정이에요. 왼쪽 아래 [기록 보기]를 누르면 보기로 가요.</p>
    <p><b>입력</b> · 찍거나 고른 사진이 폴라로이드로 올라오고, 아래 칸에 글을 쓰면 폴라로이드 흰 칸에 손글씨처럼 바로 보여요. 그 밑에서 테마 5개 중 하나를 고르고(안 고르면 자동) 저장해요. 사진 속 날짜·시간과 위치를 자동으로 읽고, 위치가 없으면 지금 위치를 써요. 사진과 글은 따로 저장되고 보일 때만 합쳐져요.</p>
    <p><b>보기</b> · 폴라로이드가 가로로 늘어서요. 좌우로 밀어 넘기고, 가운데 사진을 누르면 상세가 열려요. 아래 막대로 빨리 넘길 수 있어요. 목록에는 작은 사진을 먼저 받아 빠르게 보이고, 상세에서 큰 사진을 받아요.</p>
    <p><b>AI가 채우는 것</b> · 테마를 고르지 않으면(자동) 제미나이가 글과 사진을 보고 테마를 정해요. 보고는 작품 정보(연도·감독·출연·줄거리), 듣고는 곡 정보, 먹고는 사진 위치 근처 식당·술집 후보 3곳, 가고는 장소 소개, 일은 만난 사람을 남겨요(설정에서 캘린더를 연결하면 그 시간 앞뒤 3시간의 일정 이름·장소·참석자를 붙여요. 캘린더는 읽기만 해요). 먹고 후보는 상세 화면에서 눌러서 맞는 곳으로 바꿀 수 있어요.</p>
    <p><b>추천 사진</b> · 글만 남기면 글에 맞는 사진(포스터·앨범 표지·장소 사진, 없으면 지도)을 찾아 붙이고 왼쪽 위에 "추천 사진"이라고 표시해요. 고치기에서 내 사진으로 바꿀 수 있어요.</p>
-   <p><b>찾기</b> · 보기 위 검색 칸에 낱말을 넣고, 일·월·년으로 기간을 바꾼 뒤 ‹ › 로 넘겨요. 테마 칩으로 한 가지 테마만 볼 수 있어요.</p>
+   <p><b>기록 보기</b> · 촬영 화면 왼쪽 아래 [기록 보기]를 눌러요. 처음엔 이번 달(기록이 없으면 가장 최근 달)이 나와요. 일·월·년을 고르고 ‹ › 로 앞뒤 기간을 넘겨요. 검색 칸에 낱말을 넣으면 기간과 상관없이 모든 기록에서 찾아요. 테마 칩으로 한 가지 테마만 볼 수 있어요.</p>
    <p><b>상세</b> · 위에 폴라로이드(사진과 적은 글), 아래에 찾은 정보와 링크가 나와요. 사진을 누르면 크게 보여요. 다시 찾기는 AI 검색을 한 번 더 해요.</p>
    <p><b>저장 위치</b> · 기록은 내 구글 드라이브 goodday/goodday_기록.json, 사진은 goodday/사진 폴더에 저장돼요. 이 앱은 자기가 만든 파일만 볼 수 있어요.</p>
    <p><b>설정</b> · 촬영·보기 화면 오른쪽 위 작은 톱니바퀴. 다크 모드(기본 켬), 제미나이 상태, 캘린더 연결, 영화 포스터 키, 휴지통, 백업이 있어요.</p>
@@ -1561,7 +1576,7 @@ document.addEventListener("click",e=>{
   if(t.matches(".dpola img")){if(!t.src)return;const el=document.createElement("div");el.className="full";el.innerHTML=`<img alt="" src="${esc(t.src)}">`;el.onclick=()=>el.remove();document.body.appendChild(el);return}
   if(t.dataset.open){openDetail(t.dataset.open);return}
   if(t.dataset.th!==undefined){F.th=t.dataset.th;render();return}
-  if(t.dataset.mode){const m=t.dataset.mode;if(m!==F.mode){F.mode=m;if(m!=="all"&&!live().some(inPeriod))F.at=new Date()}render();return}
+  if(t.dataset.mode){F.mode=t.dataset.mode;F.q="";if(!live().some(inPeriod))jumpLatest();CF.pos=0;render();return}
   if(t.dataset.eth!==undefined){if(E){E.note=$("#enote").value;E.theme=E.theme===t.dataset.eth?"":t.dataset.eth;drawEntry()}return}
   if(t.dataset.pick!==undefined){const top=LAYERS[LAYERS.length-1],r=db.records.find(x=>x.id===top.id),i=+t.dataset.pick,c=r&&r.cands[i];
     if(c){const was=r.pick;r.pick=i;r.title=c.name;if(was!==i){r.info=[c.name,r.loc&&r.loc.addr?shortAddr(r.loc.addr):"",c.what].filter(Boolean).join(" · ")}r.map=mapOf(r);r.link=linkOf(r);r.upd=Date.now();save();drawDetail();renderList()}return}
@@ -1613,7 +1628,7 @@ let qT=null;
 document.addEventListener("input",e=>{
   if(e.target.id==="enote"){const p=$("#epen");if(p)p.textContent=capOf({note:e.target.value}).slice(0,48);return}
   if(e.target.id==="cfs"){cancelAnimationFrame(CF.raf);CF.pos=+e.target.value;cfSync();return}
-  if(e.target.id==="q"){F.q=e.target.value;clearTimeout(qT);qT=setTimeout(()=>{renderList();reportWhere()},120)}});
+  if(e.target.id==="q"){F.q=e.target.value;clearTimeout(qT);qT=setTimeout(()=>{CF.pos=0;render()},150)}});
 document.addEventListener("keydown",e=>{
   const top=LAYERS[LAYERS.length-1];
   if(top&&top.kind==="view"&&(e.key==="ArrowLeft"||e.key==="ArrowRight")&&e.target.tagName!=="INPUT"){e.preventDefault();cfGo(Math.round(CF.pos)+(e.key==="ArrowRight"?1:-1));return}
