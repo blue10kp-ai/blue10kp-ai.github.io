@@ -3,9 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#171B22" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#171B22">
 <meta name="color-scheme" content="light dark">
+<script>/* 기본은 다크. 저장한 값(기기 캐시)이 '끔'일 때만 라이트 — 화면이 깜빡이지 않게 맨 먼저 적용 */
+(function(){var d=1;try{var v=localStorage.getItem("goodday.dark");if(v===null)v=localStorage.getItem("goodday.theme")==="light"?"0":null;d=v==="0"?0:1}catch(e){}
+var q=/[?&]embed=1(&|$)/.test(location.search)&&/[?&]theme=(dark|light)(&|$)/.exec(location.search);if(q)d=q[2]==="light"?0:1; /* 말만해요 안에서는 말만해요가 보낸 값이 우선 */
+document.documentElement.setAttribute("data-theme",d?"dark":"light");
+var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",d?"#171B22":"#ffffff")})();</script>
 <meta name="robots" content="noindex,nofollow">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="favicon.png">
@@ -251,6 +255,7 @@ function norm(d){
   const s=d.settings=d.settings&&typeof d.settings==="object"?d.settings:{};
   s.stars=s.stars==="num"?"num":"star";
   s.theme=["auto","light","dark"].includes(s.theme)?s.theme:"auto";
+  s.dark=typeof s.dark==="boolean"?s.dark:s.theme!=="light"; // 기본 다크 켬 (예전에 라이트를 골랐던 사람만 꺼짐)
   s.hidden=Array.isArray(s.hidden)?s.hidden:[];
   s.custom=Array.isArray(s.custom)?s.custom:[];
   s.lastKind??="";
@@ -347,6 +352,7 @@ window.addEventListener("message",e=>{ // 말만해요가 보낸 요청만 받�
   if(e.origin!==location.origin||e.source!==window.parent)return;
   const d=e.data;if(!d)return;
   if(d.type==="blue10kp-back"){goBack();return}
+  if(d.type==="blue10kp-theme"){if(d.theme==="dark"||d.theme==="light"){embTheme=d.theme;applyTheme()}return}
   if(d.type!=="blue10kp-go")return;
   window.blue10kpGo({go:String(d.go||""),q:String(d.q||""),kind:String(d.kind||""),id:String(d.id||"")});
   if(!db)boot(); // 로그인이 아직이면 다시 확인
@@ -706,15 +712,14 @@ async function logout(){
 }
 
 /* ---------- 화면 모드 ---------- */
+let embTheme="";
 function applyTheme(){
-  const m=db?db.settings.theme:(lsGet("goodday.theme")||"auto");
-  if(db)lsSet("goodday.theme",m);
-  if(m==="auto")document.documentElement.removeAttribute("data-theme");else document.documentElement.setAttribute("data-theme",m);
-  try{ // 상태 표시줄·주소창 색: 앱에서 라이트/다크를 고정했으면 그 색으로(기기 설정과 달라도 띠가 안 생기게)
-    document.querySelectorAll('meta[name="theme-color"]').forEach(el=>{
-      const mm=el.getAttribute("media")||"",isDark=/dark/.test(mm);
-      el.setAttribute("content",m==="auto"?(isDark?"#171B22":"#ffffff"):(m==="dark"?"#171B22":"#ffffff"));
-    });
+  if(!embTheme&&EMBED){const m=/[?&]theme=(dark|light)(&|$)/.exec(location.search);if(m)embTheme=m[1]} // 말만해요 안: 말만해요 값 우선(저장은 안 함)
+  const dark=embTheme?embTheme==="dark":db?db.settings.dark!==false:lsGet("goodday.dark")!=="0"; // 기본 다크
+  if(db&&!embTheme)lsSet("goodday.dark",dark?"1":"0");
+  document.documentElement.setAttribute("data-theme",dark?"dark":"light");
+  try{ // 상태 표시줄·주소창 색도 같은 값으로(띠가 안 생기게)
+    document.querySelectorAll('meta[name="theme-color"]').forEach(el=>el.setAttribute("content",dark?"#171B22":"#ffffff"));
   }catch(e){}
 }
 
@@ -849,7 +854,7 @@ function viewSet(){
   <div class="card"><h3>기록 설정</h3>
    <button class="rowbtn" data-act="kinds"><span>종류 관리</span><span class="r">${visKinds().length}개 사용 중 ›</span></button>
    <label style="margin-top:8px">별점 방식</label>${seg("stars",s.stars,[["star","별 5개"],["num","10점"]])}
-   <label>화면 모드</label>${seg("theme",s.theme,[["auto","자동"],["light","라이트"],["dark","다크"]])}</div>
+   ${EMBED?"":`<button class="rowbtn" data-act="dark" role="switch" aria-checked="${s.dark}"><span>다크 모드</span><span class="r">${s.dark?"☑ 켜짐":"☐ 꺼짐"}</span></button>`}</div>
   <div class="card"><h3>내 기록</h3>
    <button class="rowbtn" data-act="exp" data-f="json"><span>내보내기 (JSON)</span><span class="r">백업용 ›</span></button>
    <button class="rowbtn" data-act="exp" data-f="csv"><span>내보내기 (엑셀용 표)</span><span class="r">엑셀에서 열기 ›</span></button>
@@ -973,6 +978,7 @@ function openHelp(){
    <b>내 기록은 어디에?</b><br>내 Google Drive의 goodday 폴더에 저장되며, 다른 사람은 볼 수 없어요. 이 앱은 앱이 만든 파일만 열 수 있는 권한만 씁니다.<br><br>
    <b>말만해요에서 바로 찾기</b><br>말만해요에서 "맛집 검색해줘"처럼 말하면 말만해요 화면 안에 항상일상의 찾기 결과가 끼워져 나와요. 말만해요 안에서는 그 화면만 보이고, 뒤로가기는 왼쪽 위 버튼으로 해요. 말만해요의 [앱으로 열기]를 누르면 보던 화면 그대로 항상일상이 열립니다.<br><br>
    <b>한 줄로 적으면 알아서 분류</b><br>홈의 한 줄 칸에 "어제 오펜하이머 봤는데 좋았다", "성수 칼국수 또 가고 싶다"처럼 적으면 영화·맛집·여행·일상 중 알맞은 종류로 제목·날짜·느낌을 채워 저장해요. 말만해요 설정에 Gemini 키를 넣어 두었다면 Gemini가 해석하고(적은 한 줄과 종류 이름만 보내요. 이메일·긴 숫자는 가려요), 키가 없거나 안 될 때는 낱말로 짐작해요. 영화·드라마는 이름으로 검색해서 연도·감독·출연·줄거리를 '작품 정보'에 함께 넣어요(예: "트라이앵글 티빙에서 봤어"). 설정 › 영화 포스터에 TMDB 무료 키를 넣어 두면 포스터도 찾아서 목록과 기록 화면에 보여 줘요(그림은 TMDB에서 바로 불러 보이고 내 드라이브에는 복사하지 않아요). 음악은 곡명·아티스트·발매연도를 찾아 넣고 앨범 그림도 키 없이 가져와요(애플 음악 검색 사용, 적은 곡 이름만 보내요). 영상·음악 기록은 목록에서 타일로 보여요: 포스터나 앨범 그림 아래에 제목, 연도(음악은 아티스트도), 입력한 날짜가 나와요. ＋ 기록으로 직접 저장해도 자동으로 채워 줘요. 기록을 누르면 그 내용이 나오고, 예전 기록은 열어서 [정보 검색]을 누르면 찾아 넣어요. 한 줄 칸 아래 [영화·음악·책·맛집·멋곳] 중 하나를 고르고 이름만 적어 [검색·저장]을 누르면, 그 종류로 찾아서 연도·소개·사진(표지)·관련 링크를 채워 저장해요(책은 구글 도서, 멋곳 사진은 위키백과를 써요. 맛집은 사진이 없어요). 목록의 사진을 누르면 사진·메모·정보와 관련 링크가 열려요. 고른 종류를 다시 누르면 자동 분류로 돌아가요. 잘못 나뉘었으면 바로 아래 [고치기]나 [되돌리기]를 누르세요. 아래에는 지금까지 적은 기록이 최근순으로 이어져요.<br><br>
+   <b>다크 모드</b><br>처음부터 어두운 화면(다크 모드)으로 열려요. 설정 › 기록 설정 › 다크 모드를 눌러 켜고 끌 수 있고, 로그인 화면에도 같이 적용돼요.<br><br>
    <b>말만해요가 알아듣게 돕는 목록</b><br>기록을 저장할 때 내 드라이브 goodday/설정 폴더에 기록 제목·종류·날짜·장소 이름·태그만 적은 목록(말만해요_색인.json)을 함께 만들어요. 말만해요가 말을 알아듣는 데만 쓰고, 한 줄 메모·사진·주소·가격은 들어가지 않아요.<br><br>
    <b>한 번 로그인하면 다른 앱도 함께</b><br>같은 브라우저에서 내 다른 앱(신한FC, 차차차 등)에 로그인했다면 항상일상도 로그인 화면 없이 바로 열려요. 로그아웃하면 모든 앱에서 함께 로그아웃됩니다. 로그인은 한 시간마다 다시 필요할 수 있어요. 아이폰 홈 화면 앱은 앱마다 따로라 서로 나눠 쓰지 못해요.<br><br>
    <b>함께 쓰려면</b><br>허용된 계정만 로그인할 수 있어요. 쓸 사람을 추가하려면 앱을 관리하는 사람에게 구글 계정(이메일)을 알려 주세요.<br><br>
@@ -1022,7 +1028,7 @@ document.addEventListener("click",e=>{
   else if(a==="trip"){tripOpen=id;render();scrollTo(0,0)}
   else if(a==="tripBack"){tripOpen=null;render()}
   else if(a==="stars"){db.settings.stars=el.dataset.v;save();render()}
-  else if(a==="theme"){db.settings.theme=el.dataset.v;applyTheme();save();render()}
+  else if(a==="dark"){db.settings.dark=!db.settings.dark;applyTheme();save();render()}
   else if(a==="kinds")openKinds();
   else if(a==="khide"){
     const h=db.settings.hidden,i=h.indexOf(id);
