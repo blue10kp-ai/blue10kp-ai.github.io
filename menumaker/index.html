@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>메뉴메이커</title>
 <meta name="robots" content="noindex,nofollow">
-<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#19191b" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" id="tcMeta" content="#19191b">
+<script>(function(){var t="dark";try{if(localStorage.getItem("mm.dark")==="0")t="light"}catch(e){}document.documentElement.setAttribute("data-theme",t)})()</script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="favicon.png">
@@ -17,9 +17,10 @@
 <style>:root{--bg:#fafafa;--card:#fff;--raised:#f4f4f5;--ln:rgba(23,23,23,.08);--tx:#171717;--tx2:#525252;--tx3:#737373;
 --ac:#1F4E8C;--acw:rgba(31,78,140,.08);--acink:#fff;--dg:#dc2626;--font:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;
 --mono:ui-monospace,"SF Mono","Cascadia Mono",Consolas,monospace;--ease:cubic-bezier(.22,1,.36,1)}
-@media (prefers-color-scheme:dark){:root{--bg:#141415;--card:#19191b;--raised:#232325;--ln:rgba(237,237,237,.08);--tx:#ededed;--tx2:#a1a1a6;--tx3:#85858b;--ac:#7FAEF0;--acw:rgba(127,174,240,.12);--acink:#0f1217;--dg:#ef7a6c}}
+html[data-theme=light]{color-scheme:light}html[data-theme=dark]{color-scheme:dark}
+html[data-theme=dark]{--bg:#141415;--card:#19191b;--raised:#232325;--ln:rgba(237,237,237,.08);--tx:#ededed;--tx2:#a1a1a6;--tx3:#85858b;--ac:#7FAEF0;--acw:rgba(127,174,240,.12);--acink:#0f1217;--dg:#ef7a6c}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html{color-scheme:light dark}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--tx);font:15px/20px var(--font)}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--tx);font:15px/20px var(--font)}
 svg.i{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--ln);padding:calc(8px + env(safe-area-inset-top)) 12px 8px}
 .top{display:flex;gap:8px;align-items:center}
@@ -85,12 +86,13 @@ body.edit .dock{display:grid}body.home .dock{display:none}
 .pcard .go{width:100%;margin-bottom:8px;min-height:44px;font-size:15px}
 .foot{margin-top:24px;padding-bottom:32px;text-align:center}
 .foot .row2{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.foot .dk{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 4px;color:var(--tx2);font-size:14px}.foot .dk input{width:16px;height:16px;accent-color:var(--ac)}
 .foot .ht{margin-top:16px;font-size:12px;line-height:16px;color:var(--tx3)}
 html:has(body.login),body.login{background:#F4F5F7}
-@media (prefers-color-scheme:dark){html:has(body.login),body.login{background:#0F1217}}
+html[data-theme=dark]:has(body.login),html[data-theme=dark] body.login{background:#0F1217}
 .lgn{--surface:#FFFFFF;--raised:#F0F2F5;--line:rgba(20,30,50,.10);--t1:#151A22;--t2:#4B5361;--t3:#6B7382;--accent:#1F4E8C;--bad:#C0392B;--font:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;
   max-width:360px;margin:16vh auto 0;padding:0 24px;text-align:center;font-family:var(--font);font-size:15px;line-height:1.5;color:var(--t1)}
-@media (prefers-color-scheme:dark){.lgn{--surface:#171B22;--raised:#1E232B;--line:rgba(255,255,255,.09);--t1:#E8EBF0;--t2:#A5ADBA;--t3:#747C8A;--accent:#7FAEF0;--bad:#EF7A6C}}
+html[data-theme=dark] .lgn{--surface:#171B22;--raised:#1E232B;--line:rgba(255,255,255,.09);--t1:#E8EBF0;--t2:#A5ADBA;--t3:#747C8A;--accent:#7FAEF0;--bad:#EF7A6C}
 .lgn h1{font-size:28px;font-weight:700;margin:0 0 4px;letter-spacing:-.5px;line-height:1.5}
 .lgn p{margin:0 0 24px;color:var(--t2);font-size:14px}
 .lgn .btn{display:inline-flex;align-items:center;justify-content:center;width:100%;height:44px;padding:0 14px;margin-top:8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--t2);font-family:var(--font);font-size:15px;font-weight:600;line-height:1;white-space:nowrap;min-height:0}
@@ -115,8 +117,8 @@ html:has(body.login),body.login{background:#F4F5F7}
   <div class="tools"><button id="pLoad">파일 열기</button></div>
 </header>
 <main class="view-home"><div class="hint">앱마다 프로젝트를 따로 두고 메뉴를 설계합니다</div><div id="plist"></div>
-<div class="foot"><div class="row2"><button id="installBtn" hidden>앱 설치</button><button id="logoutBtn">로그아웃</button><button id="clearLegacy" hidden>이 기기의 옛 기록 지우기</button></div>
-<div class="ht">홈 화면에 추가: 안드로이드 크롬은 메뉴의 '앱 설치', 아이폰 사파리는 공유 → '홈 화면에 추가'<br>한 번 로그인하면 같은 브라우저의 다른 앱도 함께 열립니다. 로그아웃은 모든 앱에서 됩니다.<br>계정 확인은 화면 보호일 뿐이며, 실제 자료는 Google Drive의 접근 권한이 지킵니다.<br>저장 위치: 내 드라이브 Claude/app/메뉴메이커/설정/메뉴메이커_기록.json</div></div></main>
+<div class="foot"><div class="row2"><button id="installBtn" hidden>앱 설치</button><label class="dk"><input type="checkbox" id="darkChk"> 다크 모드</label><button id="logoutBtn">로그아웃</button><button id="clearLegacy" hidden>이 기기의 옛 기록 지우기</button></div>
+<div class="ht">홈 화면에 추가: 안드로이드 크롬은 메뉴의 '앱 설치', 아이폰 사파리는 공유 → '홈 화면에 추가'<br>한 번 로그인하면 같은 브라우저의 다른 앱도 함께 열립니다. 로그아웃은 모든 앱에서 됩니다.<br>계정 확인은 화면 보호일 뿐이며, 실제 자료는 Google Drive의 접근 권한이 지킵니다.<br>다크 모드는 기본 켬이고 아래 '다크 모드' 체크로 끄고 켭니다(이 계정의 설정 파일에 저장).<br>저장 위치: 내 드라이브 Claude/app/메뉴메이커/설정/메뉴메이커_기록.json</div></div></main>
 <header class="view-edit">
   <div class="top"><button id="back" class="back"><i data-i="folder"></i>관리</button><input id="title" value="" aria-label="프로젝트 이름"><small class="sy"></small><button id="undo" disabled><i data-i="undo"></i>취소</button></div>
   <div class="tabs" id="ptabs"></div>
@@ -494,7 +496,7 @@ async function startApp(pre){
     if(r.e)throw r.e;
     if(r.d)DB=normDB(r.d);
     else{DB=legacyDB()||{projects:seeds(),cur:null};dirty=true;await driveSave(true)}}
-  P=null;var cp=DB.projects.filter(function(p){return p.id===DB.cur})[0]||DB.projects[0];if(cp)openP(cp.id);else home();setSync("ok");
+  loadPrefs();P=null;var cp=DB.projects.filter(function(p){return p.id===DB.cur})[0]||DB.projects[0];if(cp)openP(cp.id);else home();setSync("ok");
   $("clearLegacy").hidden=!(legacyRaw(KEY)||legacyRaw(OLD))}
 async function doLogin(other){$("lmsg").className="lm";$("lmsg").textContent="로그인 중…";
   try{if(other){try{localStorage.removeItem(GAUTH)}catch(e){}gTok=null}
@@ -507,6 +509,7 @@ async function logout(){await driveSave();
   if(!confirm("모든 앱에서 로그아웃됩니다. 로그아웃할까요?"))return;
   try{localStorage.removeItem(GAUTH)}catch(e){}gTok=null;DB=null;dirty=false;fileId=null;folderId=null;lastMod=null;showLogin("로그아웃했습니다.",false)}
 $("logoutBtn").onclick=logout;
+$("darkChk").onchange=function(){darkOn=this.checked;cacheDark();applyTheme();savePrefs()};
 $("clearLegacy").onclick=function(){if(confirm("이 기기(브라우저)에 남아 있는 옛 기록을 지울까요? 드라이브에 저장된 기록은 그대로 남아요.")){try{localStorage.removeItem(KEY);localStorage.removeItem(OLD)}catch(e){}$("clearLegacy").hidden=true;toast("지웠습니다")}};
 function loginHint(){var st=gauthState();
   $("loginBtn").textContent=st.st==="scope"?"구글 연결 (권한 추가)":"Google 계정으로 로그인"}
@@ -535,6 +538,24 @@ $("installBtn").onclick=function(){if(!instEv)return;instEv.prompt();instEv.user
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(function(){}); // 홈 화면 앱 설치용(없어도 앱은 동작)
 })();
 
-;(function(){try{var m=document.querySelector('meta[name=theme-color][media*=dark]');if(!m)return;function f(){m.setAttribute("content",document.body.classList.contains("login")?"#0F1217":"#19191b")}f();new MutationObserver(f).observe(document.body,{attributes:true,attributeFilter:["class"]})}catch(e){}})()</script>
+
+// 다크 모드: 기본 켬, 저장값이 없으면 시스템 설정과 상관없이 다크. Drive 설정 파일 + localStorage 캐시
+var PREF_FILE="메뉴메이커_설정.json",prefId=null,darkOn=document.documentElement.getAttribute("data-theme")!=="light";
+function applyTheme(){var h=document.documentElement;h.setAttribute("data-theme",darkOn?"dark":"light");
+  var m=document.getElementById("tcMeta");if(m)m.setAttribute("content",!darkOn?"#ffffff":document.body.classList.contains("login")?"#0F1217":"#19191b");
+  var c=document.getElementById("darkChk");if(c)c.checked=darkOn}
+try{new MutationObserver(applyTheme).observe(document.body,{attributes:true,attributeFilter:["class"]})}catch(e){}
+function cacheDark(){try{localStorage.setItem("mm.dark",darkOn?"1":"0")}catch(e){}}
+async function savePrefs(){try{var body=JSON.stringify({dark:darkOn});
+  if(!prefId){var fo=await dFolder(true),f=await dFind(fo,PREF_FILE,false);if(f)prefId=f.id}
+  if(prefId){await gfetch(DUP+"/files/"+prefId+"?uploadType=media&fields=id",{method:"PATCH",headers:{"Content-Type":"application/json"},body:body})}
+  else{var fo2=await dFolder(true),bd="mp"+uid();
+    var mp="--"+bd+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+JSON.stringify({name:PREF_FILE,parents:[fo2],mimeType:"application/json"})+"\r\n--"+bd+"\r\nContent-Type: application/json\r\n\r\n"+body+"\r\n--"+bd+"--";
+    var r=await gfetch(DUP+"/files?uploadType=multipart&fields=id",{method:"POST",headers:{"Content-Type":"multipart/related; boundary="+bd},body:mp});prefId=r.id}}catch(e){}}
+async function loadPrefs(){try{var fo=await dFolder(false);if(!fo)return;var f=await dFind(fo,PREF_FILE,false);if(!f)return;prefId=f.id;
+  var d=JSON.parse((await gfetch(DAPI+"/files/"+f.id+"?alt=media",null,true)).replace(/^﻿/,""));
+  if(typeof d.dark==="boolean"&&d.dark!==darkOn){darkOn=d.dark;cacheDark();applyTheme()}}catch(e){}}
+applyTheme();
+</script>
 </body>
 </html>
