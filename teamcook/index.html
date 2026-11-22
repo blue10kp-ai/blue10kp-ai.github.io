@@ -240,7 +240,7 @@ main{max-width:560px;margin:0 auto;padding:12px 16px 96px}
 <script>
 "use strict";
 /* ===== 설정 (여기만 고치면 됩니다) ===== */
-const VER="1.1.0";
+const VER="1.1.1";
 const ALLOWED=["blue10kp@gmail.com"]; // 로그인을 허용할 구글 계정 (소문자로, 여러 개면 쉼표로 추가)
 const GCLIENT="482206908404-5sdbvetcrc8j7ctrhe6aa23ccmd3d05d.apps.googleusercontent.com"; // 구글 로그인 클라이언트 ID (공개되어도 되는 값)
 const GSCOPE="openid email https://www.googleapis.com/auth/drive"; // PC 세션들이 쓴 파일을 읽어야 해서 drive (차차차·신한FC와 같은 권한)
@@ -546,16 +546,15 @@ async function readTeam(){
 function teamRows(){
   const order=people();
   const list=order.map(p=>{const m=(team||[]).find(x=>x.name===p.name)||{};return{name:p.name,role:p.role||"FC",no:m.no||"",pw:m.pw||""}});
-  return list.map((x,i)=>{const sh=!!pwShow[i];return`<div class="mr"><span>${esc(x.name)}<span class="r">${esc(x.role)}</span></span><span>${esc(x.no)||`<span class="muted small">없음</span>`}</span>${x.pw?`<span class="pw${sh?" show":""}">${sh?esc(x.pw):"••••••••"}</span><button class="btn sec sm" data-act="pw" data-i="${i}">${sh?"숨기기":"보기"}</button>`:`<span class="muted small">없음</span><span></span>`}</div>`}).join("");
+  // 비번은 기본으로 보임 (2026-11-22 사용자 지시: "나만 사용할거니깐 비번 기본으로 보이게")
+  return list.map(x=>`<div class="mr"><span>${esc(x.name)}<span class="r">${esc(x.role)}</span></span><span>${esc(x.no)||`<span class="muted small">없음</span>`}</span>${x.pw?`<span class="pw show">${esc(x.pw)}</span>`:`<span class="muted small">없음</span>`}<span></span></div>`).join("");
 }
 function drawTeam(){const b=$("#teamBody");if(b)b.innerHTML=team===null?`<div class="empty">불러오는 중…</div>`:team===false?`<div class="empty">팀원 파일을 읽지 못했어요</div>`:teamRows()}
 async function teamSheet(){
   team=null;for(const k in pwShow){clearTimeout(pwShow[k]);delete pwShow[k]}
   sheet(`<div class="row"><h3 style="flex:1;margin:0">팀원정보</h3><span class="muted small">${people().length}명 · SOL FC</span></div>
    <div class="mhd"><span>이름</span><span>사번</span><span>SOL 비번</span><span></span></div>
-   <div id="teamBody"></div>
-   <div class="note muted small" style="margin-top:8px">비번은 [보기]를 누른 줄만 30초 동안 보여요</div>
-   <div class="acts"><button class="btn sec" data-act="close">닫기</button></div>`);
+   <div id="teamBody"></div>   <div class="acts"><button class="btn sec" data-act="close">닫기</button></div>`);
   drawTeam();
   try{const t=await readTeam();if(!$("#teamBody"))return;team=t||false}
   catch(e){if(e.message==="GOOGLE_AUTH"){showLogin("로그인이 만료되었습니다. 다시 로그인해 주세요.");return}team=false}
@@ -581,7 +580,7 @@ function settingsSheet(){
     <h4>무엇을 보나요</h4><p>Claude 세션들이 하는 팀 운영 일과(ESL·FC별 할 일)와 진행 상태를 일·주·월로 봐요. 결과는 "총 2명"처럼 한 줄 요약만 보여요.</p>
     <h4>업무 시작</h4><p>오늘 화면의 [업무 시작]을 누르면 PC에 시작 요청이 가요. PC는 평일 아침(8~11시) 10분마다 요청을 확인해서, 누른 뒤 시작까지 최대 10분쯤 걸려요. 시작되면 진행 상황이 보여요. SOL 로그인은 PC에서 직접 하셔야 해서, 차례가 오면 "로그인 기다리는 중"이 떠요.</p>
     <h4>상태 표시</h4><p>빈 칸 대기 · 반 칸 진행 중 · 체크 완료 · 빨간 줄 못 함. 주황 점은 연체 확인일, 회색 점은 월초 실효·수수료 같은 정해진 일이에요.</p>
-    <h4>팀원정보</h4><p>위 바의 사람 아이콘을 누르면 팀원 이름·사번·SOL 비번이 보여요. 비번은 [보기]를 누른 줄만 30초 동안 보이고, 팀 폴더의 팀원 파일에서 읽기만 해요.</p>
+    <h4>팀원정보</h4><p>위 바의 사람 아이콘을 누르면 팀원 이름·사번·SOL 비번이 보여요. 팀 폴더의 팀원 파일에서 읽기만 해요.</p>
     <h4>앞뒤 이동</h4><p>날짜 옆 ‹ › 를 누르거나 화면을 옆으로 밀면 일 보기는 하루, 주 보기는 1주, 월 보기는 1개월씩 움직여요. 한 주는 일요일부터예요.</p>
     <h4>새로 읽기</h4><p>화면이 열려 있으면 1분마다 새로 읽어요. 앱으로 돌아올 때도 다시 읽어요.</p>
     <h4>로그인</h4><p>한 번 로그인하면 다른 앱(신한FC·차차차 등)도 함께 열려요. 로그아웃하면 모든 앱에서 로그아웃돼요.</p>
