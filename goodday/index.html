@@ -513,7 +513,7 @@ let gTok=null,pend=null,gaSeen=false;
 const allowedEm=e=>ALLOWED.map(x=>x.toLowerCase()).includes(String(e||"").toLowerCase());
 const hasScope=(sc,need)=>sc.includes(need)||(SUPER[need]||[]).some(x=>sc.includes(x));
 function readGa(){try{const g=JSON.parse(lsGet(GA)||"null");return g&&g.v===1&&typeof g.token==="string"&&+g.exp&&Array.isArray(g.scopes)?g:null}catch(e){return null}}
-function writeGa(token,exp,scopes,email){lsSet(GA,JSON.stringify({v:1,token,exp,scopes,email:email||""}));gaSeen=!!readGa()}
+function writeGa(token,exp,scopes,email){const o=readGa(),keep=o&&o.token===token?o:{};lsSet(GA,JSON.stringify({...keep,v:1,token,exp,scopes,email:email||""}));gaSeen=!!readGa()} // 같은 출입증을 다시 쓸 때는 모르는 칸(login 등)을 지우지 않음
 const gaFresh=g=>!!g&&g.exp>Date.now()+120000;
 const gaScopeOk=g=>!!g&&hasScope(g.scopes,DRIVEFILE);
 function storedTok(){const g=readGa();return gaFresh(g)&&gaScopeOk(g)?g.token:null}
