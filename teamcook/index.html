@@ -250,7 +250,7 @@ main{max-width:560px;margin:0 auto;padding:12px 16px 96px}
 <script>
 "use strict";
 /* ===== 설정 (여기만 고치면 됩니다) ===== */
-const VER="1.2.6";
+const VER="1.2.7";
 const ALLOWED=["blue10kp@gmail.com"]; // 로그인을 허용할 구글 계정 (소문자로, 여러 개면 쉼표로 추가)
 const GCLIENT="482206908404-5sdbvetcrc8j7ctrhe6aa23ccmd3d05d.apps.googleusercontent.com"; // 구글 로그인 클라이언트 ID (공개되어도 되는 값)
 const GSCOPE="openid email https://www.googleapis.com/auth/drive"; // PC 세션들이 쓴 파일을 읽어야 해서 drive (차차차·신한FC와 같은 권한)
@@ -397,6 +397,10 @@ function isBiz(ds){const w=pd(ds).getDay();return w>0&&w<6&&!hol().has(ds)}
 function nextBiz(ds){while(!isBiz(ds))ds=addD(ds,1);return ds}
 function addBiz(ds,n){while(n>0){ds=addD(ds,1);if(isBiz(ds))n--}return ds}
 function nthBiz(ds){if(!isBiz(ds))return 0;let n=0,d=ds.slice(0,8)+"01";while(d<=ds){if(isBiz(d))n++;d=addD(d,1)}return n}
+function monthDayOf(ds,day){ // 그 달 day일, 주말·휴일이면 그 앞 영업일 (2026-11-25 수수료명세서)
+  const y=+ds.slice(0,4),m=+ds.slice(5,7),last=new Date(y,m,0).getDate();
+  let d=ds.slice(0,8)+String(Math.min(+day||25,last)).padStart(2,"0");let k=0;while(!isBiz(d)&&k++<10)d=addD(d,-1);return d;
+}
 function overdueOf(ds){ // 이 날이 연체 확인일이면 {m,d}(이체 월·일)
   const t=pd(ds);
   for(const back of[0,1]){const y=t.getFullYear(),m=t.getMonth()-back;
@@ -412,6 +416,7 @@ function plan(ds){ // 작업목록으로 계산한 그날 할 일 (special: 정�
     if(w.type==="daily");
     else if(w.type==="weekly"){if(pd(ds).getDay()!==+w.dow)continue;tag="주간"}
     else if(w.type==="bizday"){if(nthBiz(ds)!==+w.n)continue;special=true;if(w.prevMonth)name+=" · "+prevMonthName(ds)}
+    else if(w.type==="monthday"){if(monthDayOf(ds,w.day)!==ds)continue;special=true;name+=" · "+(+ds.slice(5,7))+"월분"}
     else if(w.type==="overdue"){const o=overdueOf(ds);if(!o)continue;special="overdue";tag="확인일";name+=" · "+o.m+"월 "+o.d+"일분"}
     else continue;
     out.push({id:t.id,who:t.who,name,tag,special,note:t.note||""});
