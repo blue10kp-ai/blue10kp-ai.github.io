@@ -42,7 +42,7 @@ html[data-theme="light"]{color-scheme:light}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{scrollbar-gutter:stable;min-height:100%} /* 스크롤바 자리를 늘 비워 둬서, 스크롤바가 생기고 사라져도 고정 버튼이 밀리지 않음 */
 html,body{font-family:var(--font);font-size:15px;line-height:1.5;background:var(--bg);color:var(--t1)}
-body{margin:0;padding-bottom:calc(var(--navh) + 96px + env(safe-area-inset-bottom))} /* 아래 96px: 오른쪽 아래 말만해요 버튼에 취소·저장·보내기 버튼이 가리지 않게 */
+body{margin:0;padding-bottom:calc(96px + env(safe-area-inset-bottom))} /* 아래 96px: 오른쪽 아래 말만해요 버튼에 취소·저장·보내기 버튼이 가리지 않게 */
 button,input,select,textarea{font-family:var(--font)}
 button{color:inherit;cursor:pointer}
 header{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--line);padding:calc(8px + env(safe-area-inset-top)) 16px 8px;min-height:56px;display:flex;align-items:center;font-size:17px;font-weight:600}
@@ -74,6 +74,8 @@ input[type=password],input[type=text],input:not([type]),select{width:100%;height
 .choice{display:flex;flex-direction:column;gap:8px;margin-top:12px}
 .choice .btn{height:auto;min-height:44px;padding:8px 14px;white-space:normal;text-align:left;justify-content:flex-start;font-size:14px;color:var(--t1)}
 .choice .btn b{color:var(--accent);margin-right:6px}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--accent-weak);border-top-color:var(--accent);border-radius:50%;vertical-align:-2px;margin-right:8px;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 .msg{margin:0;padding:10px 12px;border-radius:var(--r-card);background:var(--accent-weak);font-size:13.5px;white-space:pre-line}
 .warn{border:1px solid var(--warn);border-left:3px solid var(--warn);background:var(--surface);border-radius:var(--r-card);padding:8px 10px;font-size:13px;margin:8px 0}
 .row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:12px 0;border-top:1px solid var(--line)}
@@ -112,8 +114,12 @@ html.modopen,html.modopen body{overflow:hidden} /* 모듈이 떠 있을 땐 뒤 
 .mfl svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .mfl.pill{left:auto;right:max(20px,env(safe-area-inset-right));width:auto;height:32px;padding:0 12px;border-radius:16px;font-size:12px;font-weight:600;color:var(--t2)}
 #modbody iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:var(--surface)}
-#fab{position:fixed;right:max(24px,env(safe-area-inset-right));bottom:var(--fabl,calc(var(--fabb,72px) + env(safe-area-inset-bottom)));z-index:42;width:56px;height:56px;border-radius:50%;border:0;padding:0;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.2);transition:transform var(--t-fast) var(--ease),bottom 200ms var(--ease)}
+#fab{position:fixed;right:max(24px,env(safe-area-inset-right));bottom:var(--fabl,calc(var(--fabb,24px) + env(safe-area-inset-bottom)));z-index:42;width:56px;height:56px;border-radius:50%;border:0;padding:0;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.2);transition:transform var(--t-fast) var(--ease),bottom 200ms var(--ease)}
 #fab:active{transform:scale(.96)}
+#gear{position:fixed;top:calc(6px + env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));z-index:43;width:44px;height:44px;border:0;border-radius:50%;background:transparent;color:var(--t2);display:flex;align-items:center;justify-content:center;padding:0}
+#gear:active{background:var(--accent-weak)}
+#gear svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+header{padding-right:60px}
 #fab.rec{background:var(--bad);color:#fff}
 #fab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 #scrim{position:fixed;inset:0;z-index:40;background:rgba(10,14,20,.4);opacity:0;visibility:hidden;transition:opacity 200ms,visibility 0s linear 200ms}
@@ -140,7 +146,8 @@ html.modopen,html.modopen body{overflow:hidden} /* 모듈이 떠 있을 땐 뒤 
   <button class="btn pri" id="loginBtn" hidden>Google 계정으로 로그인</button>
   <button class="btn" id="loginOtherBtn" hidden>다른 계정으로 로그인</button>
 </section>
-<header id="title" hidden><span>말만해요</span><small id="sync"></small></header>
+<header id="title" hidden><span id="ttl">말만해요</span><small id="sync"></small></header>
+<button id="gear" hidden aria-label="설정"></button>
 <div class="wrap" id="main" hidden></div>
 <nav id="nav" hidden></nav>
 <div id="mod" hidden><div id="modbody"></div>
@@ -434,6 +441,7 @@ function updateFab(){
   const m=modApp&&MODS[modApp],r=document.documentElement.style;
   $("#fab").hidden=!(db&&$("#login").hidden)||(!sheetOpen&&!!(m&&m.fabHide));
   $("#fab").classList.toggle("rec",!!listening);
+  {const g=$("#gear");if(g)g.hidden=!(db&&$("#login").hidden)||!!modApp} // 앱 화면을 보는 동안은 톱니를 숨김(앱 화면만 보이게)
   $("#fab").setAttribute("aria-label",sheetOpen?"말로 입력":"말만해요 열기");
   // 앱의 떠 있는 버튼과 겹치면 위로: 바닥에서 max(16, lift+12)px, 화면 위 절반은 넘지 않게. lift 0이면 원래 자리
   if(m&&m.fabLift>0)r.setProperty("--fabl","min(50vh,"+Math.max(16,m.fabLift+12)+"px)");else r.removeProperty("--fabl");
@@ -468,9 +476,11 @@ function openModule(n){
   if(sheetOpen){closeSheet(false,()=>deliverModule(n,dir,req));return true} // 묻는 창이 쌓은 history 칸을 먼저 걷은 뒤에 앱에 전달
   deliverModule(n,dir,req);return true;
 }
+function revealMod(m){if(m&&m.hiding){m.hiding=null;m.frame.style.visibility=""}} // 요청한 화면이 도착(또는 1.5초 지남)하면 앱 화면을 보여 줌
 function deliverModule(n,dir,req){
   let m=MODS[n.app];
   const expKey=whereKey({go:req.go,q:req.q,kind:req.kind,id:req.id,month:req.month,car:req.car});
+  const prevKey=m&&m.where?whereKey(m.where):null; // 앱이 전에 보여 주던 화면
   if(!m){
     const f=document.createElement("iframe");f.title=adapter(n.app).name;f.setAttribute("allow","microphone");
     m=MODS[n.app]={frame:f,ready:false,where:{app:n.app,...req},stack:[],restoring:null};
@@ -485,6 +495,10 @@ function deliverModule(n,dir,req){
   if(m.stack.length){ // 이미 화면 기록이 있으면: 요청한 화면이 도착할 때까지 중간 화면은 건너뜀(1.5초 안전장치)
     m.expect=expKey;
     setTimeout(()=>{if(m.expect===expKey){m.expect=null;if(m.where&&m.where.go)pushWhere(m,m.where)}},1500);
+  }
+  if(prevKey!==expKey){ // 전에 보던 화면(예: 고객 검색)이 잠깐 보였다가 바뀌지 않게: 요청한 화면이 올 때까지 가려 둠
+    m.hiding=req.go;m.frame.style.visibility="hidden";
+    clearTimeout(m.hideT);m.hideT=setTimeout(()=>revealMod(m),1500);
   }
   showMod(n.app);
 }
@@ -512,7 +526,7 @@ function closeMod(skipHist){
   Object.keys(MODS).forEach(k=>{MODS[k].fabHide=false;MODS[k].fabLift=0;MODS[k].stack=[];MODS[k].restoring=null});modApp=null;$("#mod").hidden=true;document.documentElement.classList.remove("modopen");document.documentElement.style.removeProperty("--fabb");updateFab();
   const p=modPushed;modPushed=false;
   if(p&&!skipHist)popLayer();
-  if(db)go(view==="talk"?"log":view);
+  if(db)go(view);
 }
 function resetMods(){ // 로그아웃·계정 거부·로그인 화면: 띄워 둔 앱과 창을 모두 걷음
   Object.keys(MODS).forEach(k=>{try{MODS[k].frame.remove()}catch(e){}delete MODS[k]});
@@ -539,7 +553,9 @@ function openAppAsIs(){ // [앱으로 열기]: 모듈에서 보던 바로 그 �
   if(!modApp)return;const w=MODS[modApp].where||{},h=modHash(w);
   location.href=APPDIR[modApp]+(h?"#"+h:"");
 }
-$("#fab").addEventListener("click",()=>{if(sheetOpen)toggleMic();else openSheet()});
+$("#gear").addEventListener("click",()=>{const t=()=>go(view==="set"?"home":"set");if(sheetOpen)closeSheet(false,t);else t()});
+$("#fab").addEventListener("click",()=>{if(!sheetOpen)openSheet(); // 파란 버튼: 창을 열자마자(같은 누름 안에서) 바로 듣기 시작 → 버튼이 빨갛게 바뀜
+  if(sheetOpen&&$("#txt"))toggleMic()});
 $("#scrim").addEventListener("click",()=>closeSheet());
 $("#sheetclose").addEventListener("click",()=>closeSheet());
 $("#modback").addEventListener("click",modBack);
@@ -567,6 +583,7 @@ window.addEventListener("message",e=>{
   const s=v=>String(v==null?"":v).slice(0,120);
   const nw={app,go:s(d.go),q:s(d.q),kind:s(d.kind),id:s(d.id),month:s(d.month),car:s(d.car),canBack:d.canBack===true},mm=MODS[app],nk=whereKey(nw);
   mm.where=nw;
+  if(mm.hiding&&nw.go===mm.hiding)revealMod(mm);
   if(mm.restoring){if(mm.restoring===nk){mm.restoring=null;if(mm.stack.length)mm.stack[mm.stack.length-1].w=nw}return} // 되돌린 화면이 도착함: 기록에 다시 쌓지 않음
   if(mm.expect){if(mm.expect===nk)mm.expect=null;else return} // 새 요청 처리 중 앱이 거치는 중간 화면은 기록에 쌓지 않음
   pushWhere(mm,nw);
@@ -780,7 +797,7 @@ async function inboxCancel(appId,id){
 }
 
 /* ================= 5. 로그인 화면 · 허용 계정 ================= */
-function setShell(on){["title","main","nav"].forEach(i=>{$("#"+i).hidden=!on});$("#login").hidden=on;if(typeof updateFab==="function")updateFab()}
+function setShell(on){["title","main"].forEach(i=>{$("#"+i).hidden=!on});$("#login").hidden=on;if(typeof updateFab==="function")updateFab()}
 function showLogin(msg,isErr){
   $("#main").innerHTML="";$("#nav").innerHTML="";resetMods();
   setShell(false);
@@ -820,7 +837,7 @@ async function startApp(pre){
   }
   await loadCfg();
   loadIndexes(); // 해석용 색인(있으면) 메모리에만 읽어 둠
-  setShell(true);setSync("ok");go("log");openSheet();scrollTo(0,0);
+  setShell(true);setSync("ok");go("home");openSheet();scrollTo(0,0);
 }
 async function doLogin(other){
   $("#lmsg").className="lm";$("#lmsg").textContent="로그인 중…";
@@ -842,7 +859,7 @@ async function boot(){
   const local=/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)||location.protocol==="file:";
   if(local&&/[?&]demo=1/.test(location.search)){
     DEMO=true;me="demo@test";USERS[me]=(new URLSearchParams(location.search).get("apps")||"goodday,shinhanfc,chachacha").split(",");
-    db=normDb(null);setShell(true);setSync("ok");go("log");openSheet();return;
+    db=normDb(null);setShell(true);setSync("ok");go("home");openSheet();return;
   }
   migrateOld();
   const au=readAuth();
@@ -878,7 +895,7 @@ document.addEventListener("visibilitychange",syncAuth);window.addEventListener("
 // 내게 열린 앱 = 관리자가 열어 준 것(USERS) 중 내가 끄지 않은 것
 const openApps=()=>(USERS[me]||[]).map(adapter).filter(Boolean);
 const activeApps=()=>openApps().filter(a=>!db.off.includes(a.id));
-let view="log",pending=null,recog=null,listening=false;
+let view="home",pending=null,recog=null,listening=false;
 const ICON={
   talk:'<svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
   log:'<svg viewBox="0 0 24 24"><path d="M5 5h14M5 12h14M5 19h9"/></svg>',
@@ -886,11 +903,19 @@ const ICON={
 };
 function go(v){
   if(v==="talk"){openSheet(true);return} // 말하기는 별도 화면이 아니라 떠오르는 묻는 창(진행 중인 카드는 그대로)
-  view=v;
-  $("#nav").hidden=false;
-  $("#nav").innerHTML=[["talk","말하기"],["log","기록"],["set","설정"]].map(([k,t])=>`<button class="${k===v?"on":""}" data-v="${k}">${ICON[k]}<span>${t}</span></button>`).join("");
-  $("#nav").querySelectorAll("button").forEach(b=>b.onclick=()=>b.dataset.v==="talk"?openSheet():go(b.dataset.v));
-  render();
+  view=v==="set"?"set":"home";
+  updateGear();render();
+}
+const GEAR_SVG='<svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>';
+const X_SVG='<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+function updateGear(){ // 오른쪽 위 톱니바퀴: 설정으로 들어가고, 설정에서는 닫기(X)로 바뀜
+  const g=$("#gear");if(!g)return;
+  g.innerHTML=view==="set"?X_SVG:GEAR_SVG;g.setAttribute("aria-label",view==="set"?"설정 닫기":"설정");
+  const t=$("#ttl");if(t)t.textContent=view==="set"?"설정":"말만해요";
+}
+function homeHtml(){
+  return `<div class="card"><h3>말로 하세요</h3><div class="t">오른쪽 아래 파란 버튼을 누르고 말하면 알맞은 앱으로 보내요.</div>
+    <p class="k" style="margin:8px 0 0">예) “김OO 고객 검색” · “내일 3시 김OO 상담 일정 추가” · “하양이 206260” · “오늘 일정”</p></div>`;
 }
 function render(){
   if(!db)return;
@@ -899,8 +924,8 @@ function render(){
   const m=sheetOpen?$("#sheetBody"):$("#main");
   if(sheetOpen)m.classList.toggle("hascard",!!pending);
   if(sheetOpen||view==="talk")m.innerHTML=talkHtml();
-  else if(view==="log")m.innerHTML=logHtml();
-  else m.innerHTML=setHtml();
+  else if(view==="set")m.innerHTML=setHtml();
+  else m.innerHTML=homeHtml();
   bind();updateFab();
 }
 function talkHtml(){
@@ -953,7 +978,7 @@ function pendingHtml(){
       <div class="choice">${p.events.map((e,i)=>`<button class="btn" data-evpick="${i}"><b>${i+1}</b>${esc(e.title)} <span class="k">${esc(fmtEv(e))} · ${esc(e.calName)}</span></button>`).join("")}
       <button class="btn" id="calno">아니요, 그만</button></div></div>`;
   }
-  return `<div class="card"><h3>${p.stage==="done"?"처리했어요":"처리 중"}</h3><div class="msg">${esc(p.note||"")}</div>
+  return `<div class="card"><h3>${p.stage==="done"?"처리했어요":`<span class="spin" role="status" aria-label="처리 중"></span>처리 중`}</h3><div class="msg">${esc(p.note||"")}</div>
     <div class="acts">${p.pickApp&&APPDIR[p.pickApp]?`<button class="btn" id="openapp" data-dir="${esc(APPDIR[p.pickApp])}">앱으로 열기</button>`:""}${p.reauth?`<button class="btn pri" id="reauth">일정 권한 연결(다시 로그인)</button>`:""}${p.canUndo?`<button class="btn dng" id="undo">${p.undoFn?"되돌리기":"취소"}</button>`:""}<button class="btn pri" id="next">다음 말하기</button></div></div>`;
 }
 function logHtml(){
@@ -990,7 +1015,8 @@ function setHtml(){
     <b>주행거리 적기</b>: “하양이 206260”, “하양이 206,260”, “하양이 20만 6260”처럼 차 이름과 숫자만 말하면 차차차 주행거리(km)로 받은편지함에 담아요(날짜는 오늘). 충전비·정비는 “하양이 충전 3만원”처럼 낱말을 같이 말하세요.<br>
     <b>묻는 창과 말만해요 버튼</b>: 앱을 열면 묻는 창이 열린 채로 시작해요. 답 카드도 이 창 안에 나와요. X로 닫으면 뒤의 최근 기록이 보이고, 오른쪽 아래 말만해요 버튼은 어느 화면에서나 떠 있어서 누르면 창이 다시 열려요.<br>
     <b>새로 적는 것은 편지로</b>: “오늘 본 영화 기록해줘”, “충전 40kWh 기록해줘”처럼 다른 앱에 기록을 새로 남기는 말은 그 앱의 받은편지함에 남기고, 카드의 [앱으로 열기]로 그 앱을 열 수 있어요(앱을 열면 반영돼요). 신한FC 상담 메모는 신한FC 고객 화면을 열어 직접 적어요. 읽기인지 쓰기인지 애매하면 어디로 보낼지 물어봐요.<br>
-    <b>AI 해석</b>: 설정에 ‘Claude 중계 서버 주소’를 넣으면 말을 먼저 Claude(Haiku)가 해석해요. 키는 서버에만 있고, 허용된 구글 계정만 쓸 수 있어요. 서버가 안 되면 Gemini 키가 있을 때 그쪽으로, 없으면 규칙으로 해석해요.<br>
+    <b>설정</b>: 오른쪽 위 톱니바퀴를 누르면 들어가고, 같은 자리의 X로 닫아요. 아래 메뉴와 기록 화면은 없어졌어요.<br>
+    <b>AI 해석</b>: 설정에 ‘Claude 중계 서버 주소’를 넣으면 앱이 바로 아는 말(화면 열기·검색·일정 보기 등)은 곧바로 열고, 애매한 말만 Claude(Haiku)가 해석해요. 키는 서버에만 있고, 허용된 구글 계정만 쓸 수 있어요. 서버가 안 되면 Gemini 키가 있을 때 그쪽으로, 없으면 규칙으로 해석해요.<br>
     <b>다크 모드</b>: 기본은 다크예요. 설정의 ‘다크 모드’ 체크를 끄면 밝은 화면으로 바뀌고, 이 설정은 말만해요 안에 열리는 신한FC·차차차·항상일상 화면에도 함께 적용돼요.<br>
     <b>로그인</b>: 한 번 로그인하면 같은 브라우저에서 다른 앱(신한FC·차차차·항상일상 등)도 로그인 없이 열려요. 로그아웃하면 <b>모든 앱에서 로그아웃</b>돼요. 로그인은 1시간 정도 유지되고, 끝나면 아무 앱에서나 다시 연결하면 돼요. (아이폰은 홈 화면에 추가한 앱끼리는 나눠 쓰지 못해요.)</p></details></div>
   <div class="card"><label class="chk" style="margin:0"><input type="checkbox" id="darkchk" ${cfg.dark===false?"":"checked"}>다크 모드 (기본 켬)</label></div>
@@ -1166,16 +1192,18 @@ async function submit(raw){
   const s=Sens.mask(raw);
   const nv=navIntent(s.text);
   const refuse=!!(nv&&nv.refuse);
-  const useAI=aiReady()&&!refuse&&Date.now()>aiOffUntil; // Claude 중계나 Gemini 키가 있으면 AI 먼저(민감 값을 불러 달라는 말은 앱이 먼저 판단해 거절)
+  const useAI=aiReady()&&!refuse&&!nv&&Date.now()>aiOffUntil; // 규칙이 이미 아는 말(화면 열기·검색·일정 보기 등, nv)은 AI를 건너뛰고 바로 실행(빠르게). 규칙이 모르는 말만 Claude·Gemini가 해석(민감 값을 불러 달라는 말은 앱이 먼저 판단해 거절)
   const gen=nv&&nv.app==="shinhanfc"&&nv.go==="customers";
   const rec={id:uid(),at:new Date().toISOString(),text:useAI?"(해석 중)":gen?"고객 검색 (이름은 기록 안 함)":s.text,masked:s.hit,status:"new",target:null,fields:{}};
   db.records.push(rec);save();
   if(refuse){await navFlow(nv,rec);return}
   let g=null;
   if(useAI){
+    pending={rec,stage:"work",note:"말을 해석하는 중…",ai:true};render(); // 움직이는 표시로 "접속 중"임을 보여 줌
     try{g=await geminiFirst(s.text,apps,window.__geminiFetch)}
     catch(e){rec.aiError=String(e&&e.message||e).slice(0,40);if(/429|RESOURCE|quota/i.test(rec.aiError))aiOffUntil=Date.now()+120000} // 한도 초과면 잠시 규칙으로만
     if(!g)rec.text=gen?"고객 검색 (이름은 기록 안 함)":s.text; // 실패·확신 낮음 → 규칙 해석으로 대신
+    if(pending&&pending.ai)pending=null; // 해석 끝: 아래 흐름이 다음 화면을 정함
   }
   if(g&&g.type==="nav"){await navFlow(g.nv,rec);return}
   if(g&&g.type==="find"){
