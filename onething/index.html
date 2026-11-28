@@ -626,7 +626,7 @@ function nameMeet(text){
 /* ================= 4. 저장소 (구글 드라이브 / 시험용 메모리) ================= */
 const DAPI="https://www.googleapis.com/drive/v3",DUP="https://www.googleapis.com/upload/drive/v3";
 /* 공통 로그인: 모든 앱이 localStorage "blue10kp.gauth" {v,token,exp,scopes,email} 를 같이 씀 (app\_공통\공통로그인.md)
-   이 토큰은 구글 API 호출에만 씀. Drive·서버로 보내거나 파일에 저장하지 않음. Gemini 키는 여기 넣지 않음 */
+   이 토큰은 구글 API 호출과, 내가 만든 Claude 중계 서버(허용된 이메일만 통과)에만 보냄. 파일에 저장하지 않음. Gemini 키는 여기 넣지 않음 */
 const GK="blue10kp.gauth",GAC="onething.gaccount",OLDTK="onething.gtoken";
 const GA="https://www.googleapis.com/auth/";
 const SUP={ // 필요한 권한 → 그것을 포함하는 더 넓은 권한
@@ -736,7 +736,9 @@ function applyTheme(t,fromUser){
   try{localStorage.setItem("onething.theme",t)}catch(e){}
   if(fromUser)Object.keys(MODS).forEach(k=>{const m=MODS[k];if(m&&m.ready){try{m.frame.contentWindow.postMessage({type:"blue10kp-theme",theme:t},location.origin)}catch(e){}}});
 }
-let cfg={geminiKey:"",model:GEMINI_MODEL_DEFAULT};
+let cfg={geminiKey:"",model:GEMINI_MODEL_DEFAULT,relayUrl:""};
+const relayOn=()=>/^https:\/\/[\w.-]+/.test(cfg.relayUrl||"")&&!!storedTok(); // Claude 중계 서버 주소가 있고 로그인돼 있으면 중계 먼저
+const aiReady=()=>relayOn()||!!cfg.geminiKey;
 async function loadCfg(){try{const c=await store().read(LOGDIR,CFGFILE);if(c)cfg={...cfg,...c}}catch(e){} applyTheme(cfg.dark===false?"light":"dark")}
 async function saveCfg(){try{await store().write(LOGDIR,CFGFILE,cfg)}catch(e){alert("설정을 저장하지 못했어요. 다시 시도해 주세요.")}}
 let db=null,me="",dirty=false,saving=false,again=false,saveT=null,retryT=null;
@@ -988,13 +990,15 @@ function setHtml(){
     <b>주행거리 적기</b>: “하양이 206260”, “하양이 206,260”, “하양이 20만 6260”처럼 차 이름과 숫자만 말하면 차차차 주행거리(km)로 받은편지함에 담아요(날짜는 오늘). 충전비·정비는 “하양이 충전 3만원”처럼 낱말을 같이 말하세요.<br>
     <b>묻는 창과 말만해요 버튼</b>: 앱을 열면 묻는 창이 열린 채로 시작해요. 답 카드도 이 창 안에 나와요. X로 닫으면 뒤의 최근 기록이 보이고, 오른쪽 아래 말만해요 버튼은 어느 화면에서나 떠 있어서 누르면 창이 다시 열려요.<br>
     <b>새로 적는 것은 편지로</b>: “오늘 본 영화 기록해줘”, “충전 40kWh 기록해줘”처럼 다른 앱에 기록을 새로 남기는 말은 그 앱의 받은편지함에 남기고, 카드의 [앱으로 열기]로 그 앱을 열 수 있어요(앱을 열면 반영돼요). 신한FC 상담 메모는 신한FC 고객 화면을 열어 직접 적어요. 읽기인지 쓰기인지 애매하면 어디로 보낼지 물어봐요.<br>
+    <b>AI 해석</b>: 설정에 ‘Claude 중계 서버 주소’를 넣으면 말을 먼저 Claude(Haiku)가 해석해요. 키는 서버에만 있고, 허용된 구글 계정만 쓸 수 있어요. 서버가 안 되면 Gemini 키가 있을 때 그쪽으로, 없으면 규칙으로 해석해요.<br>
     <b>다크 모드</b>: 기본은 다크예요. 설정의 ‘다크 모드’ 체크를 끄면 밝은 화면으로 바뀌고, 이 설정은 말만해요 안에 열리는 신한FC·차차차·항상일상 화면에도 함께 적용돼요.<br>
     <b>로그인</b>: 한 번 로그인하면 같은 브라우저에서 다른 앱(신한FC·차차차·항상일상 등)도 로그인 없이 열려요. 로그아웃하면 <b>모든 앱에서 로그아웃</b>돼요. 로그인은 1시간 정도 유지되고, 끝나면 아무 앱에서나 다시 연결하면 돼요. (아이폰은 홈 화면에 추가한 앱끼리는 나눠 쓰지 못해요.)</p></details></div>
   <div class="card"><label class="chk" style="margin:0"><input type="checkbox" id="darkchk" ${cfg.dark===false?"":"checked"}>다크 모드 (기본 켬)</label></div>
   ${isStandalone()?"":`<div class="card" id="installcard"><h3>앱 설치</h3><div class="t">홈 화면에 추가해서 앱처럼 쓰세요</div>
     <p class="k" style="margin:6px 0 0">안드로이드 크롬: 브라우저 메뉴 → ‘앱 설치’ 또는 ‘홈 화면에 추가’. 아이폰 사파리: 공유 → ‘홈 화면에 추가’.</p>
     <div class="acts"><button class="btn pri" id="installbtn" ${installEv?"":"hidden"}>앱 설치</button></div></div>`}
-  <div class="card"><h3>AI 해석 (Gemini)</h3><div class="t">${cfg.geminiKey?"Gemini 연결됨 (말을 먼저 Gemini가 해석해요)":"규칙 기반만 사용 중 (키 없음)"}</div>
+  <div class="card"><h3>AI 해석 (Claude · Gemini)</h3><div class="t">${cfg.relayUrl?"Claude 중계 서버 연결됨 (말을 먼저 Claude가 해석해요)":cfg.geminiKey?"Gemini 연결됨 (말을 먼저 Gemini가 해석해요)":"규칙 기반만 사용 중 (키 없음)"}</div>
+    <label for="rurl">Claude 중계 서버 주소 (서버 설정 뒤 한 번 붙여넣기. 키는 서버에만 있어요)</label><input id="rurl" value="${esc(cfg.relayUrl||"")}" placeholder="https://….workers.dev" autocomplete="off">
     <label for="gkey">Gemini API 키 (Google AI Studio에서 직접 발급)</label>
     <input id="gkey" type="password" autocomplete="off" placeholder="${cfg.geminiKey?"저장된 키가 있어요 (바꾸려면 새로 붙여넣기)":"키를 붙여넣기"}">
     <label for="gmodel">모델 이름</label><input id="gmodel" value="${esc(geminiModel(cfg))}">
@@ -1029,7 +1033,7 @@ function bind(){
   document.querySelectorAll("[data-app]").forEach(c=>c.onchange=()=>{const id=c.dataset.app;db.off=db.off.filter(x=>x!==id);if(!c.checked)db.off.push(id);save();render()});
   const dk=$("#darkchk");if(dk)dk.onchange=async()=>{cfg.dark=dk.checked;applyTheme(dk.checked?"dark":"light",true);await saveCfg()};
   const lo=$("#logout");if(lo)lo.onclick=logout;
-  const gs=$("#gsave");if(gs)gs.onclick=async()=>{const k=$("#gkey").value.trim();if(k)cfg.geminiKey=k;cfg.model=$("#gmodel").value.trim()||GEMINI_MODEL_DEFAULT;await saveCfg();render()};
+  const gs=$("#gsave");if(gs)gs.onclick=async()=>{const k=$("#gkey").value.trim();if(k)cfg.geminiKey=k;cfg.relayUrl=($("#rurl").value||"").trim();cfg.model=$("#gmodel").value.trim()||GEMINI_MODEL_DEFAULT;await saveCfg();render()};
   const gd=$("#gdel");if(gd)gd.onclick=async()=>{cfg.geminiKey="";await saveCfg();render()};
 }
 /* 말하기: 브라우저 음성 인식(Web Speech). 안 되는 폰은 키보드의 음성 입력(마이크 버튼)을 쓰면 됨 */
@@ -1111,14 +1115,19 @@ async function geminiFirst(maskedText,apps,fetcher){
    "\n사용자 말: \""+an.text.replace(/"/g,"'")+"\"\nJSON 형식: {\"action\":\"navigate|record|find\",\"app\":\"\",\"go\":\"\",\"q\":\"\",\"kind\":\"\",\"tab\":\"\",\"id\":\"\",\"month\":\"\",\"car\":\"\",\"memo\":\"\",\"confidence\":\"high|low\",\"alt\":[{\"app\":\"\",\"kind\":\"\"}]}";
   AI_LOG.push(prompt);if(AI_LOG.length>30)AI_LOG.shift();
   const ctl=typeof AbortController!=="undefined"?new AbortController():null,timer=setTimeout(()=>{try{ctl&&ctl.abort()}catch(e){}},12000);
-  let r;
+  let r,via="Gemini";
   const gcall=m=>(fetcher||fetch)(geminiUrl(m),{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":cfg.geminiKey},signal:ctl?ctl.signal:undefined,
        body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:"application/json",temperature:0}})});
   try{
-    const gm=geminiModel(cfg);r=await gcall(gm);
-    if(r.status===404&&gm!==GEMINI_MODEL_DEFAULT)r=await gcall(GEMINI_MODEL_DEFAULT); // 없는 모델이면 새 기본값으로 한 번만 다시(12초 제한은 그대로 공유)
+    if(relayOn()){ // Claude 중계 서버: 키는 서버에만 있고, 구글 토큰으로 허용된 사람인지 확인함. 실패하면 Gemini 키가 있을 때만 그쪽으로
+      via="Claude";
+      try{r=await (fetcher||fetch)(cfg.relayUrl,{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+storedTok()},signal:ctl?ctl.signal:undefined,body:JSON.stringify({prompt})})}catch(e){r=null}
+      if((!r||!r.ok)&&cfg.geminiKey){via="Gemini";r=null}
+    }
+    if(!r){const gm=geminiModel(cfg);r=await gcall(gm);
+    if(r.status===404&&gm!==GEMINI_MODEL_DEFAULT)r=await gcall(GEMINI_MODEL_DEFAULT)} // 없는 모델이면 새 기본값으로 한 번만 다시(12초 제한은 그대로 공유)
   }finally{clearTimeout(timer)}
-  if(!r.ok)throw new Error("Gemini "+r.status);
+  if(!r||!r.ok)throw new Error(via+" "+(r?r.status:"연결 실패"));
   const j=await r.json();
   const raw=j.candidates&&j.candidates[0]&&j.candidates[0].content.parts.map(x=>x.text||"").join("");
   const o=JSON.parse(String(raw||"").replace(/^```json|```$/g,"").trim());
@@ -1157,7 +1166,7 @@ async function submit(raw){
   const s=Sens.mask(raw);
   const nv=navIntent(s.text);
   const refuse=!!(nv&&nv.refuse);
-  const useAI=!!cfg.geminiKey&&!refuse&&Date.now()>aiOffUntil; // 키가 있으면 Gemini 먼저(민감 값을 불러 달라는 말은 앱이 먼저 판단해 거절)
+  const useAI=aiReady()&&!refuse&&Date.now()>aiOffUntil; // Claude 중계나 Gemini 키가 있으면 AI 먼저(민감 값을 불러 달라는 말은 앱이 먼저 판단해 거절)
   const gen=nv&&nv.app==="shinhanfc"&&nv.go==="customers";
   const rec={id:uid(),at:new Date().toISOString(),text:useAI?"(해석 중)":gen?"고객 검색 (이름은 기록 안 함)":s.text,masked:s.hit,status:"new",target:null,fields:{}};
   db.records.push(rec);save();
