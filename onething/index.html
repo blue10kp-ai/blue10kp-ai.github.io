@@ -1042,10 +1042,10 @@ function toggleMic(){
   if(!SR){$("#ast").textContent="이 브라우저는 음성 인식이 안 돼요. 키보드의 마이크 버튼으로 말해 보세요.";$("#txt")&&$("#txt").focus();return}
   if(listening&&recog){recog.stop();return}
   recog=new SR();recog.lang="ko-KR";recog.interimResults=true;recog.continuous=false;
-  const tx=$("#txt");const base=tx.value?tx.value.trim()+" ":"";
-  recog.onresult=e=>{let s="";for(let i=0;i<e.results.length;i++)s+=e.results[i][0].transcript;tx.value=base+s};
+  const tx=$("#txt");const base=tx.value?tx.value.trim()+" ":"";let last=tx.value; // 듣기를 시작하면 화면을 다시 그려 입력창이 새로 만들어지니, 결과는 그때그때 새 입력창에 씀(예전 입력창에 쓰면 글이 안 나타남)
+  recog.onresult=e=>{let s="";for(let i=0;i<e.results.length;i++)s+=e.results[i][0].transcript;last=base+s;const t=$("#txt");if(t)t.value=last};
   recog.onerror=e=>{listening=false;render();const ast=$("#ast");if(ast)ast.textContent=e.error==="not-allowed"?"마이크 사용을 허용해 주세요.":"음성 인식이 안 됐어요. 다시 눌러 보세요."};
-  recog.onend=()=>{const keep=$("#txt")?$("#txt").value:"";listening=false;render();if($("#txt"))$("#txt").value=keep};
+  recog.onend=()=>{const keep=last||($("#txt")?$("#txt").value:"");listening=false;render();if($("#txt"))$("#txt").value=keep};
   try{recog.start();listening=true;const keep=tx.value;render();$("#txt").value=keep}catch(e){listening=false}
 }
 
